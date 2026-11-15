@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=7">
     <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
     <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=1"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion_targets.js') }}?v=1"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion_targets.js') }}?v=2"></script>
     <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=12"></script>
 </head>
 <body class="tw:font-sans">
@@ -119,6 +119,7 @@
             </div>
             <button type="submit" id="target-add">Add target</button>
             <p id="target-error" role="status" hidden></p>
+            <button type="button" id="target-online" hidden>Search online (CDS)</button>
         </form>
         <ul id="target-list" aria-label="Saved targets"></ul>
         <p id="target-status" role="status" hidden></p>

@@ -9,7 +9,10 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from ..companion_astronomy import camera_timezone, night_ephemeris
 from ..companion_battery import battery_reading
-from ..companion_targets import marker_coordinates, project_targets, resolve_coordinates, resolve_name
+from ..companion_targets import (
+    OnlineCatalogUnavailable, UnknownTargetName, marker_coordinates, project_targets,
+    resolve_coordinates, resolve_name,
+)
 from .base_views import BaseView
 from .companion_charts import companion_charts, sensor_probes
 from .misc import login_optional_media
@@ -119,15 +122,21 @@ def companion_status(view):
 
 
 def companion_target_request(view):
+    online = request.args.get('online') == '1'
     try:
         if 'resolve' in request.args:
-            return {'target': resolve_name(request.args['resolve'])}
+            return {'target': resolve_name(request.args['resolve'], online=online)}
         if 'ra' in request.args or 'dec' in request.args:
             return {'target': resolve_coordinates(request.args.get('ra'), request.args.get('dec'))}
         frame = request.args.get('frame', type=int)
         if frame is None or not 0 < frame <= 2**63 - 1:
             raise ValueError('Invalid image ID.')
         coordinates = marker_coordinates(request.args.getlist('target'))
+    except UnknownTargetName as exc:
+        code = 'online_unknown' if online else 'unknown_name'
+        abort(make_response(jsonify(error=str(exc), code=code), 400))
+    except OnlineCatalogUnavailable as exc:
+        abort(make_response(jsonify(error=str(exc), code='catalog_unavailable'), 503))
     except ValueError as exc:
         abort(make_response(jsonify(error=str(exc)), 400))
 

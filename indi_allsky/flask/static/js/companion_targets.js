@@ -14,20 +14,28 @@ class CompanionTargets {
         this.ra = document.getElementById('target-ra');
         this.dec = document.getElementById('target-dec');
         this.label = document.getElementById('target-label');
+        this.addButton = document.getElementById('target-add');
+        this.onlineButton = document.getElementById('target-online');
         this.targets = this.readTargets();
         this.open.addEventListener('click', () => {
             this.dialog.showModal();
             (this.mode.value === 'coords' ? this.ra : this.name).focus();
         });
         document.getElementById('target-close').addEventListener('click', () => this.dialog.close());
-        this.form.addEventListener('submit', event => this.add(event));
+        this.form.addEventListener('submit', event => {
+            event.preventDefault();
+            return this.add();
+        });
+        this.onlineButton.addEventListener('click', () => this.add(true));
+        this.form.addEventListener('input', () => this.resetLookup());
+        this.dialog.addEventListener('close', () => this.resetLookup());
         this.mode.addEventListener('change', () => {
             const coords = this.mode.value === 'coords';
             document.getElementById('target-name-fields').hidden = coords;
             document.getElementById('target-coord-fields').hidden = !coords;
             this.name.disabled = coords;
             for (const input of [this.ra, this.dec, this.label]) input.disabled = !coords;
-            this.message('target-error', '');
+            this.resetLookup();
         });
         window.addEventListener('storage', event => {
             if (event.key === this.key || event.key === null) {
@@ -80,39 +88,70 @@ class CompanionTargets {
             throw new Error('Could not reach the camera. Check your connection and sign-in.');
         }
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Could not update target markers.');
+        if (!response.ok) {
+            const error = new Error(data.error || 'Could not update target markers.');
+            error.code = data.code;
+            throw error;
+        }
         return data;
     }
 
-    async add(event) {
-        event.preventDefault();
-        const button = document.getElementById('target-add');
-        if (button.disabled) return;
-        const coords = this.mode.value === 'coords';
-        const params = coords ? [['ra', this.ra.value.trim()], ['dec', this.dec.value.trim()]]
-            : [['resolve', this.name.value.trim()]];
-        const label = coords ? this.label.value.trim() : '';
-        button.disabled = true;
+    resetLookup() {
+        this.lookup?.abort();
+        this.lookup = null;
+        this.unknownName = null;
+        this.onlineButton.hidden = true;
+        this.onlineButton.disabled = false;
+        this.addButton.disabled = false;
         this.message('target-error', '');
+    }
+
+    async add(online = false) {
+        if (this.lookup) return;
+        const coords = this.mode.value === 'coords';
+        const name = this.name.value.trim();
+        if (online && (coords || !name || this.unknownName !== name)) return;
+        const params = coords ? [['ra', this.ra.value.trim()], ['dec', this.dec.value.trim()]]
+            : [['resolve', name]];
+        if (online) params.push(['online', '1']);
+        const label = coords ? this.label.value.trim() : '';
+        this.onlineButton.hidden = !online;
+        this.onlineButton.disabled = true;
+        this.addButton.disabled = true;
+        this.message('target-error', online ? 'Searching CDS…' : '');
         const request = new AbortController();
+        this.lookup = request;
         const timeout = setTimeout(() => request.abort(), 12000);
         try {
             const {target} = await this.request(params, request.signal);
+            if (this.lookup !== request) return;
+            if (request.signal.aborted) throw new Error('Target lookup timed out. Try again.');
             if (!target || !Number.isFinite(target.ra_deg) || !Number.isFinite(target.dec_deg) || !target.label) {
                 throw new Error('The camera returned an invalid target.');
             }
+            this.onlineButton.hidden = true;
+            this.unknownName = null;
             if (this.targets.some(t => t.ra_deg === target.ra_deg && t.dec_deg === target.dec_deg)) {
                 throw new Error('This target is already on the list.');
             }
             this.targets = [...this.targets, {label: label || target.label, ra_deg: target.ra_deg, dec_deg: target.dec_deg}];
             this.save();
             for (const field of [this.name, this.ra, this.dec, this.label]) field.value = '';
+            this.message('target-error', '');
             (coords ? this.ra : this.name).focus();
         } catch (error) {
+            if (this.lookup !== request) return;
+            if (!online) this.unknownName = !coords && error.code === 'unknown_name' ? name : null;
+            if (online && error.code === 'online_unknown') this.unknownName = null;
+            this.onlineButton.hidden = !this.unknownName;
             this.message('target-error', request.signal.aborted ? 'Target lookup timed out. Try again.' : error.message);
         } finally {
             clearTimeout(timeout);
-            button.disabled = false;
+            if (this.lookup === request) {
+                this.lookup = null;
+                this.onlineButton.disabled = false;
+                this.addButton.disabled = false;
+            }
         }
     }
 

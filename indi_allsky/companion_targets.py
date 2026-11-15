@@ -1,11 +1,16 @@
-"""Offline target lookup and projection for the astrophotography companion."""
+"""Target lookup and projection for the astrophotography companion."""
 import csv
 import json
 import math
+from contextlib import closing
 from functools import lru_cache
+from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
 import re
+from time import monotonic
 import unicodedata
+from urllib.parse import quote
+from xml.etree import ElementTree
 
 from ephem.stars import stars
 
@@ -72,10 +77,22 @@ def _catalog():
     return objects, aliases
 
 
-def resolve_name(name):
-    if not name or len(name) > 128:
+class UnknownTargetName(ValueError):
+    """The object name was not found in the catalogue searched."""
+
+
+class OnlineCatalogUnavailable(RuntimeError):
+    """The online resolver could not supply a usable reply."""
+
+
+def resolve_name(name, *, online=False):
+    if (not isinstance(name, str) or not name.strip() or len(name) > 128
+            or any(unicodedata.category(c) in ('Cc', 'Cs') for c in name)):
         raise ValueError('Enter an object name or catalogue number.')
+    name = name.strip()
     key = _name_key(name)
+    if not key:
+        raise ValueError('Enter an object name or catalogue number.')
     objects, aliases = _catalog()
     alias = None
     if key not in objects and key in aliases:
@@ -84,9 +101,67 @@ def resolve_name(name):
             raise ValueError('Several objects share this name. Enter a catalogue number or RA and Dec.')
         key, alias = match
     if key not in objects:
-        raise ValueError('Unknown object. Try a Messier, NGC or IC number, a star name, or RA and Dec.')
+        if online:
+            return _resolve_online(name)
+        raise UnknownTargetName('Object not found in the local catalogue. Try another name or enter RA and Dec.')
     label, ra, dec = objects[key]
     return {'label': alias or label, 'ra_deg': ra, 'dec_deg': dec}
+
+
+def _sesame_reply(name):
+    # CDS Sesame's IDIA mirror. The fixed destination receives only the object name.
+    # /SNV asks for the first match, in SIMBAD, NED, then VizieR.
+    path = '/viz-bin/nph-sesame/-ox/SNV?' + quote(name, safe='')
+    limit = 64 * 1024
+    deadline = monotonic() + 10
+    with closing(HTTPSConnection('vizier.idia.ac.za', timeout=3)) as connection:
+        connection.request('GET', path, headers={'Accept': 'application/xml'})
+        socket = connection.sock
+        socket.settimeout(max(.001, deadline - monotonic()))
+        with connection.getresponse() as response:
+            if response.status != 200:
+                raise HTTPException('Unexpected Sesame status')
+            data = bytearray()
+            while not response.isclosed():
+                remaining = deadline - monotonic()
+                if remaining <= 0:
+                    raise TimeoutError()
+                socket.settimeout(remaining)
+                chunk = response.read1(min(8192, limit + 1 - len(data)))
+                if not chunk:
+                    break
+                data.extend(chunk)
+                if len(data) > limit:
+                    raise HTTPException('Oversized Sesame response')
+            return data.decode('utf-8')
+
+
+def _resolve_online(name):
+    try:
+        body = _sesame_reply(name)
+        if '<!DOCTYPE' in body:
+            raise ValueError('Unexpected XML document type')
+        root = ElementTree.fromstring(body)
+        targets = root.findall('Target')
+        if root.tag != 'Sesame' or len(targets) != 1:
+            raise ValueError('Unexpected Sesame response')
+        target = targets[0]
+        resolvers = target.findall('Resolver')
+        if not resolvers:
+            if any('nothing found' in (msg.text or '').casefold() for msg in target.findall('INFO')):
+                raise UnknownTargetName('CDS Sesame could not find this object. Try another name or enter RA and Dec.')
+            raise ValueError('Incomplete Sesame response')
+        if len(resolvers) != 1:
+            raise ValueError('Expected a single Sesame position')
+        ra = float(resolvers[0].findtext('jradeg', ''))
+        dec = float(resolvers[0].findtext('jdedeg', ''))
+        if not 0 <= ra < 360 or not -90 <= dec <= 90:
+            raise ValueError('Invalid Sesame position')
+    except UnknownTargetName:
+        raise
+    except (OSError, HTTPException, ElementTree.ParseError, ValueError) as exc:
+        raise OnlineCatalogUnavailable('Online catalogue unavailable. Try again or enter RA and Dec.') from exc
+    return {'label': name, 'ra_deg': ra, 'dec_deg': dec}
 
 
 _NUMBER = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'

@@ -1,4 +1,4 @@
-"""Exercise offline names, exact image permissions and frame-bound sky projection."""
+"""Exercise target lookup, exact image permissions and frame-bound sky projection."""
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -6,7 +6,8 @@ from types import SimpleNamespace
 from flask import Flask
 import pytest
 
-from indi_allsky.companion_targets import resolve_coordinates, resolve_name
+from indi_allsky import companion_targets
+from indi_allsky.companion_targets import OnlineCatalogUnavailable, UnknownTargetName, resolve_coordinates, resolve_name
 from indi_allsky.flask import db, views
 from indi_allsky.flask.companion import companion_status, latest_companion_image
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable as Camera, IndiAllSkyDbImageTable as Frame
@@ -35,6 +36,81 @@ def test_thors_lightning_aliases(name):
 @pytest.mark.parametrize('name', ['Giant Squid Nebula', 'Squid Nebula', 'Tintenfischnebel', 'Ou4', 'Outters 4'])
 def test_squid_nebula_aliases(name):
     assert resolve_name(name) == {'label': 'Squid Nebula', 'ra_deg': 317.95075, 'dec_deg': 59.985833}
+
+
+def test_online_access_is_only_used_for_an_explicit_local_miss(monkeypatch):
+    monkeypatch.setattr(companion_targets, '_sesame_reply', lambda name: pytest.fail('Unexpected network lookup'))
+    assert resolve_name('Tintenfischnebel', online=True) == resolve_name('Ou4')
+    with pytest.raises(UnknownTargetName):
+        resolve_name('LDN 1235')
+    for invalid in ('', '  ', '---', 'Sirius\nVega', 'X' * 129):
+        with pytest.raises(ValueError, match='Enter an object name'):
+            resolve_name(invalid, online=True)
+
+
+def test_online_reads_one_signed_j2000_position(monkeypatch):
+    reply = ('<Sesame><Target><name>HD 209458</name><Resolver><jradeg>330.79</jradeg>'
+             '<jdedeg>-0.62</jdedeg></Resolver></Target></Sesame>')
+    monkeypatch.setattr(companion_targets, '_sesame_reply', lambda name: reply)
+    assert resolve_name('HD 209458', online=True) == {'label': 'HD 209458', 'ra_deg': 330.79, 'dec_deg': -.62}
+
+
+def test_online_distinguishes_a_catalogue_miss_from_service_errors(monkeypatch):
+    reply = '<Sesame><Target><INFO> *** NNNothing found *** </INFO></Target></Sesame>'
+    monkeypatch.setattr(companion_targets, '_sesame_reply', lambda name: reply)
+    with pytest.raises(UnknownTargetName, match='CDS Sesame could not find'):
+        resolve_name('Example unknown object', online=True)
+
+
+@pytest.mark.parametrize('content', [
+    '', '<html>Maintenance</html>', '<Sesame><Target/></Sesame>',
+    '<!DOCTYPE Sesame [<!ENTITY name "value">]><Sesame/>',
+    '<Sesame><Target><Resolver/><Resolver/></Target></Sesame>',
+    '<Sesame><Target><Resolver><jdedeg>-2</jdedeg></Resolver></Target></Sesame>',
+    '<Sesame><Target><Resolver><jradeg>nan</jradeg><jdedeg>1</jdedeg></Resolver></Target></Sesame>',
+    '<Sesame><Target><Resolver><jradeg>-1</jradeg><jdedeg>1</jdedeg></Resolver></Target></Sesame>',
+    '<Sesame><Target><Resolver><jradeg>180</jradeg><jdedeg>91</jdedeg></Resolver></Target></Sesame>',
+])
+def test_bad_online_responses_do_not_create_markers(monkeypatch, content):
+    monkeypatch.setattr(companion_targets, '_sesame_reply', lambda name: content)
+    with pytest.raises(OnlineCatalogUnavailable):
+        resolve_name('Online test', online=True)
+
+
+def test_online_transport_uses_a_fixed_host_and_quotes_the_whole_name(monkeypatch):
+    from unittest.mock import MagicMock
+    connection = MagicMock()
+    make_connection = MagicMock(return_value=connection)
+    monkeypatch.setattr(companion_targets, 'HTTPSConnection', make_connection)
+    response = connection.getresponse.return_value.__enter__.return_value
+    response.status = 200
+    response.isclosed.return_value = False
+    response.read1.side_effect = [b'<Sesame/>', b'']
+    assert companion_targets._sesame_reply('A+B /?&') == '<Sesame/>'
+    make_connection.assert_called_once_with('vizier.idia.ac.za', timeout=3)
+    connection.request.assert_called_once_with('GET', '/viz-bin/nph-sesame/-ox/SNV?A%2BB%20%2F%3F%26',
+                                               headers={'Accept': 'application/xml'})
+    connection.close.assert_called_once()
+
+
+@pytest.mark.parametrize('problem', ['redirect', 'oversized', 'timeout'])
+def test_online_transport_limits_replies_and_never_follows_redirects(monkeypatch, problem):
+    from unittest.mock import MagicMock
+    connection = MagicMock()
+    monkeypatch.setattr(companion_targets, 'HTTPSConnection', lambda *args, **kwargs: connection)
+    response = connection.getresponse.return_value.__enter__.return_value
+    response.status = 302 if problem == 'redirect' else 200
+    response.isclosed.return_value = False
+    if problem == 'oversized':
+        response.read1.side_effect = lambda size: b'X' * size
+    else:
+        response.read1.side_effect = TimeoutError()
+    with pytest.raises(OnlineCatalogUnavailable):
+        resolve_name('Online test', online=True)
+    if problem == 'redirect':
+        response.read1.assert_not_called()
+    connection.request.assert_called_once()
+    connection.close.assert_called_once()
 
 
 @pytest.mark.parametrize('ra,dec,expected', [

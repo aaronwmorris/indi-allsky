@@ -130,6 +130,76 @@ test('companion resolves, saves and removes both named and J2000 targets per cam
     assert.match(reopened.el('target-status').textContent, /saved, aligned image/);
 });
 
+test('an offline miss offers one explicit CDS search for that name and saves the result', async () => {
+    const saved = new Map();
+    const b = browser('companion', {saved});
+    const form = b.el('target-form');
+    const name = b.el('target-name');
+    const online = b.el('target-online');
+    const queries = () => b.requests.filter(r => r.url.searchParams.has('resolve'));
+    name.value = '3C 273';
+    form.input();
+    assert.equal(queries().length, 0);
+    assert.equal(online.hidden, true);
+    const first = form.submit({preventDefault() {}});
+    assert.equal(queries()[0].url.searchParams.has('online'), false);
+    queries()[0].reply({code: 'unknown_name', error: 'Unknown object.'}, 'application/json', 400);
+    await first;
+    assert.equal(online.hidden, false);
+    assert.equal(queries().length, 1);
+    const second = online.click();
+    assert.deepEqual([...queries()[1].url.searchParams], [['camera_id','3'], ['resolve','3C 273'], ['online','1']]);
+    assert.equal(queries()[1].url.origin, 'https://camera.test');
+    queries()[1].reply({code: 'catalog_unavailable', error: 'CDS is unavailable.'}, 'application/json', 503);
+    await second;
+    assert.equal(online.hidden, false);
+    assert.equal(online.disabled, false);
+    assert.equal(queries().length, 2);
+    const retry = online.click();
+    queries()[2].reply({target: {label: '3C 273', ra_deg: 187.27, dec_deg: 2.05}});
+    await retry;
+    assert.equal(online.hidden, true);
+    assert.equal(name.value, '');
+    assert.equal(JSON.parse(saved.get('allsky-companion-targets-3'))[0].label, '3C 273');
+});
+
+test('editing or closing discards stale lookups and coordinate entry never offers CDS', async () => {
+    const b = browser('companion');
+    const form = b.el('target-form');
+    const online = b.el('target-online');
+    const submit = () => form.submit({preventDefault() {}});
+    const miss = request => request.reply({code: 'unknown_name', error: 'Unknown object.'}, 'application/json', 400);
+    b.el('target-name').value = 'First';
+    const first = submit();
+    const old = b.requests.at(-1);
+    b.el('target-name').value = 'Second';
+    form.input();
+    assert.equal(old.options.signal.aborted,true);
+    miss(old);
+    await first;
+    assert.equal(online.hidden, true);
+    const second = submit();
+    miss(b.requests.at(-1));
+    await second;
+    const remote = online.click();
+    const inFlight = b.requests.at(-1);
+    b.el('target-dialog').close();
+    assert.equal(inFlight.options.signal.aborted, true);
+    inFlight.reply({target: {label: 'Second', ra_deg: 12, dec_deg: 15}});
+    await remote;
+    assert.equal(b.el('target-open').textContent, 'Targets');
+    assert.equal(online.hidden, true);
+    b.el('target-mode').value = 'coords';
+    b.el('target-mode').change();
+    const coordinates = submit();
+    miss(b.requests.at(-1));
+    await coordinates;
+    assert.equal(online.hidden, true);
+    const count = b.requests.length;
+    await online.click();
+    assert.equal(b.requests.length, count);
+});
+
 test('companion batches targets and never applies obsolete positions to another displayed frame', async () => {
     const targets = Array.from({length: 65}, (_, i) => ({label: 'Target ' + i, ra_deg: i, dec_deg: 10}));
     const b = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
