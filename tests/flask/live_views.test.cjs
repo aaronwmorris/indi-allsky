@@ -22,6 +22,7 @@ function browser(view) {
             this.id = id;
             this.textContent = '';
             this.hidden = false;
+            this.dataset = {};
             this.options = [];
             this.value = '';
             this.style = {setProperty() {}};
@@ -205,6 +206,20 @@ test('companion differentiates missing, transferring, paused, offline and authen
     assert.equal(b.displays.length, 1);
 });
 
+test('companion uses the charge reported by the HAT at each color threshold', async () => {
+    const b = browser('companion');
+    const snapshot = full(null);
+    b.requests[0].reply(snapshot); b.requests[1].reply(snapshot); await b.flush();
+    for (const [value, level] of [[100, 'high'], [51, 'high'], [50, 'medium'], [21, 'medium'], [20, 'low'], [0, 'low']]) {
+        snapshot.battery = {value, expires_at: '2026-11-07T22:00:00+01:00'};
+        b.emit('online');
+        b.requests.at(-2).reply(snapshot); b.requests.at(-1).reply(snapshot); await b.flush();
+        const icon = b.el('battery');
+        assert.equal(icon.dataset.level, level);
+        assert.equal(icon['aria-label'], 'Battery ' + value + '%, ' + level + ' charge');
+    }
+});
+
 test('companion hides an absent battery, shows a genuine zero and expires the reading offline', async () => {
     const b = browser('companion');
     const snapshot = full(null);
@@ -216,10 +231,12 @@ test('companion hides an absent battery, shows a genuine zero and expires the re
     b.requests.at(-2).reply(snapshot); b.requests.at(-1).reply(snapshot); await b.flush();
     assert.equal(icon.hidden, false);
     assert.equal(b.el('battery-value').textContent, '0%');
-    assert.equal(icon['aria-label'], 'Battery 0%');
+    assert.equal(icon['aria-label'], 'Battery 0%, low charge');
+    assert.equal(icon.dataset.level, 'low');
     await b.advance(3000);
     assert.equal(b.el('battery-value').textContent, '–');
     assert.equal(icon.title, 'Battery reading unavailable');
+    assert.equal(icon.dataset.level, 'unknown');
 });
 
 test('companion formats English readings and keeps the date and offset of each camera event', async () => {

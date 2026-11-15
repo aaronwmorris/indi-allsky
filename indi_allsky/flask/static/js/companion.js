@@ -129,11 +129,18 @@
         const valid = Number.isFinite(battery.value) && battery.value >= 0 && battery.value <= 100
             && Date.parse(battery.expires_at) > now;
         const value = valid ? number.format(battery.value) + '%' : '–';
-        const description = valid ? 'Battery ' + value : 'Battery reading unavailable';
+        let level = 'unknown';
+        if (valid) {
+            if (battery.value <= 20) level = 'low';
+            else if (battery.value <= 50) level = 'medium';
+            else level = 'high';
+        }
+        const description = valid ? 'Battery ' + value + ', ' + level + ' charge' : 'Battery reading unavailable';
         const label = byId('battery-value');
         if (label.textContent !== value || icon.title !== description) {
             label.textContent = value;
             icon.title = description;
+            icon.dataset.level = level;
             icon.setAttribute('aria-label', description);
             icon.style.setProperty('--battery-fill', valid ? battery.value + '%' : '0%');
         }

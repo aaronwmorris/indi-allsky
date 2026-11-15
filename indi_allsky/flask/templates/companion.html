@@ -18,10 +18,10 @@
         window.addEventListener('storage', applyCompanionTheme);
     </script>
     <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}">
-    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=6">
     <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
     <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=1"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=8"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=9"></script>
 </head>
 <body class="tw:font-sans">
 <main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}" data-stale-ms="{{ stale_ms }}"
