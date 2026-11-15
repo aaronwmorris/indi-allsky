@@ -66,13 +66,15 @@ def process_stack_frame(entry, path, pixels, remap, keogram, startrails, use_db_
         solution = frame_geometry(metadata, (pixels.shape[1], pixels.shape[0]))
         if solution is None:
             return
-        keogram.x_offset = keogram.y_offset = 0
         align = partial(remap.image, solution=solution)
 
-    try:
-        keogram.processImage(align(pixels) if align else pixels, path.stat().st_mtime)
-    except KeogramMismatchException as exc:
-        logger.error('Error processing keogram image: %s', exc)
+    if keogram is not None:
+        if align:
+            keogram.x_offset = keogram.y_offset = 0
+        try:
+            keogram.processImage(align(pixels) if align else pixels, path.stat().st_mtime)
+        except KeogramMismatchException as exc:
+            logger.error('Error processing keogram image: %s', exc)
 
     if startrails is not None:
         startrails.processImage(path, pixels, entry.binmode, adu=entry.adu if use_db_data else None,

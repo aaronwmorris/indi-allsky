@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 import numpy as np
+import pytest
 
 from indi_allsky.aligned_media import SkyRemap, process_stack_frame, stack_entries
 from indi_allsky.exceptions import KeogramMismatchException
@@ -79,3 +80,24 @@ def test_keogram_and_star_trails_align_after_sensor_space_filtering(tmp_path):
     assert kg.processImage.call_args.args[0] is raw
     assert kg.x_offset == 14
     assert trails.processImage.call_args.kwargs == {'adu': None, 'star_count': None, 'align': None}
+
+
+@pytest.mark.parametrize('aligned', [False, True])
+def test_star_trails_can_be_rebuilt_without_a_keogram(tmp_path, aligned):
+    entry = frame(90)
+    if not aligned:
+        entry.data = {}
+    path = tmp_path / 'frame.jpg'
+    path.touch()
+    raw = np.zeros((128, 128, 3), dtype=np.uint8)
+    raw[64, 96] = (1, 2, 3)
+    trails = Mock()
+
+    process_stack_frame(entry, path, raw, SkyRemap(), None, trails, True)
+
+    args, kwargs = trails.processImage.call_args
+    assert args[1] is raw
+    if aligned:
+        np.testing.assert_array_equal(kwargs['align'](raw)[32, 64], (1, 2, 3))
+    else:
+        assert kwargs['align'] is None
