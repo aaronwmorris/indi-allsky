@@ -24,7 +24,7 @@ def panoramaVideoOptions(codec, crop_filter, extra_options):
             if not user_filter:
                 raise TimelapseException('Missing video filter after ' + option)
         elif h264 and option in ('-level', '-level:v', '-level:v:0'):
-            # The camera's general H.264 level (3.1 by default) may not fit
+            # The camera's general H.264 level may not fit
             # the output dimensions, frame rate or bitrate. Let the encoder choose.
             if next(args, None) is None:
                 raise TimelapseException('Missing H.264 level after ' + option)

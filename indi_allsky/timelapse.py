@@ -16,6 +16,63 @@ logger = logging.getLogger('indi_allsky')
 
 
 
+def _x264_timelapse_options(bitrate, framerate, options):
+    """Supply browser playback defaults while preserving explicit FFmpeg/x264 settings."""
+    # Older installs carried this single option as the factory default. At full
+    # camera resolution the level must be determined from the actual output.
+    options = [] if options == ['-level', '3.1'] else list(options)
+    values = {}
+    params_index = None
+    for i, arg in enumerate(options[:-1]):
+        if not arg.startswith('-'):
+            continue
+        name = re.sub(r'(?::v(?::0)?|:0)$', '', arg)
+        if name in ('-vcodec', '-codec'):
+            name = '-c'
+        elif name == '-vb':
+            name = '-b'
+        values[name] = options[i + 1]
+        if name == '-x264-params':
+            params_index = i + 1
+    if values.get('-c', 'libx264') != 'libx264':
+        return options
+
+    # The two native x264 option lists also take precedence over our defaults.
+    native = {}
+    for name in ('-x264opts', '-x264-params'):
+        for item in values.get(name, '').split(':'):
+            key, _, value = item.partition('=')
+            native[key.replace('_', '-')] = value
+
+    defaults = []
+    rate_options = {'-crf', '-qp', '-q', '-qscale', '-pass', '-minrate'}
+    rate_params = {'crf', 'qp', 'pass'}
+    if rate_options.isdisjoint(values) and rate_params.isdisjoint(native):
+        # FFmpeg rates use bits/s; x264's native bitrate uses kbit/s.
+        target = native['bitrate'] + 'k' if 'bitrate' in native else values.get('-b', bitrate)
+        if 'vbv-maxrate' in native:
+            peak = native['vbv-maxrate'] + 'k'
+        elif '-maxrate' in values:
+            peak = values['-maxrate']
+        else:
+            peak = target
+            defaults.extend(['-maxrate', peak])
+        if '-bufsize' not in values and 'vbv-bufsize' not in native:
+            defaults.extend(['-bufsize', peak])
+    if '-refs' not in values and {'ref', 'refs'}.isdisjoint(native):
+        defaults.extend(['-refs', '1'])
+    if '-g' not in values and 'keyint' not in native:
+        defaults.extend(['-g', str(max(1, round(2 * framerate)))])
+    if {'mvrange', 'mv-range'}.isdisjoint(native):
+        # Limiting the motion-vector range avoids VideoToolbox decode failures
+        # late in full-resolution movies. Preserve other native x264 options.
+        if params_index is None:
+            defaults.extend(['-x264-params', 'mvrange=512'])
+        else:
+            options[params_index] += ':mvrange=512'
+    return defaults + options
+
+
 def _preserves_frame_count(video_filter, extra_options):
     """Only advertise an output total for filters with one output per input."""
     filters = [video_filter] if video_filter else []
@@ -191,6 +248,8 @@ class TimelapseGenerator(object):
 
 
         extra_options = self.ffmpeg_extra_options.split(' ') if self.ffmpeg_extra_options else []
+        if self.codec == 'libx264':
+            extra_options = _x264_timelapse_options(self.bitrate, self.framerate, extra_options)
         if self.panorama:
             cmd.extend(panoramaVideoOptions(self.codec, self.video_filter, extra_options))
         else:

@@ -87,7 +87,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS.label.text }}</span>
                         {{ form_config.FFMPEG_EXTRA_OPTIONS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional FFmpeg options; values are not validated. “-level 3.1” can reduce artifacts and improve iOS compatibility.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Optional FFmpeg encoder settings. Leave blank to use the playback defaults for the selected codec.</span>
                         <div id="FFMPEG_EXTRA_OPTIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -156,7 +156,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_EXTRA_OPTIONS_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional FFmpeg options; values are not validated. “-level 3.1” can reduce artifacts and improve iOS compatibility.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Optional FFmpeg encoder settings. Leave blank to use the playback defaults for the selected codec.</span>
                         <div id="FFMPEG_EXTRA_OPTIONS_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
