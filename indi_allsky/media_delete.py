@@ -1,59 +1,73 @@
-"""Keep video recovery from undoing an operator's explicit deletion."""
+"""Preserve an operator's bulk deletion when recent media are reconciled."""
 from datetime import timedelta
 
-from sqlalchemy.exc import IntegrityError
 
-from . import night_movie
-from .utils import IndiAllSkyDateCalcs
-
-
-def suppress_movie_repair(camera_id, date, night, panorama):
+def _mark(mark, *args):
+    from sqlalchemy.exc import IntegrityError
     from .flask import db
     try:
-        night_movie.suppress_repair(camera_id, date, night, panorama)
+        mark(*args)
     except IntegrityError:
         # A concurrent encoder may have just inserted the claim row.
         db.session.rollback()
-        night_movie.suppress_repair(camera_id, date, night, panorama)
+        mark(*args)
+
+
+def suppress_movie_repair(camera_id, date, night, panorama):
+    from . import night_movie
+    _mark(night_movie.suppress_repair, camera_id, date, night, panorama)
 
 
 def suppress_deleted_local_product(entry):
-    """Only explicit Sync API DELETE uses this hook, never upload replacement or expiry."""
-    from .flask.models import IndiAllSkyDbPanoramaVideoTable as PanoramaMovie, IndiAllSkyDbVideoTable as Movie
-    is_panorama = isinstance(entry, PanoramaMovie)
-    if not is_panorama and not (isinstance(entry, Movie) and entry.night):
+    """Used by explicit Sync API DELETE, never by upload replacement or expiry."""
+    from .flask.models import (
+        IndiAllSkyDbVideoTable as Movie, IndiAllSkyDbPanoramaVideoTable as PanoramaMovie,
+        IndiAllSkyDbKeogramTable as Keogram, IndiAllSkyDbStarTrailsTable as StarTrails,
+        IndiAllSkyDbStarTrailsVideoTable as StarMovie,
+    )
+    stills = {Keogram: 'keogram', StarTrails: 'startrail', StarMovie: 'startrail_timelapse'}
+    model = type(entry)
+    if model not in (Movie, PanoramaMovie) and model not in stills:
         return
-    if entry.camera.local:
-        suppress_movie_repair(entry.camera_id, entry.dayDate, entry.night, is_panorama)
+    if not entry.camera.local:
+        return
+    from . import derived_media, night_movie
+    args = entry.camera_id, entry.dayDate, bool(entry.night)
+    if model in stills:
+        _mark(derived_media.suppress_repair, *args, stills[model])
+    else:
+        _mark(night_movie.suppress_repair, *args, model is PanoramaMovie)
 
 
 def suppress_flushed_periods(config, camera_id, *, daytime_only=False):
     from .flask import db
     from .flask.models import (
-        IndiAllSkyDbCameraTable as Camera,
-        IndiAllSkyDbImageTable as Image,
-        IndiAllSkyDbPanoramaImageTable as Panorama,
-        IndiAllSkyDbPanoramaVideoTable as PanoramaMovie,
-        IndiAllSkyDbVideoTable as Movie,
+        IndiAllSkyDbCameraTable as Camera, IndiAllSkyDbImageTable as Image,
+        IndiAllSkyDbPanoramaImageTable as Panorama, IndiAllSkyDbVideoTable as Movie,
+        IndiAllSkyDbPanoramaVideoTable as PanoramaMovie, IndiAllSkyDbKeogramTable as Keogram,
+        IndiAllSkyDbStarTrailsTable as StarTrails, IndiAllSkyDbStarTrailsVideoTable as StarMovie,
     )
+    from .utils import IndiAllSkyDateCalcs
+
     camera = db.session.get(Camera, camera_id)
     if not camera or not camera.local or camera.latitude is None or camera.longitude is None:
         return
+    from . import derived_media, night_movie
     today = IndiAllSkyDateCalcs(config, [camera.latitude, camera.longitude, camera.elevation or 0]).getDayDate()
-    retention = min(config.get('IMAGE_EXPIRE_DAYS', 10), config.get('TIMELAPSE_EXPIRE_DAYS', 365))
-    for panorama, models in ((False, (Image, Movie)), (True, (Panorama, PanoramaMovie))):
-        if daytime_only and not panorama:
-            continue
-        cutoff = today - timedelta(days=retention if panorama else min(retention, night_movie.RECENT_DAYS))
-        # An encoder may have started from source images without publishing a movie row yet.
-        periods = set()
-        for model in models:
-            query = db.session.query(model.dayDate, model.night).filter(
-                model.camera_id == camera_id, model.dayDate >= cutoff, model.dayDate < today)
-            if not panorama:
-                query = query.filter(model.night.is_(True))
-            elif daytime_only:
-                query = query.filter(model.night.is_(False))
-            periods.update(query.distinct())
-        for date, night in sorted(periods):
-            suppress_movie_repair(camera_id, date, night, panorama)
+    days = min(config.get('IMAGE_EXPIRE_DAYS', 10), config.get('TIMELAPSE_EXPIRE_DAYS', 365))
+    cutoff = today - timedelta(days=days)
+    periods = set()
+    # Include source-only periods: a repair may already be encoding and may
+    # not yet have created a movie row. Don't suppress the ongoing period.
+    for model in (Image, Panorama, Movie, PanoramaMovie, Keogram, StarTrails, StarMovie):
+        query = db.session.query(model.dayDate, model.night).filter(
+            model.camera_id == camera_id, model.dayDate >= cutoff, model.dayDate < today)
+        if daytime_only:
+            query = query.filter(model.night.is_(False))
+        periods.update(query.distinct())
+
+    for date, night in sorted(periods):
+        args = camera_id, date, night
+        _mark(night_movie.suppress_repair, *args, False)
+        _mark(night_movie.suppress_repair, *args, True)
+        _mark(derived_media.suppress_repair, *args)

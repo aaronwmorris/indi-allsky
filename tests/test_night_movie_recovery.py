@@ -15,16 +15,20 @@ from indi_allsky.flask import db
 from indi_allsky.flask.miscDb import miscDb
 from indi_allsky.flask.models import (IndiAllSkyDbCameraTable as Camera, IndiAllSkyDbImageTable as Frame,
     IndiAllSkyDbVideoTable as Movie, IndiAllSkyDbTaskQueueTable as Task, TaskQueueState)
+from indi_allsky.timelapse import TimelapseGenerator
 from indi_allsky.video import VideoWorker
 
 
 @pytest.fixture
 def station(tmp_path, monkeypatch):
+    if ffmpeg := shutil.which('ffmpeg'):
+        monkeypatch.setattr(TimelapseGenerator, 'ffmpeg_bin', ffmpeg)
     app = Flask(__name__)
     app.config.update(SQLALCHEMY_DATABASE_URI='sqlite:///:memory:', INDI_ALLSKY_IMAGE_FOLDER=str(tmp_path))
     db.init_app(app)
     business_day = date.today()
     monkeypatch.setattr('indi_allsky.utils.IndiAllSkyDateCalcs.getDayDate', lambda self: business_day)
+    monkeypatch.setattr('indi_allsky.derived_media.reconcile', lambda *args: False)
     monkeypatch.setattr('indi_allsky.archive_health.archive_paused', lambda _: False)
     with app.app_context():
         db.create_all()
@@ -242,7 +246,7 @@ def test_pending_panorama_task_prevents_a_duplicate_repair(station):
 
 
 @pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg and ffprobe required')
-def test_retained_panorama_is_repaired_without_extending_regular_video_lookback(station):
+def test_retained_panorama_and_regular_day_and_night_movies_are_repaired(station):
     from indi_allsky.flask.models import IndiAllSkyDbPanoramaVideoTable as PanoMovie, IndiAllSkyDbStateTable as State
     import json
     worker, camera, today, add_frame = station
@@ -263,8 +267,8 @@ def test_retained_panorama_is_repaired_without_extending_regular_video_lookback(
     for _ in range(10):
         night_movie.reconcile(worker)
     assert PanoMovie.query.one().dayDate == older
-    assert Movie.query.count() == 0
-    assert Task.query.count() == 1
+    assert {(movie.dayDate, movie.night) for movie in Movie.query.all()} == {(older, True), (recent, False)}
+    assert Task.query.count() == 3
 
 
 @pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg and ffprobe required')
@@ -354,3 +358,33 @@ def test_partial_source_archive_preserves_the_longer_existing_panorama(station):
     assert PanoMovie.query.one().id == watch_id and PanoMovie.query.one().frames == 4
     assert night_movie.panorama_playable(Path(PanoMovie.query.one().getFilesystemPath()), expected_frames=4)
     assert not legacy.exists()
+
+
+@pytest.mark.skipif(not shutil.which('ffmpeg'), reason='ffmpeg required')
+def test_interrupted_encode_retries_once_after_cooldown(station, monkeypatch):
+    import json
+    from indi_allsky.flask.models import IndiAllSkyDbStateTable as State
+    worker, camera, today, add_frame = station
+    day = today - timedelta(days=1)
+    add_frame('image.jpg')
+    real_time = night_movie.time.time
+    start = real_time()
+    def stop_task(task, **kwargs):
+        raise KeyboardInterrupt  # simulate power loss after committing reservation
+    worker.generateVideo = stop_task
+    with pytest.raises(KeyboardInterrupt):
+        night_movie.reconcile(worker)
+    first = Task.query.one()
+    first.setExpired()
+    night_movie.reconcile(worker)
+    assert Task.query.count() == 1  # cooldown
+    monkeypatch.setattr(night_movie.time, 'time', lambda:start+121)
+    with pytest.raises(KeyboardInterrupt):
+        night_movie.reconcile(worker)
+    second = Task.query.order_by(Task.id.desc()).first()
+    second.setExpired()
+    monkeypatch.setattr(night_movie.time, 'time', lambda:start+242)
+    night_movie.reconcile(worker)
+    assert Task.query.count() == 2 and Movie.query.count() == 0
+    record = db.session.get(State, night_movie.attempt_key(camera.id, day))
+    assert json.loads(record.value)['attempt'] == 2

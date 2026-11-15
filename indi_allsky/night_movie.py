@@ -1,4 +1,4 @@
-"""Repair local night timelapses and panorama movies for completed capture dates."""
+"""Bounded repair of locally recorded media for completed capture dates."""
 import hashlib
 import json
 import logging
@@ -342,6 +342,7 @@ def reconcile(worker):
         IndiAllSkyDbPanoramaVideoTable as PanoMovie, IndiAllSkyDbTaskQueueTable as Task,
         TaskQueueQueue, TaskQueueState)
     from .utils import IndiAllSkyDateCalcs
+    from . import derived_media
 
     config = worker.config
     if (not config.get('TIMELAPSE_ENABLE', True) or config.get('CAPTURE_PAUSE')
@@ -367,14 +368,14 @@ def reconcile(worker):
         if args.get('camera_id') == camera.id:
             outstanding.add((data.get('action'), args.get('timespec'), bool(args.get('night'))))
 
+    day_enabled = (config.get('DAYTIME_CAPTURE', True) and config.get('DAYTIME_CAPTURE_SAVE', True)
+                   and config.get('DAYTIME_TIMELAPSE', True))
     pano_enabled = config.get('FISH2PANO', {}).get('ENABLE', False)
-    day_pano = (config.get('DAYTIME_CAPTURE', True) and config.get('DAYTIME_CAPTURE_SAVE', True)
-                and config.get('DAYTIME_TIMELAPSE', True))
+    enabled = [False] + ([True] if pano_enabled else [])
     checked = set()
-
     def check(date, night, panorama):
         identity = (date, night, panorama)
-        if identity in checked:
+        if identity in checked or (not night and not day_enabled):
             return False
         checked.add(identity)
         action = 'generatePanoramaVideo' if panorama else 'generateVideo'
@@ -385,47 +386,48 @@ def reconcile(worker):
         return _repair_movie(worker, camera, date, night, panorama,
                              PanoFrame if panorama else Frame, PanoMovie if panorama else Movie)
 
-    def check_panoramas(date):
-        return check(date, True, True) or (day_pano and check(date, False, True))
-
-    if pano_enabled:
-        # Reuse a failed panorama's watch ID before creating missing movies.
-        failed = PanoMovie.query.filter_by(camera_id=camera.id, success=False).filter(
-            PanoMovie.dayDate >= cutoff, PanoMovie.dayDate < today)
-        if not day_pano:
-            failed = failed.filter(PanoMovie.night.is_(True))
-        for candidate in failed.order_by(PanoMovie.dayDate.desc()).limit(2):
-            if check(candidate.dayDate, candidate.night, True):
+    # Rows already marked failed are actionable and retain public watch URLs.
+    # Bound this fast path; the rotating date scan also reaches older rows.
+    for panorama in reversed(enabled):
+        model = PanoMovie if panorama else Movie
+        candidates = model.query.filter_by(camera_id=camera.id, success=False).filter(
+            model.dayDate >= cutoff, model.dayDate < today).order_by(model.dayDate.desc()).limit(2)
+        for candidate in candidates:
+            if check(candidate.dayDate, candidate.night, panorama):
                 return True
 
-    for offset in range(1, min(RECENT_DAYS, days) + 1):
-        if worker._shutdown or archive_paused(config):
-            return False
-        date = today - timedelta(days=offset)
-        if check(date, True, False) or (pano_enabled and check_panoramas(date)):
-            return True
-
-    if not pano_enabled or days <= RECENT_DAYS or worker._shutdown:
+    def check_period(date):
+        for night in (True, False) if day_enabled else (True,):
+            for panorama in enabled:
+                if check(date, night, panorama):
+                    return True
+            if not worker._shutdown and not archive_paused(config) and derived_media.reconcile(worker, camera, date, night):
+                return True
         return False
 
-    # Rotate through older panorama dates with known sources or movies. The
-    # regular night timelapse recovery above keeps its three-night window.
+    for offset in range(1, min(RECENT_DAYS, days) + 1):
+        if check_period(today - timedelta(days=offset)):
+            return True
+    if days <= RECENT_DAYS or worker._shutdown:
+        return False
+
+    # Rotate through at most two older dates with known sources or movies per
+    # pass. An interrupted long-running station can catch up within retention
+    # without repeatedly scanning every image directory on every timer tick.
     from .flask import db
     from .flask.models import IndiAllSkyDbStateTable as State
-    cursor_key = 'PANOSCAN_' + str(camera.id)
+    cursor_key = 'MEDIASCAN_' + str(camera.id)
     cursor = db.session.get(State, cursor_key)
     end = today - timedelta(days=RECENT_DAYS)
-
     def older_dates(before):
         dates = set()
-        for model in (PanoMovie, PanoFrame):
-            query = model.query.with_entities(model.dayDate).filter(
-                model.camera_id == camera.id, model.dayDate >= cutoff, model.dayDate < before)
-            if not day_pano:
-                query = query.filter(model.night.is_(True))
-            dates.update(row[0] for row in query.distinct().order_by(model.dayDate.desc()).limit(OLDER_DATES_PER_SCAN))
+        for model in ((Movie, Frame, PanoMovie, PanoFrame) if pano_enabled else (Movie, Frame)):
+            q = model.query.with_entities(model.dayDate).filter(model.camera_id == camera.id,
+                    model.dayDate >= cutoff, model.dayDate < before)
+            if not day_enabled:
+                q = q.filter(model.night.is_(True))
+            dates.update(row[0] for row in q.distinct().order_by(model.dayDate.desc()).limit(OLDER_DATES_PER_SCAN))
         return sorted(dates, reverse=True)[:OLDER_DATES_PER_SCAN]
-
     before = end
     if cursor is not None:
         try:
@@ -436,14 +438,12 @@ def reconcile(worker):
     if not older and before != end:
         older = older_dates(end)
     for date in older:
-        if worker._shutdown or archive_paused(config):
-            return False
         if cursor is None:
             cursor = State(key=cursor_key)
             db.session.add(cursor)
         cursor.value = date.strftime('%Y%m%d')
         cursor.createDate = datetime.now()
         db.session.commit()
-        if check_panoramas(date):
+        if check_period(date):
             return True
     return False

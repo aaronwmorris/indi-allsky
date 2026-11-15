@@ -7307,10 +7307,13 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
         if camera.local:
-            if night and action in ('delete_video_k_st_p', 'delete_video'):
+            if action in ('delete_video_k_st_p', 'delete_video'):
                 suppress_movie_repair(camera.id, day_date, night, panorama=False)
             if action in ('delete_video_k_st_p', 'delete_panorama_video'):
                 suppress_movie_repair(camera.id, day_date, night, panorama=True)
+            if action in ('delete_video_k_st_p', 'delete_k_st'):
+                from ..derived_media import suppress_repair as suppress_derived
+                suppress_derived(camera.id, day_date, night)
 
         if action == 'delete_video_k_st_p':
             video_entry = IndiAllSkyDbVideoTable.query\
@@ -11488,7 +11491,7 @@ class TimelapseVideoView(TemplateView):
             context['timeofday'] = 'Day'
 
         panorama = self.model is IndiAllSkyDbPanoramaVideoTable
-        if local and video.camera.local and (panorama or (self.model is IndiAllSkyDbVideoTable and video.night)):
+        if local and video.camera.local and (panorama or self.model is IndiAllSkyDbVideoTable):
             key = attempt_key(video.camera_id, video.dayDate, video.night, panorama)
             record = db.session.get(IndiAllSkyDbStateTable, key)
             context['night_movie_status'] = prior_attempt(record, video.dayDate).get('result')

@@ -34,8 +34,7 @@ from .panorama import buildPanoramaPanFilter
 from .panorama import buildPanoramaTimedPanFilter
 from .panorama import cropPanoramaArray
 from .panorama import validatePanoramaAspectRatio
-from .keogram import KeogramGenerator
-from .starTrails import StarTrailGenerator
+from . import derived_media
 from .miscUpload import miscUpload
 from .aurora import IndiAllskyAuroraUpdate
 from .smoke import IndiAllskySmokeUpdate
@@ -1839,16 +1838,7 @@ class VideoWorker(Process):
 
         processing_start = time.time()
 
-        kg = KeogramGenerator(
-            self.config,
-            skip_frames=timelapse_skip_frames,
-        )
-        kg.angle = self.config.get('KEOGRAM_ANGLE', 0.0)
-        kg.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
-        kg.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
-        kg.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
-        kg.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
-        kg.label = self.config.get('KEOGRAM_LABEL', True)
+        kg = derived_media.make_keogram(self.config, timelapse_skip_frames)
 
 
         keogram_metadata = {
@@ -1938,25 +1928,8 @@ class VideoWorker(Process):
             startrail_video_entry = None
 
 
-        stg = StarTrailGenerator(
-            self.config,
-            skip_frames=timelapse_skip_frames,
-            mask=detection_mask_dict,
-        )
-        stg.max_adu = self.config['STARTRAILS_MAX_ADU']
-        stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
-        stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
-        stg.min_stars = self.config.get('STARTRAILS_MIN_STARS', 0)
-        stg.latitude = camera.latitude
-        stg.longitude = camera.longitude
-        stg.sun_alt_threshold = self.config['STARTRAILS_SUN_ALT_THOLD']
-
-        if self.config['STARTRAILS_MOONMODE_THOLD']:
-            stg.moonmode_alt = self.config['NIGHT_MOONMODE_ALT_DEG']
-            stg.moonmode_phase = self.config['NIGHT_MOONMODE_PHASE']
-        else:
-            stg.moon_alt_threshold = self.config['STARTRAILS_MOON_ALT_THOLD']
-            stg.moon_phase_threshold = self.config['STARTRAILS_MOON_PHASE_THOLD']
+        stg = (derived_media.make_startrails(self.config, timelapse_skip_frames, camera, detection_mask_dict)
+               if night else None)
 
         if self.config.get('STARTRAILS_USE_DB_DATA', True):
             logger.warning('Re-using image data for ADU and Star counts')

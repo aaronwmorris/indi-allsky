@@ -5,15 +5,15 @@ from types import SimpleNamespace
 import pytest
 from flask import Flask, current_app
 
-from indi_allsky import night_movie
+from indi_allsky import derived_media, night_movie
 from indi_allsky.flask import db, views
 from indi_allsky.flask.models import (
     IndiAllSkyDbCameraTable as Camera, IndiAllSkyDbImageTable as Image, IndiAllSkyDbVideoTable as Movie,
     IndiAllSkyDbPanoramaImageTable as Panorama, IndiAllSkyDbPanoramaVideoTable as PanoramaMovie,
-    IndiAllSkyDbStateTable as State,
+    IndiAllSkyDbKeogramTable as Keogram, IndiAllSkyDbStateTable as State,
 )
 from indi_allsky.flask.syncapi_views import SyncApiBaseView
-from indi_allsky.media_delete import suppress_flushed_periods
+from indi_allsky.media_delete import suppress_deleted_local_product, suppress_flushed_periods
 
 
 @pytest.fixture
@@ -55,15 +55,16 @@ def test_bulk_flush_marks_each_recoverable_period_including_inflight_sources(sta
     db.session.add(State(key=key, value=token))
     db.session.commit()
     suppress_flushed_periods(config, camera.id)
-    assert {record.key for record in State.query.all()} == {
-        night_movie.attempt_key(camera.id, recent), key,
-        night_movie.attempt_key(camera.id, older, True, True), night_movie.attempt_key(camera.id, older, False, True),
-    }
+    periods = ((recent, True), (recent, False), (older, True), (older, False))
+    expected = {night_movie.attempt_key(camera.id, day, mode, panorama)
+                for day, mode in periods for panorama in (False, True)}
+    expected.update(derived_media.key(camera.id, day, mode) for day, mode in periods)
+    assert {record.key for record in State.query.all()} == expected
     assert all(json.loads(record.value)['deleted'] for record in State.query.all())
     assert not night_movie.lock_repair(camera.id, recent, token, False, True)
 
 
-def test_daytime_flush_only_marks_local_day_panoramas(station):
+def test_daytime_flush_only_marks_local_day_products(station):
     camera, remote, today, config = station
     day = today - timedelta(days=1)
     db.session.add_all([frame(Panorama, camera, day, False), frame(Panorama, camera, day, True),
@@ -71,7 +72,10 @@ def test_daytime_flush_only_marks_local_day_panoramas(station):
     db.session.commit()
     suppress_flushed_periods(config, remote.id)
     suppress_flushed_periods(config, camera.id, daytime_only=True)
-    assert State.query.one().key == night_movie.attempt_key(camera.id, day, False, True)
+    assert {row.key for row in State.query.all()} == {
+        night_movie.attempt_key(camera.id, day, False), night_movie.attempt_key(camera.id, day, False, True),
+        derived_media.key(camera.id, day, False),
+    }
 
 
 def test_sync_delete_marks_only_the_selected_local_recoverable_video(station, tmp_path):
@@ -85,12 +89,14 @@ def test_sync_delete_marks_only_the_selected_local_recoverable_video(station, tm
         db.session.commit()
         SyncApiBaseView.deleteFile(SimpleNamespace(model=model), movie.id, cam.id)
         assert not path.exists()
-    assert State.query.one().key == night_movie.attempt_key(camera.id, day, False, True)
+    assert {row.key for row in State.query.all()} == {
+        night_movie.attempt_key(camera.id, day, False), night_movie.attempt_key(camera.id, day, False, True),
+    }
 
 
 @pytest.mark.parametrize('action,night,kinds', [
     ('delete_video_k_st_p', True, (False, True)), ('delete_panorama_video', False, (True,)),
-    ('delete_video', False, ()), ('delete_video', True, (False,)),
+    ('delete_video', False, (False,)), ('delete_k_st', False, ()), ('delete_video', True, (False,)),
 ])
 def test_ui_delete_marks_only_requested_products_even_before_publication(station, monkeypatch, action, night, kinds):
     camera, _, today, _ = station
@@ -101,4 +107,28 @@ def test_ui_delete_marks_only_requested_products_even_before_publication(station
     with current_app.test_request_context(method='POST', json=request_data):
         result = views.AjaxTimelapseGeneratorView.dispatch_request(SimpleNamespace(verify_admin_network=lambda: True))
     assert result.status_code == 200
-    assert {row.key for row in State.query.all()} == {night_movie.attempt_key(camera.id, day, night, p) for p in kinds}
+    expected = {night_movie.attempt_key(camera.id, day, night, p) for p in kinds}
+    if action in ('delete_video_k_st_p', 'delete_k_st'):
+        expected.add(derived_media.key(camera.id, day, night))
+    assert {row.key for row in State.query.all()} == expected
+
+
+def test_explicit_sync_delete_marks_only_selected_local_product(station, tmp_path):
+    camera, remote, today, _ = station
+    day = today - timedelta(days=2)
+    keep = frame(Image, camera, day, False)
+    db.session.add(keep)
+    for cam in (camera, remote):
+        p = tmp_path / f'{cam.id}-keogram.jpg'
+        p.write_bytes(b'old')
+        entry = Keogram(camera_id=cam.id, dayDate=day, night=True, filename=str(p))
+        db.session.add(entry)
+        db.session.commit()
+        view = type('SyncKeogram', (), {'model': Keogram})()
+        SyncApiBaseView.deleteFile(view, entry.id, cam.id)
+        assert not p.exists()
+    suppress_deleted_local_product(keep)
+    record = State.query.one()
+    assert record.key == derived_media.key(camera.id, day, True)
+    assert json.loads(record.value)['deleted_kinds'] == ['keogram']
+    assert not json.loads(record.value).get('deleted')

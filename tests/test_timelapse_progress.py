@@ -1,4 +1,4 @@
-"""Count the frames FFmpeg actually encodes in a timelapse sequence."""
+"""Count the frames FFmpeg actually encodes in file and aligned-pipe mode."""
 import shutil
 import subprocess
 
@@ -33,7 +33,7 @@ class RecordingActivity:
         self.finish_progress()
 
 
-def fixture_movie(directory):
+def fixture_movie(directory, stream):
     paths = []
     for n in range(4):
         path = directory / f'{n}.png'
@@ -42,11 +42,17 @@ def fixture_movie(directory):
     activity = RecordingActivity()
     gen = TimelapseGenerator({'IMAGE_FILE_TYPE': 'png'}, skip_frames=1, activity=activity)
     gen.ffmpeg_bin = shutil.which('ffmpeg')
+    if stream:
+        # Mixed archives may contain already registered images, sent unchanged.
+        gen.pre_processor.frame_alignments = {directory / 'outside-selection.png': {}}
+        if not hasattr(gen.pre_processor, 'encoded_frames'):
+            gen.pre_processor.encoded_frames = lambda frames, suffix: (path.read_bytes() for path in frames)
     return gen, activity, paths
 
 
-def test_reports_encoded_frames_after_skips_and_keeps_movie_intact(tmp_path):
-    gen, activity, paths = fixture_movie(tmp_path)
+@pytest.mark.parametrize('stream', [False, True])
+def test_reports_encoded_frames_after_skips_and_keeps_movie_intact(tmp_path, stream):
+    gen, activity, paths = fixture_movie(tmp_path, stream)
     target = tmp_path / 'movie.mp4'
     gen.generate(target, paths, preserve_order=True)
     counts = [n for stage, n, total in activity.samples if stage == 'Encoding frames' and total == 3]
@@ -59,7 +65,7 @@ def test_reports_encoded_frames_after_skips_and_keeps_movie_intact(tmp_path):
 
 
 def test_encoder_failure_clears_live_count(tmp_path):
-    gen, activity, paths = fixture_movie(tmp_path)
+    gen, activity, paths = fixture_movie(tmp_path, False)
     gen.codec = 'missing_encoder_for_this_test'
     target = tmp_path / 'broken.mp4'
     with pytest.raises(TimelapseException):

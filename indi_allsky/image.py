@@ -2429,14 +2429,12 @@ class ImageWorker(Process):
             status[sensor_topic] = v_temp
 
 
-        # user sensors
-        for i in range(60):
-            sensor_topic = 'sensor_user_{0:d}'.format(i)
-            status[sensor_topic] = self.sensors_user_av[i]
-
-        for i in range(100, 110):
-            sensor_topic = 'sensor_user_{0:d}'.format(i)
-            status[sensor_topic] = self.sensors_user_av[i]
+        # Include the same sensor validity as archived frames, also during unsaved daytime capture.
+        with self.sensors_user_av.get_lock():
+            for i in (*range(60), *range(100, 110)):
+                status['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+            if self.sensor_health is not None:
+                status.update(self.sensor_health.metadata(time.monotonic()))
 
 
         indi_allsky_status_p = self.varlib_folder_p.joinpath('indi_allsky_status.json')

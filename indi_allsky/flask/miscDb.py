@@ -1350,11 +1350,11 @@ class miscDb(object):
         if img_width >= img_height:
             scale = new_width / img_width
             thumb_width = int(new_width)
-            thumb_height = int(img_height * scale)
+            thumb_height = max(1, int(img_height * scale))
         else:
             # scale based on height
             scale = opt_height / img_height
-            thumb_width = int(img_width * scale)
+            thumb_width = max(1, int(img_width * scale))
             thumb_height = int(opt_height)
 
 
