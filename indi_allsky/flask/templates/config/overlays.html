@@ -334,7 +334,7 @@
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__ENABLE.label.text }}</span>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Draw cardinal directions using the lens azimuth configured on the Location tab.</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Draw compass directions on captured images.</span>
                         </div>
                         {{ form_config.CARDINAL_DIRS__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -355,6 +355,14 @@
                         <div id="CARDINAL_DIRS__FONT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
+
+                <label class="tw:flex tw:items-center tw:justify-between tw:gap-3 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <span class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__AUTO_ALIGN.label.text }}</span>
+                        <span class="tw:text-xs tw:text-base-content/70">Two matching night images confirm the camera orientation. Use the current camera location and time.</span>
+                    </span>
+                    {{ form_config.CARDINAL_DIRS__AUTO_ALIGN(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                </label>
 
                 <!-- Custom Characters (N, E, S, W) -->
                 <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">

@@ -12,6 +12,7 @@ import time
 import math
 import base64
 from pathlib import Path
+from types import SimpleNamespace
 import socket
 import ipaddress
 import re
@@ -1202,6 +1203,32 @@ class ImageLoopCanvasView(TemplateView):
         return context
 
 
+def virtualsky_frame_alignment(view, entry):
+    """Expose only the geometry and observer information for this photograph."""
+    model = entry.data.get('star_alignment')
+    if not isinstance(model, dict) or model.get('image_size') != [entry.width, entry.height]:
+        return None
+    model_id = model.get('id')
+    if not isinstance(model_id, str) or re.fullmatch(r'[a-f0-9]{32}', model_id) is None:
+        return None
+    raw = model.get('values')
+    if not isinstance(raw, dict):
+        return None
+    values, error = parseSolverRequestValues(raw)
+    if error or not all(k in values for k in ('LENS_ALTITUDE', 'POINTING_AZIMUTH', 'RADIAL_DISTORTION', 'PRECESSION')):
+        return None
+    values.pop('CALIBRATION_ENABLED', None)
+    result = {'id': model_id, 'values': values, 'image_size': model['image_size']}
+    site = model.get('location')
+    if (isinstance(site, (list, tuple)) and len(site) == 2 and
+            all(type(v) in (int, float) and abs(v) <= bound for v, bound in zip(site, (90, 180)))):
+        result['location'] = view.getCameraPrivacyLatLong(SimpleNamespace(latitude=site[0], longitude=site[1]))
+    offset = entry.data.get('utc_offset')
+    if type(offset) in (int, float) and -86400 < offset < 86400:
+        result['observed_at'] = entry.createDate.replace(tzinfo=timezone(timedelta(seconds=offset))).timestamp()
+    return result
+
+
 class JsonImageLoopView(JsonView):
     model = IndiAllSkyDbImageTable
     include_id = False
@@ -1229,6 +1256,10 @@ class JsonImageLoopView(JsonView):
             timestamp = int(datetime.timestamp(self.camera_now))
 
         ts_dt = datetime.fromtimestamp(timestamp + 3)  # allow some jitter
+        if request.args.get('virtualsky') == '1' and request.args.get('timestamp', type=int):
+            # The gallery link identifies a captured second. A faster camera can
+            # already have another frame inside the live polling jitter window.
+            ts_dt = datetime.fromtimestamp(timestamp + 1)
 
         # sanity check, limit to 4 hours
         if history_seconds > 14400:
@@ -1308,6 +1339,9 @@ class JsonImageLoopView(JsonView):
 
     def getLoopImages(self, camera_id, loop_dt, history_seconds):
         ts_minus_seconds = loop_dt - timedelta(seconds=history_seconds)
+        start_filter = self.model.createDate > ts_minus_seconds
+        if request.args.get('virtualsky') == '1' and request.args.get('timestamp', type=int):
+            start_filter = self.model.createDate >= loop_dt - timedelta(seconds=1)
 
         latest_images_q = self.model.query\
             .join(self.model.camera)\
@@ -1315,7 +1349,7 @@ class JsonImageLoopView(JsonView):
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
                     self.model.exclude == sa_false(),
-                    self.model.createDate > ts_minus_seconds,
+                    start_filter,
                     self.model.createDate < loop_dt,
                 )
             )
@@ -1362,6 +1396,9 @@ class JsonImageLoopView(JsonView):
                 data['id'] = i.id
             if request.args.get('virtualsky') == '1':
                 data['binmode'] = getattr(i, 'binmode', None)
+                metadata = getattr(i, 'data', None)
+                if isinstance(metadata, dict) and 'star_alignment' in metadata:
+                    data['star_alignment'] = virtualsky_frame_alignment(self, i)
 
 
             try:
@@ -2871,6 +2908,7 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__PIL_FONT_CUSTOM' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_CUSTOM', ''),
             'TEXT_PROPERTIES__PIL_FONT_SIZE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_SIZE', 30),
             'CARDINAL_DIRS__ENABLE'          : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('ENABLE', True),
+            'CARDINAL_DIRS__AUTO_ALIGN'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('AUTO_ALIGN', False),
             'CARDINAL_DIRS__SWAP_NS'         : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('SWAP_NS', False),
             'CARDINAL_DIRS__SWAP_EW'         : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('SWAP_EW', False),
             'CARDINAL_DIRS__CHAR_NORTH'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_NORTH', 'N'),
@@ -3952,6 +3990,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
         self.indi_allsky_config['CARDINAL_DIRS']['ENABLE']              = bool(request.json['CARDINAL_DIRS__ENABLE'])
+        if 'CARDINAL_DIRS__AUTO_ALIGN' in request.json:
+            self.indi_allsky_config['CARDINAL_DIRS']['AUTO_ALIGN'] = bool(form_config.CARDINAL_DIRS__AUTO_ALIGN.data)
         self.indi_allsky_config['CARDINAL_DIRS']['SWAP_NS']             = bool(request.json['CARDINAL_DIRS__SWAP_NS'])
         self.indi_allsky_config['CARDINAL_DIRS']['SWAP_EW']             = bool(request.json['CARDINAL_DIRS__SWAP_EW'])
         self.indi_allsky_config['CARDINAL_DIRS']['CHAR_NORTH']          = str(request.json['CARDINAL_DIRS__CHAR_NORTH'])
@@ -8155,6 +8195,13 @@ class AjaxLensSolverView(BaseView):
 
         # identical effective-time computation to VirtualSkyView.get_context
         obstime_unix = timestamp - self.camera_time_offset
+        calibration_offset = self.camera_time_offset
+        if isinstance(getattr(image_entry, 'data', None), dict) and image_entry.data.get('star_alignment'):
+            alignment = virtualsky_frame_alignment(self, image_entry)
+            if alignment:
+                latitude, longitude = alignment.get('location', (latitude, longitude))
+                obstime_unix = alignment.get('observed_at', obstime_unix)
+                calibration_offset = timestamp - obstime_unix
 
         solver = IndiAllSkyLensSolver(self.indi_allsky_config)
 
@@ -8178,7 +8225,7 @@ class AjaxLensSolverView(BaseView):
                 **hints)
             if result.get('calibration'):
                 result['calibration']['camera_uuid'] = self.camera.uuid
-                result['calibration']['context'][2] = self.camera_time_offset
+                result['calibration']['context'][2] = calibration_offset
         except Exception:  # noqa: BLE001
             # never return a raw exception string to the client
             app.logger.exception('Lens solver failed')
@@ -9434,6 +9481,36 @@ class JsonImageProcessingView(JsonView):
         super(JsonImageProcessingView, self).__init__(**kwargs)
 
 
+    def preview_alignment(self, fits_entry, image_processor):
+        from ..lens_solver.calibration import pipelineSignature
+
+        # A preview may deliberately flip, rotate or crop an archived FITS.
+        # Even an equal-sized image cannot reuse a pose from a different transform.
+        frames = IndiAllSkyDbImageTable.query.filter_by(camera_id=fits_entry.camera_id,
+                    createDate=fits_entry.createDate, dayDate=fits_entry.dayDate).limit(2).all()
+        missing = 'No confirmed star alignment for this exposure.'
+        if len(frames) != 1 or not isinstance(frames[0].data, dict):
+            return None, missing
+        geometry = virtualsky_frame_alignment(self, frames[0])
+        if geometry is None:
+            return None, missing
+        stored = frames[0].data['star_alignment']
+        directions = stored.get('directions')
+        if not isinstance(directions, dict) or any(
+                not isinstance(directions.get(k), (list, tuple)) or len(directions[k]) != 2 or
+                any(type(v) not in (int, float) or not math.isfinite(v) for v in directions[k])
+                for k in 'NESW'):
+            return None, missing
+        height, width = image_processor.image.shape[:2]
+        width, height = image_processor.scaled_size(width, height, image_processor.config.get('IMAGE_SCALE', 100))
+        left, top, right, bottom = image_processor.image_border()
+        if (stored.get('pipeline') != pipelineSignature(image_processor.config) or
+                geometry['image_size'] != [width + left + right, height + top + bottom]):
+            return None, 'Preview geometry differs from the star-aligned exposure.'
+        geometry['directions'] = directions
+        return geometry, 'Aligned by stars for this exposure.'
+
+
     def dispatch_request(self):
         import ctypes
         import cv2
@@ -9777,6 +9854,7 @@ class JsonImageProcessingView(JsonView):
 
 
         message_list = list()
+        alignment_message = ''
 
         if disable_processing:
             # just return original image with no processing
@@ -9968,29 +10046,38 @@ class JsonImageProcessingView(JsonView):
             image_processor.apply_image_circle_mask(i_ref.binning)
 
 
+            solution = None
+            if p_config.get('CARDINAL_DIRS', {}).get('AUTO_ALIGN') and table is IndiAllSkyDbFitsImageTable:
+                solution, alignment_message = self.preview_alignment(fits_entry, image_processor)
+
             if not p_config.get('FISH2PANO', {}).get('ENABLE'):
+                if solution:
+                    image_processor.scale_image()
                 image_processor.add_border()
 
                 image_processor.moon_overlay()
 
                 image_processor.lightgraph_overlay()
 
-                image_processor.cardinal_dirs_label()
+                image_processor.cardinal_dirs_label(solution)
 
                 if p_config['IMAGE_LABEL_SYSTEM']:
                     image_processor.label_image()
 
             else:
                 # no labels if converting to panorama
-                pano_data = image_processor.fish2pano(i_ref.binning)
+                aligned = None
+                if solution:
+                    from ..aligned_media import SkyRemap
+                    aligned = SkyRemap().image(image_processor.image, solution, border=image_processor.image_border())
+                pano_data = image_processor.fish2pano(i_ref.binning, aligned)
 
-
-                if p_config.get('FISH2PANO', {}).get('FLIP_H'):
+                if solution is None and p_config.get('FISH2PANO', {}).get('FLIP_H'):
                     pano_data = image_processor._flip(pano_data, 1)
 
 
                 if p_config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
-                    pano_data = image_processor.fish2pano_cardinal_dirs_label(pano_data)
+                    pano_data = image_processor.fish2pano_cardinal_dirs_label(pano_data, geographic=bool(solution))
 
 
                 image_processor.image = pano_data
@@ -10033,7 +10120,7 @@ class JsonImageProcessingView(JsonView):
         json_data['image_b64'] = json_image_b64.decode('utf-8')
         json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
         #json_data['message'] = ', '.join(message_list)
-        json_data['message'] = ''  # Blank until I can get messages from all processing actions
+        json_data['message'] = alignment_message
         json_data['stars_count'] = stars_count
         json_data['detections_count'] = detections_count
         json_data['DETECT_STARS_METHOD'] = detect_method

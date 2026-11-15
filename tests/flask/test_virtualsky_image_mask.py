@@ -1,6 +1,6 @@
 """Image masking is a display boundary, separate from star detection and solving."""
 import ast
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import math
 import os
@@ -112,3 +112,29 @@ def test_virtualsky_gets_each_frames_binning_without_changing_other_loop_respons
     assert ('binmode' in result) is virtualsky
     if virtualsky:
         assert result['binmode'] == binmode
+
+
+def test_archive_frame_geometry_is_scoped_to_the_image_and_redacts_private_coordinates():
+    from indi_allsky.lens_solver.request import parseSolverRequestValues
+
+    values = dict(AZIMUTH_ANGLE=314, POINTING_AZIMUTH=28, LENS_ALTITUDE=86, RADIAL_DISTORTION=0.1,
+                  LATITUDE_OFFSET=0, LONGITUDE_OFFSET=0, IMAGE_CIRCLE_DIAMETER=2000, OFFSET_X=5,
+                  OFFSET_Y=9, PRECESSION=True, host_data='private')
+    model = {'id': 'a' * 32, 'image_size': [2300, 2400], 'values': values,
+             'location': [52.19, 9.85], 'local_filename': '/private/unpublished'}
+    frame = SimpleNamespace(width=2300, height=2400, createDate=datetime(2026, 10, 25, 2, 30),
+                            data={'star_alignment': model, 'utc_offset': 3600})
+    namespace = dict(parseSolverRequestValues=parseSolverRequestValues, re=re, SimpleNamespace=SimpleNamespace,
+                     timezone=timezone, timedelta=timedelta)
+    method = next(n for n in VIEWS.body if isinstance(n, ast.FunctionDef) and n.name == 'virtualsky_frame_alignment')
+    exec(compile(ast.Module(body=[method], type_ignores=[]), 'views.py', 'exec'), namespace)
+    view = SimpleNamespace(getCameraPrivacyLatLong=lambda site: (round(site.latitude), round(site.longitude)))
+    geometry = namespace['virtualsky_frame_alignment'](view, frame)
+    assert geometry['location'] == (52, 10)
+    assert 'local_filename' not in geometry and 'host_data' not in geometry['values']
+    assert geometry['values']['AZIMUTH_ANGLE'] == 314
+    assert geometry['observed_at'] == datetime(2026, 10, 25, 1, 30, tzinfo=timezone.utc).timestamp()
+    for damaged in (None, {'id':'wrong'}, {**model, 'image_size':[1200, 1200]},
+                    {**model, 'values': {**values, 'LENS_ALTITUDE': float('nan')}}):
+        frame.data['star_alignment'] = damaged
+        assert namespace['virtualsky_frame_alignment'](view, frame) is None

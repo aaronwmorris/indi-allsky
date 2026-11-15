@@ -21,6 +21,11 @@ class IndiAllskyCardinalDirsLabel(object):
         self.SOUTH_CHAR = self.config.get('CARDINAL_DIRS', {}).get('CHAR_SOUTH', 'S')
 
 
+        # Geographic labels are matched in the final, already flipped image.
+        # Keep their configured text independently of the manual direction swaps.
+        self.sky_labels = {'N': self.NORTH_CHAR, 'E': self.EAST_CHAR,
+                           'S': self.SOUTH_CHAR, 'W': self.WEST_CHAR}
+
         border_top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
         border_left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
         border_right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
@@ -86,22 +91,19 @@ class IndiAllskyCardinalDirsLabel(object):
         self._diameter = int(new_diameter)
 
 
-    def main(self, image):
-
-        coord_dict = dict()
-
-        if self.NORTH_CHAR:
-            coord_dict[self.NORTH_CHAR] = self.findDirectionCoordinate(image, self.az)
-
-        if self.EAST_CHAR:
-            coord_dict[self.EAST_CHAR]  = self.findDirectionCoordinate(image, self.az + 90)
-
-        if self.WEST_CHAR:
-            coord_dict[self.WEST_CHAR]  = self.findDirectionCoordinate(image, self.az - 90)
-
-        if self.SOUTH_CHAR:
-            coord_dict[self.SOUTH_CHAR] = self.findDirectionCoordinate(image, self.az + 180)
-
+    def main(self, image, directions=None):
+        coord_dict = {}
+        if directions is None:
+            for label, offset in ((self.NORTH_CHAR, 0), (self.EAST_CHAR, 90),
+                                  (self.WEST_CHAR, -90), (self.SOUTH_CHAR, 180)):
+                if label:
+                    coord_dict[label] = self.findDirectionCoordinate(image, self.az + offset)
+        else:
+            height, width = image.shape[:2]
+            for direction, label in self.sky_labels.items():
+                if label:
+                    x, y = directions[direction]
+                    coord_dict[label] = (round(x * width), round(y * height))
 
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
@@ -400,28 +402,20 @@ class IndiAllskyCardinalDirsLabel(object):
         #)
 
 
-    def panorama_label(self, image):
+    def panorama_label(self, image, geographic=False):
         height, width = image.shape[:2]
-
-
-        coord_dict = dict()
-
-        # the starting position of the panorama is 90 degrees clockwise
-        if self.NORTH_CHAR:
-            coord_dict[self.NORTH_CHAR]  = self.findPanoramaCoordinate(image, self.az - 90)
-
-        if self.EAST_CHAR:
-            coord_dict[self.EAST_CHAR] = self.findPanoramaCoordinate(image, self.az)
-
-        if self.WEST_CHAR:
-            coord_dict[self.WEST_CHAR] = self.findPanoramaCoordinate(image, self.az + 180)
-
-        if self.SOUTH_CHAR:
-            coord_dict[self.SOUTH_CHAR]  = self.findPanoramaCoordinate(image, self.az + 90)
-
-
-        #logger.info('Panorama coords: %s', str(coord_dict))
-
+        coord_dict = {}
+        if geographic:
+            for quarter, direction in enumerate(('N', 'E', 'S', 'W')):
+                label = self.sky_labels[direction]
+                if label:
+                    coord_dict[label] = (quarter * width // 4, height - self.panorama_bottom_offset)
+        else:
+            # The legacy panorama starts at 90 degrees clockwise.
+            for label, offset in ((self.NORTH_CHAR, -90), (self.EAST_CHAR, 0),
+                                  (self.WEST_CHAR, 180), (self.SOUTH_CHAR, 90)):
+                if label:
+                    coord_dict[label] = self.findPanoramaCoordinate(image, self.az + offset)
 
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 

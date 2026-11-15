@@ -221,9 +221,11 @@ class ImageProcessor(object):
         self.varlib_folder_p = Path(varlib_folder)
 
 
-        self._keogram_store_tmpl = 'realtime_keogram_store_ccd{0:d}.npy'
+        # Keep manual, camera-relative columns separate from geographic ones.
+        prefix = 'realtime_keogram_sky' if self.config.get('CARDINAL_DIRS', {}).get('AUTO_ALIGN') else 'realtime_keogram_store'
+        self._keogram_store_tmpl = prefix + '_ccd{0:d}.npy'
         self._keogram_store_p = None
-        self._keogram_store_metadata_tmpl = 'realtime_keogram_store_ccd{0:d}_metadata.npy'
+        self._keogram_store_metadata_tmpl = prefix + '_ccd{0:d}_metadata.npy'
         self._keogram_store_metadata_p = None
 
 
@@ -2730,15 +2732,17 @@ class ImageProcessor(object):
         return True
 
 
+    @staticmethod
+    def scaled_size(width, height, scale):
+        if scale == 100:
+            return width, height
+        width, height = int(width * scale / 100), int(height * scale / 100)
+        return width - width % 2, height - height % 2
+
+
     def _scale_image(self, scale):
         image_height, image_width = self.image.shape[:2]
-
-        new_height = int(image_height * scale / 100.0)
-        new_width = int(image_width * scale / 100.0)
-
-        # ensure size is divisible by 2
-        new_height = new_height - (new_height % 2)
-        new_width = new_width - (new_width % 2)
+        new_width, new_height = self.scaled_size(image_width, image_height, scale)
 
         logger.info('Scaling image by %d%%, new size: %d x %d', scale, new_width, new_height)
 
@@ -3440,22 +3444,30 @@ class ImageProcessor(object):
             return
 
 
-    def cardinal_dirs_label(self):
+    def cardinal_dirs_label(self, solution=None):
         if self.focus_mode:
             return
 
         if not self.config.get('CARDINAL_DIRS', {}).get('ENABLE'):
             return
 
-        self.image = self._cardinal_dirs_label.main(self.image)
+        if self.config['CARDINAL_DIRS'].get('AUTO_ALIGN'):
+            if solution is None:
+                return
+            self.image = self._cardinal_dirs_label.main(self.image, solution['directions'])
+        else:
+            self.image = self._cardinal_dirs_label.main(self.image)
 
 
-    def orb_image(self):
+    def orb_image(self, solution=None):
         # Disabled when focus mode is enabled
         if self.focus_mode:
             return
 
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
+        self._orb.star_alignment = solution
+        if orb_mode == 'az' and self.config.get('CARDINAL_DIRS', {}).get('AUTO_ALIGN') and not solution:
+            return
         if orb_mode == 'off':
             # orbs disabled
             return
@@ -4060,19 +4072,58 @@ class ImageProcessor(object):
         return img_pano
 
 
-    def fish2pano(self, binning):
-        return self.fish2pano_warpPolar(binning)
+    def geographic_horizon_clipped(self, solution):
+        from .aligned_media import projection_values
+        from .fisheye import projectToPixels
+
+        width, height = solution['image_size']
+        left, top, right, bottom = self.image_border()
+        params = projection_values(solution)
+        x, y = projectToPixels(0., numpy.radians(numpy.arange(360)), params[:7], width, height,
+                               lens_altitude=params[7], pointing_azimuth=params[8])
+        return bool(x.min() < left - .5 or x.max() > width - right + .5 or
+                    y.min() < top - .5 or y.max() > height - bottom + .5)
 
 
-    def fish2pano_cardinal_dirs_label(self, pano_data):
-        if not self.config.get('CARDINAL_DIRS', {}).get('ENABLE'):
+    def fish2pano(self, binning, aligned_sky=None):
+        if aligned_sky is None:
+            return self.fish2pano_warpPolar(binning)
+
+        # Fixed sky coordinates: zenith at the top, horizon at the bottom;
+        # the seam is north and azimuth increases toward east. Keep the same
+        # output dimensions as the user-configured panorama and its videos.
+        config = self.config.get('FISH2PANO', {})
+        radius = int(config.get('DIAMETER', 3000) / binning) // 2
+        scale = config.get('SCALE', 0.3)
+        width, height = int(2 * math.pi * radius * scale), int(radius * scale)
+        width, height = width - width % 2, height - height % 2
+        src_height, src_width = aligned_sky.shape[:2]
+        polar = cv2.warpPolar(
+            aligned_sky, (height, width), (src_width / 2, src_height / 2),
+            min(src_width, src_height) / 2, cv2.WARP_POLAR_LINEAR | cv2.WARP_FILL_OUTLIERS | cv2.INTER_LINEAR,
+        )
+        # warpPolar starts at sky west (right in a north-up/east-left image)
+        # and traverses toward south. Reverse and place north at column zero.
+        return numpy.roll(cv2.rotate(polar, cv2.ROTATE_90_CLOCKWISE), round(0.75 * width) + 1, axis=1)
+
+
+    def fish2pano_cardinal_dirs_label(self, pano_data, geographic=False):
+        options = self.config.get('CARDINAL_DIRS', {})
+        if not options.get('ENABLE') or (options.get('AUTO_ALIGN') and not geographic):
             return pano_data
 
-        return self._cardinal_dirs_label.panorama_label(pano_data)
+        return self._cardinal_dirs_label.panorama_label(pano_data, geographic=geographic)
 
 
-    def circular_display(self, binning):
-        return self._circular_display(binning)
+    def circular_display(self, binning, aligned_sky=None):
+        if aligned_sky is None:
+            return self._circular_display(binning)
+        height, width = aligned_sky.shape[:2]
+        side = min(width, height)
+        top, left = (height - side) // 2, (width - side) // 2
+        resolution = self.config.get('CIRCULAR_DISPLAY', {}).get('RESOLUTION', 800)
+        return cv2.resize(aligned_sky[top:top + side, left:left + side],
+                          (resolution, resolution), interpolation=cv2.INTER_AREA)
 
 
     def _circular_display(self, binning):
@@ -4171,15 +4222,16 @@ class ImageProcessor(object):
         self._image_overlay_o.apply(self.image)
 
 
+    def image_border(self):
+        border = self.config.get('IMAGE_BORDER', {})
+        return tuple(border.get(edge, 0) for edge in ('LEFT', 'TOP', 'RIGHT', 'BOTTOM'))
+
+
     def add_border(self):
         if self.focus_mode:
             return
 
-
-        top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
-        left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
-        right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
-        bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
+        left, top, right, bottom = self.image_border()
 
 
         if not top and not left and not right and not bottom:
@@ -4248,11 +4300,12 @@ class ImageProcessor(object):
         self.image = image_colormapped
 
 
-    def realtimeKeogramUpdate(self):
+    def realtimeKeogramUpdate(self, image=None):
         if self.focus_mode:
             return
 
-        image_height, image_width = self.image.shape[:2]
+        if image is None:
+            image = self.image
 
 
         if isinstance(self.realtime_keogram_data, type(None)):
@@ -4286,7 +4339,7 @@ class ImageProcessor(object):
 
 
         try:
-            self._keogram_gen.processImage(self.image, int(time.time()))
+            self._keogram_gen.processImage(image, int(time.time()))
         except KeogramMismatchException as e:
             logger.error('Error processing keogram image: %s', str(e))
             self.realtime_keogram_data = None

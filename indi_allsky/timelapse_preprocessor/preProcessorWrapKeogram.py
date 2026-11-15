@@ -91,13 +91,13 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         self.file_list_len = len(file_list)
 
 
-        process_start = time.time()
+        process_start = time.monotonic()
 
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
 
-            if i % 25 == 0:
-                process_elapsed_s = time.time() - process_start
+            if i and i % 25 == 0:
+                process_elapsed_s = max(time.monotonic() - process_start, 1e-9)
                 logger.info('Pre-processed %d of %d images (%0.2f images/s)', i, self.file_list_len, (i + 1) / process_elapsed_s)
 
             self.wrap(
@@ -110,7 +110,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             )
 
 
-        process_elapsed_s = time.time() - process_start
+        process_elapsed_s = max(time.monotonic() - process_start, 1e-9)
         logger.info('Pre-processing in %0.4f s (%0.2f images/s)', process_elapsed_s, len(file_list) / process_elapsed_s)
 
 
@@ -160,6 +160,11 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #elapsed_open_s = time.time() - start_open
         #logger.info('Image opened in %0.4f s', elapsed_open_s)
 
+
+        if f in self.frame_alignments:
+            image = self.aligned_image(f, image)
+            x_offset = y_offset = 0
+            image_circle = int(min(image.shape[:2]) * self.pre_scale / 100)
 
         image_height, image_width = image.shape[:2]
         #logger.info('Image: %d x %d', image_width, image_height)

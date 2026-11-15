@@ -21,7 +21,7 @@ def processor_class():
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'ImageProcessor')
     methods = ('rotate_90', '_rotate_90', 'rotate_angle', '_rotate_angle', '_flip',
                'flip_h', 'flip_v', 'crop_image', '_crop_image', 'scale_image',
-               '_scale_image', 'add_border', '_add_border', '_generate_image_circle_mask')
+               '_scale_image', 'scaled_size', 'image_border', 'add_border', '_add_border', '_generate_image_circle_mask')
     cls.body = [n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name in methods]
     namespace = dict(cv2=cv2, numpy=np, logger=logging.getLogger(__name__))
     exec(compile(ast.Module(body=[cls], type_ignores=[]), str(path), 'exec'), namespace)

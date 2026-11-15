@@ -51,7 +51,8 @@ def lens_radius(theta, model):
 
 def simulate_camera(path, sensor, fov, model, hour, distortion='none', strength=0,
                     crop=(0., 0.), noise=False, obstruction=False, guess_error=False,
-                    altitude=ALTITUDE, heading=HEADING, roll=ROLL, observer=(53, 11)):
+                    altitude=ALTITUDE, heading=HEADING, roll=ROLL, observer=(53, 11),
+                    for_sky_alignment=False):
     width, height = sensor
     timestamp, alt, world = observed_sky(hour, observer)
     elevation, heading_rad, roll_rad = np.radians([altitude, heading, roll])
@@ -106,7 +107,8 @@ def simulate_camera(path, sensor, fov, model, hour, distortion='none', strength=
         OFFSET_X=cx-width/2+(40 if guess_error else 0),
         OFFSET_Y=height/2-cy-(30 if guess_error else 0),
         LENS_ALTITUDE=90, POINTING_AZIMUTH=0, PRECESSION=True, RADIAL_DISTORTION=0)
-    result = IndiAllSkyLensSolver(config).solve(path, *observer, timestamp, initial)
+    result = IndiAllSkyLensSolver(config).solve(path, *observer, timestamp, initial,
+        for_sky_alignment=for_sky_alignment)
     values = result.get('values', {})
     heading_error = abs((values['POINTING_AZIMUTH']-heading+180) % 360-180) if 'POINTING_AZIMUTH' in values else None
     elevation_error = abs(values['LENS_ALTITUDE']-altitude) if 'LENS_ALTITUDE' in values else None
@@ -186,6 +188,26 @@ def test_solved_values_remain_a_valid_starting_point(tmp_path, model):
     assert again['success'] and not again['partial'], again
     assert abs((again['values']['POINTING_AZIMUTH']-HEADING+180) % 360-180) < 2, again
     assert abs(again['values']['LENS_ALTITUDE']-ALTITUDE) < 0.5, again
+
+
+def test_near_zenith_sky_alignment_validates_horizon_even_when_tilt_heading_varies(tmp_path):
+    # Small off-centre lens distortion makes the azimuth of a 2-degree tilt
+    # sensitive to which part of the sky is fitted, while the horizon is stable.
+    case = dict(sensor=(1600, 1200), fov=140, model='equisolid', hour=0,
+                distortion='decentered', strength=0.003, altitude=88., heading=149., roll=0.7)
+    path = tmp_path/'garden.png'
+    assert simulate_camera(path, **case)['result']['reason'] == 'lens_model_unconstrained'
+    report = simulate_camera(path, **case, for_sky_alignment=True)
+    assert_accurate(report)
+    values = report['result']['values']
+    assert abs(values['AZIMUTH_ANGLE']-case['roll']) < 0.1
+    diameter = min(case['sensor'])/lens_radius(np.radians(case['fov']/2), case['model'])
+    assert abs(values['IMAGE_CIRCLE_DIAMETER']/diameter-1) < 0.01
+
+    # A radial wave inconsistent with the fitted lens can also produce a stable
+    # roll, but predicts the wrong horizon radius beyond the clipped image.
+    case.update(distortion='wave', strength=0.04)
+    assert simulate_camera(path, **case, for_sky_alignment=True)['result']['reason'] == 'lens_model_unconstrained'
 
 
 def varied_cameras(distorted=False):
