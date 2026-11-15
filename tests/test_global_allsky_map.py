@@ -73,10 +73,44 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(set(data), {'force','machine_id','location','owner','latitude','longitude',
             'website_url','image_url','camera','lens','computer','equipmentinfo','allsky_version',
             'website_settings','allsky_settings'})
-        self.assertEqual(data['allsky_settings'], {}); self.assertEqual(data['website_settings'], {})
+        self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''}); self.assertEqual(data['website_settings'], {})
         self.assertEqual(data['camera'], 'Detected CCD'); self.assertEqual(data['allsky_version'], G.canonical_version(__version__))
         self.assertNotIn('NEVER-PUBLISH', json.dumps(data)); self.assertNotIn('OTHER-KEY', json.dumps(data))
         self.assertNotIn('imageBase64', data); self.assertFalse(data['force'])
+
+    def test_equipment_is_duplicated_without_changing_other_payload_fields(self):
+        equipment = 'Example heater; quotes " and Unicode ☁'
+        self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'] = equipment
+        data = self.s._payload(self.cfg, create=True)
+        self.assertEqual(data, {
+            'force': False, 'machine_id': self.s.identifier(),
+            'location': 'Synthetic site', 'owner': 'Synthetic owner',
+            'latitude': '51.5N', 'longitude': '0.12W',
+            'website_url': '', 'image_url': 'https://images.example.org/latest.jpg',
+            'camera': 'Detected CCD', 'lens': self.cfg['LENS_NAME'],
+            'computer': 'Generic PC, 8 GiB', 'equipmentinfo': equipment,
+            'allsky_version': G.canonical_version(__version__), 'website_settings': {},
+            'allsky_settings': {'equipmentinfo': equipment},
+        })
+        self.assertTrue(data['allsky_version'].startswith('indi_'))
+        encoded = json.loads(json.dumps(data))
+        self.assertEqual(encoded['equipmentinfo'], encoded['allsky_settings']['equipmentinfo'])
+
+    def test_empty_or_unconfigured_equipment_is_empty_in_both_locations(self):
+        for value in ('', None):
+            with self.subTest(value=value):
+                self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'] = value
+                data = self.s._payload(self.cfg, create=True)
+                self.assertEqual(data['equipmentinfo'], '')
+                self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
+        del self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT']
+        data = self.s._payload(self.cfg)
+        self.assertEqual(data['equipmentinfo'], '')
+        self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
+        del self.cfg['GLOBAL_ALLSKY_MAP']
+        data = self.s._payload(self.cfg)
+        self.assertEqual(data['equipmentinfo'], '')
+        self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
 
     def test_urls_image_only_and_same_domain_without_rewriting(self):
         G.validate_urls('', 'https://images.example.org/latest.jpg')

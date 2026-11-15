@@ -149,6 +149,7 @@ def payload(config, camera, identifier, computer=None):
     image = options.get('IMAGE_URL', '')
     validate_urls(website, image)
     private = bool(config.get('PRIVACY_MODE'))
+    equipment = str(options.get('EQUIPMENT', '') or '')
     return {
         'force': False, 'machine_id': identifier,
         'location': str(config.get('LOCATION_NAME', '') or ''),
@@ -158,8 +159,9 @@ def payload(config, camera, identifier, computer=None):
         'website_url': website, 'image_url': image, 'camera': str(name),
         'lens': str(config.get('LENS_NAME', '') or ''),
         'computer': computer if computer is not None else computer_description(),
-        'equipmentinfo': str(options.get('EQUIPMENT', '') or ''),
-        'allsky_version': canonical_version(), 'website_settings': {}, 'allsky_settings': {},
+        'equipmentinfo': equipment,
+        'allsky_version': canonical_version(), 'website_settings': {},
+        'allsky_settings': {'equipmentinfo': equipment},
     }
 
 

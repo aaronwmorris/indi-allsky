@@ -92,7 +92,7 @@ class GlobalMapWebTest(unittest.TestCase):
     def test_preview_explicit_registration_and_actual_video_dispatch(self):
         preview=self.preview();self.assertEqual(preview['metadata']['image_url'],self.IMAGE_URL)
         self.assertEqual(preview['metadata']['website_url'],'')
-        self.assertEqual(preview['metadata']['allsky_settings'],{})
+        self.assertEqual(preview['metadata']['allsky_settings'],{'equipmentinfo':''})
         r=self.client.post(self.endpoint,json={'operation':'register','preview_token':preview['preview_token']})
         self.assertEqual(r.status_code,200,r.get_json())
         task,call=self.worker(r.get_json()['task_id'])

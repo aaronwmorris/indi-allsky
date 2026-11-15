@@ -68,7 +68,8 @@ assume a timeout means the server did nothing.
 
 The helper posts allowlisted JSON to
 `https://www.thomasjacquin.com/allsky-map/postToMap.php` with JSON Accept/Content-Type.
-`allsky_settings` and `website_settings` are always empty objects. Deletion sends
+`allsky_settings.equipmentinfo` duplicates top-level `equipmentinfo` (both empty
+strings when unconfigured); `website_settings` remains an empty object. Deletion sends
 only `machine_id` and `website_url: "DELETE"`. No host machine-id is read.
 
 HTTP 200 alone is insufficient: the response must contain a terminal `RETURN`
