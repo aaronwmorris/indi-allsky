@@ -12,6 +12,7 @@ from flask import Flask, abort, current_app, request
 import pytest
 
 from indi_allsky.companion_astronomy import camera_timezone, night_ephemeris
+from indi_allsky.companion_battery import battery_reading
 
 
 @pytest.fixture(scope='module')
@@ -24,7 +25,7 @@ def functions():
                  ephem=ephem, request=request, abort=abort, camera_timezone=camera_timezone,
                  app=current_app, ipaddress=ipaddress, socket=socket, cached_property=cached_property,
                  psutil=SimpleNamespace(net_if_addrs=lambda: {}),
-                 night_ephemeris=night_ephemeris,
+                 night_ephemeris=night_ephemeris, sensor_probes=lambda *args: {}, battery_reading=battery_reading,
                  companion_charts=lambda *args, **kwargs: ([], [], [{'id': 'test-series'}]))
     for filename in ('base_views.py', 'views.py', 'companion.py'):
         path = directory / filename

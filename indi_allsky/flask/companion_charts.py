@@ -30,7 +30,7 @@ def _probe_kind(probe, has_humidity):
             'lux': 'lux', 'sqm': 'sqm'}.get(probe)
 
 
-def _slots(camera, config):
+def sensor_probes(camera, config):
     """Use the capturing station's configuration/labels, never the receiver's sensors."""
     probes = {}
     if camera.local:
@@ -50,6 +50,11 @@ def _slots(camera, config):
                 device, _, probe = label.lower().rpartition(' - ')
                 probes[index] = (device, probe.strip())
 
+    return probes
+
+
+def _slots(camera, config):
+    probes = sensor_probes(camera, config)
     humid_devices = {device for device, probe in probes.values() if probe == 'relative humidity' and device}
     slots = {}
     for index, (device, probe) in sorted(probes.items()):

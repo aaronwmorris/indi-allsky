@@ -21,6 +21,7 @@
     let detailMessage = '';
     let capturePaused = false;
     let lastPayload;
+    let battery;
     const staleAfter = Number(page.dataset.staleMs) || 90000;
 
     try {
@@ -104,6 +105,7 @@
     function tick() {
         if (!clock) return;
         const now = cameraNow();
+        showBattery(now);
         byId('clock').textContent = localTime(now, true);
         byId('clock').dateTime = new Date(now).toISOString();
         if (displayed) {
@@ -117,6 +119,24 @@
             badge.title = imageIsLate() ? 'Time since the last known capture' : 'Latest capture';
         }
         updateStatus();
+    }
+
+    function showBattery(now) {
+        const icon = byId('battery');
+        if (!icon) return;
+        icon.hidden = battery == null;
+        if (icon.hidden) return;
+        const valid = Number.isFinite(battery.value) && battery.value >= 0 && battery.value <= 100
+            && Date.parse(battery.expires_at) > now;
+        const value = valid ? number.format(battery.value) + '%' : '–';
+        const description = valid ? 'Battery ' + value : 'Battery reading unavailable';
+        const label = byId('battery-value');
+        if (label.textContent !== value || icon.title !== description) {
+            label.textContent = value;
+            icon.title = description;
+            icon.setAttribute('aria-label', description);
+            icon.style.setProperty('--battery-fill', valid ? battery.value + '%' : '0%');
+        }
     }
 
     const frames = new LiveFrameLoader((image, entry) => {
@@ -290,6 +310,7 @@
         if (!payload?.astronomy || !Array.isArray(payload.metrics) || !Array.isArray(payload.series)
             || !Array.isArray(payload.defaults)) throw new Error('Invalid detail data');
         if (!clock) updateClock(payload);
+        battery = payload.battery;
         const astronomy = payload.astronomy;
         for (const id of eventNames) showEvent(id, astronomy[id]);
         const phase = [astronomy.moon_phase];

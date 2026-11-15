@@ -5,8 +5,9 @@ from flask import abort, render_template, request, session
 from sqlalchemy.orm.exc import NoResultFound
 
 from ..companion_astronomy import camera_timezone, night_ephemeris
+from ..companion_battery import battery_reading
 from .base_views import BaseView
-from .companion_charts import companion_charts
+from .companion_charts import companion_charts, sensor_probes
 from .misc import login_optional_media
 
 
@@ -44,18 +45,27 @@ def companion_status(view):
 
     zone = camera_timezone(view.camera)
     now = datetime.now(timezone.utc).astimezone(zone)
+    image_only = request.args.get('image_only') == '1'
+    entry = view.getLatestImage(
+        view.camera.id, None, not_after=now.replace(tzinfo=None), include_sensor_data=not image_only,
+    )
     data = {
         'camera_id': view.camera.id,
         'now': now.isoformat(),
         'time_zone': getattr(zone, 'key', None),
         'offset_minutes': int(now.utcoffset().total_seconds() / 60),
         'capture_paused': bool(view.camera.capture_pause),
-        'image': latest_companion_image(view, now),
+        'image': latest_companion_image(view, now, entry),
     }
     # The browser can discover a published frame promptly without recomputing
     # two hours of sensor readings and the ephemerides on each image check.
-    if request.args.get('image_only') == '1':
+    if image_only:
         return data
+
+    data['battery'] = battery_reading(
+        sensor_probes(view.camera, view.indi_allsky_config), entry.get('sensor_data'), data['image'],
+        now, view.camera, view.indi_allsky_config,
+    )
 
     latitude, longitude = view.getCameraPrivacyLatLong(view.camera)
     data['astronomy'] = night_ephemeris(now, zone, latitude, longitude, view.camera.elevation or 0)
@@ -66,10 +76,9 @@ def companion_status(view):
     return data
 
 
-def latest_companion_image(view, now):
+def latest_companion_image(view, now, entry):
     # Use one database entry for both the URL and its capture time. Keep the
     # last eligible image across long pauses, ignoring future-dated captures.
-    entry = view.getLatestImage(view.camera.id, None, not_after=now.replace(tzinfo=None))
     image = None
     captured = None
     if entry.get('url'):

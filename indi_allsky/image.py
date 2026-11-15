@@ -2317,6 +2317,7 @@ class ImageWorker(Process):
     def write_status_json(self, i_ref, adu, adu_average):
         status = {
             'name'                : 'indi_json',
+            'camera_uuid'         : i_ref.camera_uuid,
             'class'               : 'ccd',
             'device'              : i_ref.camera_name,
             'night'               : self.night_av[constants.NIGHT_NIGHT],
