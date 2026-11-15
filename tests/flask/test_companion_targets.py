@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 from flask import Flask
 import pytest
@@ -43,6 +44,8 @@ def test_online_access_is_only_used_for_an_explicit_local_miss(monkeypatch):
     assert resolve_name('Tintenfischnebel', online=True) == resolve_name('Ou4')
     with pytest.raises(UnknownTargetName):
         resolve_name('LDN 1235')
+    with pytest.raises(ValueError, match='Several objects'):
+        resolve_name('Antennae Galaxies', online=True)
     for invalid in ('', '  ', '---', 'Sirius\nVega', 'X' * 129):
         with pytest.raises(ValueError, match='Enter an object name'):
             resolve_name(invalid, online=True)
@@ -78,7 +81,6 @@ def test_bad_online_responses_do_not_create_markers(monkeypatch, content):
 
 
 def test_online_transport_uses_a_fixed_host_and_quotes_the_whole_name(monkeypatch):
-    from unittest.mock import MagicMock
     connection = MagicMock()
     make_connection = MagicMock(return_value=connection)
     monkeypatch.setattr(companion_targets, 'HTTPSConnection', make_connection)
@@ -95,7 +97,6 @@ def test_online_transport_uses_a_fixed_host_and_quotes_the_whole_name(monkeypatc
 
 @pytest.mark.parametrize('problem', ['redirect', 'oversized', 'timeout'])
 def test_online_transport_limits_replies_and_never_follows_redirects(monkeypatch, problem):
-    from unittest.mock import MagicMock
     connection = MagicMock()
     monkeypatch.setattr(companion_targets, 'HTTPSConnection', lambda *args, **kwargs: connection)
     response = connection.getresponse.return_value.__enter__.return_value
