@@ -458,6 +458,8 @@ class JsonLatestImageView(JsonView):
             'height' : latest_image.height,
         }
 
+        if getattr(self, 'include_frame_id', False):
+            image_data['id'] = latest_image.id
         if not_after is not None:
             image_data['create_date'] = latest_image.createDate
             image_data['utc_offset'] = latest_image.data.get('utc_offset') if isinstance(latest_image.data, dict) else None
@@ -468,6 +470,7 @@ class JsonLatestImageView(JsonView):
 
 class JsonCompanionView(JsonLatestImageView):
     decorators = [login_optional_media]
+    include_frame_id = True
 
     def get_objects(self):
         return companion_status(self)

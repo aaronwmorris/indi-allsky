@@ -18,10 +18,11 @@
         window.addEventListener('storage', applyCompanionTheme);
     </script>
     <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}">
-    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=7">
     <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
     <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=1"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=11"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion_targets.js') }}?v=1"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=12"></script>
 </head>
 <body class="tw:font-sans">
 <main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}" data-stale-ms="{{ stale_ms }}"
@@ -41,12 +42,14 @@
         <figure class="capture">
             <div class="image-area">
                 <img id="capture-image" alt="Latest all-sky image" hidden>
+                <div id="target-markers" aria-hidden="true"></div>
                 <p id="empty-image">Loading image…</p>
             </div>
             <figcaption>
                 <div><span class="caption-label">Captured</span><time id="image-time">–</time></div>
                 <small id="orientation" role="status" hidden></small>
                 <span id="image-age" class="age" title="Time since capture, including image processing"></span>
+                <button type="button" id="target-open" aria-haspopup="dialog" aria-controls="target-dialog">Targets</button>
             </figcaption>
         </figure>
     </div>
@@ -93,6 +96,33 @@
         </div>
     </div>
     <noscript>Enable JavaScript to view the camera image and sensor readings.</noscript>
+    <dialog id="target-dialog" class="surface" aria-labelledby="target-title">
+        <div class="section-heading">
+            <h2 id="target-title">Target markers</h2>
+            <button id="target-close" type="button" aria-label="Close target markers">Close</button>
+        </div>
+        <form id="target-form">
+            <label for="target-mode">Add target by</label>
+            <select id="target-mode"><option value="name">Object name</option><option value="coords">RA / Dec (J2000)</option></select>
+            <div id="target-name-fields">
+                <label for="target-name">Object name</label>
+                <input id="target-name" placeholder="M31, NGC 7000, Vega…" required maxlength="128" autocomplete="off">
+            </div>
+            <div id="target-coord-fields" hidden>
+                <label for="target-ra">Right ascension</label>
+                <input id="target-ra" placeholder="00:42:44 or 10.683°" disabled required maxlength="64" aria-describedby="target-units">
+                <label for="target-dec">Declination</label>
+                <input id="target-dec" placeholder="+41:16:09 or +41.269°" disabled required maxlength="64" aria-describedby="target-units">
+                <p id="target-units">Use decimal degrees, or hours:minutes:seconds for RA and degrees:minutes:seconds for Dec.</p>
+                <label for="target-label">Marker label (optional)</label>
+                <input id="target-label" disabled maxlength="64" autocomplete="off">
+            </div>
+            <button type="submit" id="target-add">Add target</button>
+            <p id="target-error" role="status" hidden></p>
+        </form>
+        <ul id="target-list" aria-label="Saved targets"></ul>
+        <p id="target-status" role="status" hidden></p>
+    </dialog>
 </main>
 </body>
 </html>

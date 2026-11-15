@@ -8,7 +8,7 @@ const vm = require('node:vm');
 
 const staticDir = path.resolve(__dirname, '../../indi_allsky/flask/static/js');
 
-function browser(view) {
+function browser(view, {saved = new Map()} = {}) {
     let now = 0, nextId = 0;
     const timers = new Map(), elements = new Map(), requests = [], images = [], displays = [], draws = [];
     const handlers = new Map();
@@ -29,6 +29,7 @@ function browser(view) {
             this.classList = {toggle() {}};
         }
         addEventListener(type, callback) { this[type] = callback; }
+        focus() {}
         getContext() { return {drawImage: image => draws.push(image.src)}; }
         querySelector(key) {
             if (key === 'canvas' && this.id === 'live-view') return view === 'canvas' ? el('canvas') : null;
@@ -61,7 +62,7 @@ function browser(view) {
     const clearTimeout = id => timers.delete(id);
     const window = {setInterval, innerWidth: 640, innerHeight: 480, addEventListener: listen};
     const context = vm.createContext({URL, Date, Intl, AbortController, document, window, setTimeout, clearTimeout,
-        performance: {now: () => now}, localStorage: {getItem: () => null, setItem() {}},
+        performance: {now: () => now}, localStorage: {getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value)},
         Option: class {constructor(label, value) {this.label = label; this.value = value;}},
         Image: class extends Element {
             constructor() {super(); this.naturalWidth = 640; this.naturalHeight = 480; images.push(this);}
@@ -76,7 +77,7 @@ function browser(view) {
             // deliver an already-dispatched obsolete response after a wakeup.
         }),
     });
-    const files = ['live_frames.js', view === 'companion' ? 'companion.js' : 'latest_view.js'];
+    const files = ['live_frames.js', ...(view === 'companion' ? ['companion_targets.js', 'companion.js'] : ['latest_view.js'])];
     for (const file of files) vm.runInContext(fs.readFileSync(path.join(staticDir, file), 'utf8'), context, {filename: file});
     const flush = () => new Promise(resolve => setImmediate(resolve));
     async function advance(ms) {
@@ -100,6 +101,72 @@ const latest = filename => ({latest_image: {url: filename, message: ''}});
 const frame = (id = 0) => ({url: 'images/' + id + '.jpg', captured_at: '2026-11-07T21:00:0' + id + '+01:00', time_source: 'capture'});
 const status = image => ({image, now: '2026-11-07T21:00:10+01:00', time_zone: 'Europe/Berlin', offset_minutes: 60});
 const full = image => ({...status(image), astronomy: {moon_phase: 'New Moon', moon_illumination: 0}, metrics: [], defaults: [], series: []});
+
+test('companion resolves, saves and removes both named and J2000 targets per camera', async () => {
+    const saved = new Map();
+    const b = browser('companion', {saved});
+    b.el('target-name').value = 'M31';
+    const submit = () => b.el('target-form').submit({preventDefault() {}});
+    const first = submit();
+    assert.equal(b.requests.at(-1).url.searchParams.get('resolve'), 'M31');
+    b.requests.at(-1).reply({target: {label: 'M31', ra_deg: 10.68, dec_deg: 41.27}});
+    await first;
+    b.el('target-mode').value = 'coords';
+    b.el('target-mode').change();
+    b.el('target-ra').value = '18:30:00';
+    b.el('target-dec').value = '-12:30:00';
+    b.el('target-label').value = 'My mosaic';
+    const second = submit();
+    assert.equal(b.requests.at(-1).url.searchParams.get('ra'), '18:30:00');
+    assert.equal(b.requests.at(-1).url.searchParams.get('dec'), '-12:30:00');
+    b.requests.at(-1).reply({target: {label: '277.5°, −12.5°', ra_deg: 277.5, dec_deg: -12.5}});
+    await second;
+    assert.deepEqual(JSON.parse(saved.get('allsky-companion-targets-3')).map(t => t.label), ['M31', 'My mosaic']);
+    const reopened = browser('companion', {saved});
+    assert.equal(reopened.el('target-open').textContent, 'Targets (2)');
+    reopened.el('target-list').options[0].options[1].click();
+    assert.equal(reopened.el('target-open').textContent, 'Targets (1)');
+    assert.equal(JSON.parse(saved.get('allsky-companion-targets-3'))[0].label, 'My mosaic');
+    assert.match(reopened.el('target-status').textContent, /saved, aligned image/);
+});
+
+test('companion batches targets and never applies obsolete positions to another displayed frame', async () => {
+    const targets = Array.from({length: 65}, (_, i) => ({label: 'Target ' + i, ra_deg: i, dec_deg: 10}));
+    const b = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
+    const images = () => b.requests.filter(r => r.url.searchParams.has('image_only'));
+    const projections = () => b.requests.filter(r => r.url.searchParams.has('frame'));
+    const old = {...frame(1), id: 7};
+    images()[0].reply(status(old)); await b.flush();
+    assert.equal(projections().length, 0);
+    b.images[0].onload(); await b.flush();
+    const oldRequest = projections()[0];
+    assert.equal(oldRequest.url.searchParams.get('frame'), '7');
+    await b.advance(2000);
+    images().at(-1).reply(status({...frame(2), id: 8})); await b.flush();
+    assert.equal(projections().length, 1);
+    const fresh = b.images[1];
+    fresh.clientWidth = 240; fresh.clientHeight = 220;
+    fresh.onload(); await b.flush();
+    oldRequest.reply({frame: 7, state: 'ready', points: Array(32).fill({x: 0, y: 0})});
+    await b.flush();
+    assert.equal(b.el('target-markers').options.length, 0);
+    for (const count of [32, 32, 1]) {
+        const req = projections().at(-1);
+        assert.equal(req.url.searchParams.get('frame'), '8');
+        assert.equal(req.url.searchParams.getAll('target').length, count);
+        req.reply({frame: 8, state: 'ready', points: Array(count).fill(count === 1 ? null : {x: .75, y: .25})});
+        await b.flush();
+    }
+    const layer = b.el('target-markers');
+    assert.deepEqual([layer.style.width, layer.style.height], ['240px', '180px']);
+    assert.equal(layer.options.length, 64);
+    assert.deepEqual([layer.options[0].style.left, layer.options[0].style.top], ['75%', '25%']);
+    await b.advance(2000);
+    images().at(-1).reply(status({...frame(3), time_source: 'file'})); await b.flush();
+    b.images[2].onload(); await b.flush();
+    assert.equal(layer.options.length, 0);
+    assert.match(b.el('target-status').textContent, /saved, aligned image/);
+});
 
 for (const view of ['image', 'canvas']) {
     test(view + ': login HTML cannot kill the loop, recovered data draws immediately', async () => {

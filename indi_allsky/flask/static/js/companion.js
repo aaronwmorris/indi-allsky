@@ -32,6 +32,7 @@
     let lastPayload;
     let battery;
     const staleAfter = Number(page.dataset.staleMs) || 90000;
+    const targets = new CompanionTargets(page);
 
     try {
         const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -163,6 +164,7 @@
         image.alt = 'Latest all-sky image';
         byId('capture-image').replaceWith(image);
         page.style.setProperty('--capture-aspect', image.naturalWidth / image.naturalHeight);
+        targets.showFrame(entry, image);
         byId('empty-image').hidden = true;
         const timestamp = Date.parse(entry.captured_at);
         const advanced = displayed && timestamp > displayed.timestamp && cameraNow() - timestamp < 60000;
