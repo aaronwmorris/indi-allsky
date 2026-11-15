@@ -131,8 +131,8 @@
         const value = valid ? number.format(battery.value) + '%' : '–';
         let level = 'unknown';
         if (valid) {
-            if (battery.value <= 20) level = 'low';
-            else if (battery.value <= 50) level = 'medium';
+            if (battery.value < 10) level = 'low';
+            else if (battery.value < 20) level = 'medium';
             else level = 'high';
         }
         const description = valid ? 'Battery ' + value + ', ' + level + ' charge' : 'Battery reading unavailable';

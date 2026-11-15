@@ -210,7 +210,7 @@ test('companion uses the charge reported by the HAT at each color threshold', as
     const b = browser('companion');
     const snapshot = full(null);
     b.requests[0].reply(snapshot); b.requests[1].reply(snapshot); await b.flush();
-    for (const [value, level] of [[100, 'high'], [51, 'high'], [50, 'medium'], [21, 'medium'], [20, 'low'], [0, 'low']]) {
+    for (const [value, level] of [[100, 'high'], [20, 'high'], [19, 'medium'], [10, 'medium'], [9, 'low'], [0, 'low']]) {
         snapshot.battery = {value, expires_at: '2026-11-07T22:00:00+01:00'};
         b.emit('online');
         b.requests.at(-2).reply(snapshot); b.requests.at(-1).reply(snapshot); await b.flush();
