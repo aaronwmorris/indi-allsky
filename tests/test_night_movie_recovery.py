@@ -34,6 +34,7 @@ def station(tmp_path, monkeypatch):
         worker = VideoWorker.__new__(VideoWorker)
         worker._shutdown = False
         worker.config = {'TIMELAPSE_SKIP_FRAMES': 0, 'NIGHT_SUN_ALT_DEG': -6, 'IMAGE_FOLDER': str(tmp_path),
+                         'VARLIB_FOLDER': str(tmp_path),
                          'IMAGE_FILE_TYPE': 'jpg', 'FFMPEG_CODEC': 'libx264', 'TIMELAPSE_OVERWRITE': False,
                          'FFMPEG_FRAMERATE': 5}
         worker.image_dir = tmp_path

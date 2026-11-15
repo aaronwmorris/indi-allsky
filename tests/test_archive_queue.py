@@ -23,7 +23,9 @@ def test_video_and_upload_tasks_survive_low_space_and_restart(tmp_path):
         db.session.add_all([video, upload])
         db.session.commit()
         archive.publish(LOW, 'reserve', '/')
-        worker = SimpleNamespace(config=cfg)
+        worker = VideoWorker.__new__(VideoWorker)
+        worker.config = cfg
+        worker.generateVideo = lambda task: task.setSuccess('Generated test video')
         VideoWorker.processTask(worker, {'task_id':video.id})
         FileUploader.processUpload(worker, {'task_id':upload.id})
         assert all(t.state == S.MANUAL and t.result == DEFERRED for t in (video, upload))
@@ -32,9 +34,12 @@ def test_video_and_upload_tasks_survive_low_space_and_restart(tmp_path):
         assert boss.video_q.empty() and boss.upload_q.empty()
         archive.publish(OK, 'ok', '/')
         IndiAllSky._queueManualTasks(boss)
-        assert boss.video_q.get_nowait()['task_id'] == video.id
+        pending_video = boss.video_q.get_nowait()
+        assert pending_video['task_id'] == video.id
         assert boss.upload_q.get_nowait()['task_id'] == upload.id
         assert all(t.state == S.QUEUED for t in (video, upload))
+        worker.processTask(pending_video)
+        assert video.state == S.SUCCESS
 
 
 def test_cleanup_waits_if_archive_device_changes(tmp_path):
