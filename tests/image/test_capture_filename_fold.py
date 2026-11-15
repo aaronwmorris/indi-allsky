@@ -1,6 +1,7 @@
 import ast
 from datetime import date, datetime, timezone
 import logging
+import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -20,10 +21,11 @@ def test_regular_images_survive_the_repeated_local_second(tmp_path, monkeypatch)
                         if isinstance(node, ast.ClassDef) and node.name == 'ImageWorker')
     methods = [node for node in worker_class.body
                if isinstance(node, ast.FunctionDef) and node.name in ('write_img', '_getImageFolder')]
-    scope = dict(Path=Path, cv2=cv2, tempfile=tempfile, shutil=shutil, constants=constants,
+    scope = dict(Path=Path, cv2=cv2, os=os, time=time, tempfile=tempfile, shutil=shutil, constants=constants,
                  logger=logging.getLogger('indi_allsky'))
     exec(compile(ast.Module(body=methods, type_ignores=[]), str(path), 'exec'), scope)
     worker = type('Worker', (), {method.name: scope[method.name] for method in methods})()
+    worker.health = SimpleNamespace(image_published=SimpleNamespace(value=0), publications=SimpleNamespace(value=0))
     worker.image_dir = tmp_path
     worker.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
     worker.config = {'IMAGE_FILE_TYPE': 'png', 'IMAGE_FILE_COMPRESSION': {'png': 1}, 'DAYTIME_CAPTURE': True}
