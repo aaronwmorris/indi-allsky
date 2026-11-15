@@ -698,6 +698,8 @@ class SensorWorker(Process):
 
 
                     for i, v in enumerate(sensor_data['data']):
+                        if v is None:
+                            continue  # Keep the last measurement for an unavailable channel.
                         self.sensors_user_av[sensor.slot + i] = float(v)
             except SensorReadException as e:
                 logger.error('SensorReadException: {0:s}'.format(str(e)))
