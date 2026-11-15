@@ -184,3 +184,56 @@ test('a restored browser canvas schedules a redraw without another solve', async
     $('#starmap canvas').handlers.contextrestored();
     assert.notEqual(c.planetarium.pendingRefresh, undefined);
 });
+
+test('the decoded archive frame supplies its roll, pointing, site and observation time', async () => {
+    const {$, context: c, entry} = page();
+    const solution = {
+        id:'12'.repeat(16), image_size:[2408, 2348], location:[-22, 17],
+        observed_at:entry.timestamp - 3600,
+        values:{AZIMUTH_ANGLE:68, POINTING_AZIMUTH:33, LENS_ALTITUDE:82, RADIAL_DISTORTION:0.3,
+            LATITUDE_OFFSET:0, LONGITUDE_OFFSET:0, IMAGE_CIRCLE_DIAMETER:2100,
+            OFFSET_X:18, OFFSET_Y:-19, PRECESSION:true},
+    };
+    entry.star_alignment = solution;
+    await c.loop(); c.img.onload();
+    assert.equal(c.mapReady, true);
+    assert.equal($('#frame-alignment-state').message, 'Aligned by stars');
+    assert.equal($('#AZIMUTH_ANGLE').val(), 68);
+    assert.equal(c.planetarium.fisheye_azimuth, 33);
+    assert.equal(c.planetarium.fisheye_radial, 0.3);
+    assert.equal(c.planetarium.clock.getTime(), solution.observed_at*1000);
+    assert.deepEqual(Array.from(c.frameObserver), [-22,17]);
+
+    const pending = {...entry, timestamp:entry.timestamp + 20, star_alignment:null};
+    c.json_data.image_list = [pending];
+    await c.loop(); c.img.onload();
+    assert.equal(c.mapReady, false);
+    assert.equal($('#starmap_container').styles.visibility, 'hidden');
+    assert.equal($('#download_overlay, #download_map').disabled, true);
+    assert.equal($('#frame-alignment-state').message, 'Orientation pending for this image');
+
+    // Explicitly preview the manual configuration on that frame, then return to its recorded state.
+    $('#use-frame-alignment').handlers.change.call({checked:false}); c.img.onload();
+    assert.equal(c.mapReady, true);
+    assert.equal($('#AZIMUTH_ANGLE').val(), 359.6);
+    $('#use-frame-alignment').handlers.change.call({checked:true}); c.img.onload();
+    assert.equal(c.mapReady, false);
+
+    // A pre-feature image restores the original controls and downloads.
+    c.json_data.image_list = [{url:'/legacy.jpg', timestamp:entry.timestamp - 100}];
+    await c.loop(); c.img.onload();
+    assert.equal(c.mapReady, true);
+    assert.equal($('#download_overlay, #download_map').disabled, false);
+    assert.equal($('#frame-alignment').hidden, true);
+    assert.equal($('#AZIMUTH_ANGLE').val(), 359.6);
+    assert.equal(c.camera_altitude, 87.42);
+});
+
+test('an alignment belonging to a different pixel geometry never draws or exports its map', async () => {
+    const {$, context:c, entry} = page();
+    entry.star_alignment = {id:'a'.repeat(32),image_size:[600,600],values:{}};
+    await c.loop(); c.img.onload();
+    assert.equal(c.planetarium, undefined);
+    assert.equal(c.mapReady, false);
+    assert.equal($('#download_overlay, #download_map').disabled, true);
+});

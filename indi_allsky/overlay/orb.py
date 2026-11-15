@@ -15,6 +15,7 @@ class IndiAllskyOrbGenerator(object):
 
     def __init__(self, config):
         self.config = config
+        self.star_alignment = None
 
         self._sun_alt_deg = -6.0
         self._azimuth_offset = 0.0
@@ -657,6 +658,10 @@ class IndiAllskyOrbGenerator(object):
     def getOrbAzimuthXY(self, skyObj, obs, image_size):
         image_height, image_width = image_size
 
+        if self.star_alignment:
+            from ..aligned_media import horizon_edge
+            return horizon_edge(self.star_alignment, float(skyObj.az), image_width, image_height)
+
         az_deg = math.degrees(skyObj.az)
 
 
@@ -861,7 +866,7 @@ class IndiAllskyOrbGenerator(object):
         line_length = int(self.config['ORB_PROPERTIES']['RADIUS'] / 2)
 
         x, y = pt
-        if x == 0 or x == image_width:
+        if x == 0 or x >= image_width - 1:
             # line is on the left or right
             x1 = x - line_length
             y1 = y

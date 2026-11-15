@@ -450,6 +450,7 @@ class IndiAllSkyConfigBase(object):
         },
         "CARDINAL_DIRS" : {
             "ENABLE"         : True,
+            "AUTO_ALIGN"     : False,
             "FONT_COLOR"     : [255, 0, 0],
             "SWAP_NS"        : False,
             "SWAP_EW"        : False,

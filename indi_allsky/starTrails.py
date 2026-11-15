@@ -226,7 +226,7 @@ class StarTrailGenerator(object):
         pass  # read only
 
 
-    def processImage(self, file_p, image, binning, adu=None, star_count=None):
+    def processImage(self, file_p, image, binning, adu=None, star_count=None, *, align=None):
         self.process_count += 1
 
         if self.process_count <= self.skip_frames:
@@ -280,7 +280,7 @@ class StarTrailGenerator(object):
 
         if m_avg < self.placeholder_adu:
             # placeholder should be the image with the lowest calculated ADU
-            self.placeholder_image = image
+            self.placeholder_image = align(image) if align else image
             self.placeholder_adu = m_avg
 
 
@@ -349,6 +349,8 @@ class StarTrailGenerator(object):
 
 
         ### Here is the magic
+        if align:
+            image = align(image)  # after masking in sensor coordinates, before stacking
         self.trail_image = cv2.max(self.trail_image, image)
 
 

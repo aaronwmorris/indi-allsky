@@ -23,15 +23,16 @@ MIN_DETECTED_STARS = 30
 MAX_SOLVE_PIXELS = 16_000_000
 
 
-def _chooseDownscaleFactor(native_width, native_height, initial_diameter):
+def _chooseDownscaleFactor(native_width, native_height, initial_diameter, max_work_pixels=None):
     """Integer downscale factor for detection, chosen so it never pushes
     the working diameter below MIN_VIABLE_DIAMETER_PX -- an oversized
     image downscales less aggressively (slower solve), never refuses.
     """
     total_pixels = native_width * native_height
     scale = 1
-    if total_pixels > MAX_SOLVE_PIXELS:
-        scale = int(math.ceil(math.sqrt(total_pixels / float(MAX_SOLVE_PIXELS))))
+    limit = MAX_SOLVE_PIXELS if max_work_pixels is None else min(max_work_pixels, MAX_SOLVE_PIXELS)
+    if total_pixels > limit:
+        scale = int(math.ceil(math.sqrt(total_pixels / float(limit))))
     while scale > 1 and (initial_diameter / scale) < fitting.MIN_VIABLE_DIAMETER_PX:
         scale -= 1
     return max(1, scale)
@@ -118,7 +119,8 @@ class IndiAllSkyLensSolver(object):
             self._fit_s = engine.fit_s
 
     def solve(self, image_file, latitude, longitude, obstime_unix, initial_values,
-              lens_altitude=90.0, pointing_azimuth=0.0, sensor_shape=None, binning=1):
+              lens_altitude=90.0, pointing_azimuth=0.0, sensor_shape=None, binning=1, *,
+              max_work_pixels=None, stationary_reference=None, for_sky_alignment=False):
         """Fit overlay geometry, recovering camera pointing when needed.
         initial_values/values use the VirtualSky form-field keys; every
         return is a full success or a structured failure, always with a
@@ -183,7 +185,7 @@ class IndiAllSkyLensSolver(object):
                 'quality': {'stars_detected': 0, 'stars_matched': 0},
             })
 
-        scale = _chooseDownscaleFactor(native_width, native_height, initial_diameter)
+        scale = _chooseDownscaleFactor(native_width, native_height, initial_diameter, max_work_pixels)
 
         if scale > 1:
             work_width = max(1, native_width // scale)
@@ -195,6 +197,22 @@ class IndiAllSkyLensSolver(object):
 
         t0 = time.monotonic()
         detections = self.detectStars(work_img)
+
+        if stationary_reference and not self.last_component_flood:
+            # A stationary dome, hot pixels and burned-in text can dominate
+            # the brightest detections. Real stars move between exposures.
+            ref_img = cv2.imread(str(stationary_reference), cv2.IMREAD_GRAYSCALE)
+            if ref_img is not None and ref_img.shape == (native_height, native_width):
+                if scale > 1:
+                    ref_img = cv2.resize(ref_img, (work_width, work_height), interpolation=cv2.INTER_AREA)
+                reference = StarDetector(self.config).detectStars(ref_img)
+                if len(reference) and len(detections):
+                    radius = initial_diameter / (2.0 * scale)
+                    cx = work_width / 2.0 + initial_values['OFFSET_X'] / scale
+                    cy = work_height / 2.0 - initial_values['OFFSET_Y'] / scale
+                    moved, _ = cKDTree(reference[:, :2]).query(detections[:, :2])
+                    inside_lens = numpy.hypot(detections[:, 0]-cx, detections[:, 1]-cy) <= 1.03 * radius
+                    detections = detections[inside_lens & (moved > max(1., .0035 * radius))]
         timing['detect_s'] = round(time.monotonic() - t0, 3)
         timing['n_labels'] = int(self.last_n_labels)
         stars_detected = int(detections.shape[0])
@@ -276,7 +294,8 @@ class IndiAllSkyLensSolver(object):
                 if not candidate['success'] or candidate.get('partial'):
                     continue
                 refined = refineLensModel(detections, catalog, latitude, longitude,
-                    obstime_unix, candidate['params'], work_width, work_height, altitude, heading)
+                    obstime_unix, candidate['params'], work_width, work_height, altitude, heading,
+                    for_sky_alignment=for_sky_alignment)
                 if refined is not None:
                     fit, lens_altitude, pointing_azimuth = refined, altitude, heading
                     break

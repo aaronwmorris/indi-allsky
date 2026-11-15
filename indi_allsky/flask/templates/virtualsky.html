@@ -189,9 +189,16 @@ async function loop() {
         if (!last_image_timestamp && !$('#lens_save').prop('disabled')) {
             $('#lens_solve').prop('disabled', false);
         }
+        const frame = this.entry;
+        selectFrameAlignment(frame, image_width, image_height);
         redraw_planetarium = redraw_planetarium || image_timestamp != last_image_timestamp;
         last_image_timestamp = image_timestamp;
+        if (!frameOverlayAvailable) {
+            setMapReady(false);
+            return;
+        }
         if (redraw_planetarium) {
+            setMapReady(false);
             var magnitude = Number($("#MAGNITUDE").val());
             var constellations = $("#CONSTELLATIONS").prop('checked');
             var constellationlabels = $("#CONSTELLATIONLABELS").prop('checked');
@@ -207,8 +214,9 @@ async function loop() {
             var offset_x = Number($("#OFFSET_X").val());
             var offset_y = Number($("#OFFSET_Y").val());
 
-            var vs_latitude = camera_latitude + latitude_offset;
-            var vs_longitude = camera_longitude + longitude_offset;
+            const site = frameObserver || [camera_latitude, camera_longitude];
+            var vs_latitude = site[0] + latitude_offset;
+            var vs_longitude = site[1] + longitude_offset;
 
             console.log("Latitude (with offset): " + vs_latitude);
             console.log("Longitude (with offset): " + vs_longitude);
@@ -257,7 +265,7 @@ async function loop() {
 
 
             // Using image timestamp for planetarium
-            var clock = new Date((image_timestamp - time_offset) * 1000);
+            const clock = new Date((image_timestamp - frameTimeOffset) * 1000);
             console.log("Time Offset: " + time_offset);
             console.log("Date: " + clock);
 
@@ -320,7 +328,7 @@ async function loop() {
             VirtualSkyCalibration.install(planetarium, null);
             if ($('#CALIBRATION_ENABLED').prop('checked') && lensCalibration) {
                 if (VirtualSkyCalibration.compatible(lensCalibration, calibrationGeometry(),
-                        [image_width, image_height], [camera_latitude, camera_longitude, time_offset],
+                        [image_width, image_height], [...site, frameTimeOffset],
                         calibrationCameraUuid)) {
                     VirtualSkyCalibration.install(planetarium, lensCalibration);
                     updateCalibrationStatus();
@@ -330,8 +338,8 @@ async function loop() {
             }
             VirtualSkyCalibration.maskImage(planetarium, overlayImageMask, [image_width, image_height],
                 this.entry.binmode, [image_circle_diameter, offset_x, offset_y]);
-            planetarium.draw();
-
+            planetarium.drawImmediate();
+            setMapReady(true);
 
             redraw_planetarium = false;
 
@@ -346,6 +354,7 @@ async function loop() {
 
 
 function showImage(entry) {
+    if (solvingFrame) entry = solvingFrame;
     console.log('Showing image ' + entry["url"]);
     img.entry = entry;
     img.src = entry["url"];
@@ -354,7 +363,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 900, 'timestamp' : timestamp}, function() {});
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 900, 'limit': 1, 'timestamp' : timestamp}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -413,6 +422,12 @@ function loadJS(url, data, onDone, onError) {
                         </span>
                     </div>
 
+                    <div id="frame-alignment" hidden>
+                        <label class="tw:flex tw:items-center tw:gap-2">
+                            <input id="use-frame-alignment" type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" checked>
+                            Use orientation recorded with this image
+                        </label>
+                    </div>
                     <div class="virtualsky-groups">
                         <fieldset class="virtualsky-group">
                             <legend>Camera orientation</legend>
@@ -554,6 +569,7 @@ function loadJS(url, data, onDone, onError) {
             <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-info"></span> Loading Sky Map...
         </div>
         
+        <p id="frame-alignment-state" role="status" hidden></p>
         <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl tw:w-fit tw:max-w-full tw:mx-auto">
             <img id="latest-image" crossorigin="anonymous" class="tw:max-h-[calc(100dvh-14rem)] tw:w-auto tw:h-auto tw:object-contain tw:block" alt="Live Allsky View">
             <div id="starmap_container" class="tw:absolute tw:inset-0">
@@ -732,6 +748,7 @@ async function downloadImageWithOverlay() {
     $btn.prop('disabled', true);
 
     try {
+        if (!mapReady) return;
         const imgElem = document.getElementById('latest-image');
         if (!imgElem || !imgElem.src || !imgElem.complete || !imgElem.naturalWidth) {
             console.warn('Image is not loaded yet.');
@@ -799,7 +816,7 @@ async function downloadImageWithOverlay() {
         console.error('Failed to download composite image:', err);
     } finally {
         setTimeout(() => {
-            $btn.prop('disabled', false);
+            $btn.prop('disabled', !mapReady);
         }, 500);
     }
 }
@@ -809,6 +826,7 @@ async function downloadMapData() {
     $btn.prop('disabled', true);
 
     try {
+        if (!mapReady) return;
         const imgElem = document.getElementById('latest-image');
         const fullWidth = (imgElem && imgElem.naturalWidth) ? imgElem.naturalWidth : 3500;
         const image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val()) || fullWidth;
@@ -862,7 +880,7 @@ async function downloadMapData() {
         console.error('Failed to download map data:', err);
     } finally {
         setTimeout(() => {
-            $btn.prop('disabled', false);
+            $btn.prop('disabled', !mapReady);
         }, 500);
     }
 }
@@ -880,6 +898,76 @@ $('#download_map').on('click', function(e) {
 
 const SOLVE_FIELDS = ['AZIMUTH_ANGLE', 'LATITUDE_OFFSET', 'LONGITUDE_OFFSET',
                       'IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y', 'RADIAL_DISTORTION'];
+
+// Read the alignment only when its photo has decoded. A gallery frame can
+// belong to a different site or session than the one capturing images now.
+var frameAlignmentKey = 'manual';
+var frameOverlayAvailable = true;
+var mapReady = false;
+var frameObserver;
+var frameTimeOffset;
+var manualGeometry;
+var lastFrame;
+var solvingFrame;
+
+function setMapReady(ready) {
+    mapReady = ready;
+    $('#starmap_container').css({visibility: ready ? 'visible' : 'hidden'});
+    $('#download_overlay, #download_map').prop('disabled', !ready);
+}
+
+function loadGeometry(values) {
+    for (const field of [...SOLVE_FIELDS, 'POINTING_AZIMUTH']) $('#' + field).val(values[field]);
+    camera_altitude = values.LENS_ALTITUDE;
+    $('#lens_altitude').val(camera_altitude);
+    precession = values.PRECESSION;
+    lensCalibration = values.CALIBRATION || null;
+    $('#CALIBRATION_ENABLED').prop('checked', Boolean(values.CALIBRATION_ENABLED));
+    calibrationMessage = '';
+    updateCalibrationStatus();
+}
+
+function showAlignmentState(message) {
+    $('#frame-alignment-state').text(message).prop('hidden', !message);
+}
+
+function selectFrameAlignment(entry, width, height) {
+    lastFrame = {entry, width, height};
+    const record = entry.star_alignment;
+    const matches = record && record.values && Array.isArray(record.image_size) && record.image_size[0] === width && record.image_size[1] === height;
+    const hasRecord = Object.hasOwn(entry, 'star_alignment');
+    const key = hasRecord ? (matches ? record.id : 'pending:' + entry.timestamp) : 'manual';
+    frameObserver = matches ? record.location : null;
+    frameTimeOffset = matches && Number.isFinite(record.observed_at) ? entry.timestamp - record.observed_at : time_offset;
+    if (key === frameAlignmentKey) return;
+    if (frameAlignmentKey === 'manual') manualGeometry = solverPayload('save');
+    frameAlignmentKey = key;
+    $('#frame-alignment').prop('hidden', !hasRecord);
+    $('#use-frame-alignment').prop('checked', hasRecord);
+    loadGeometry(matches ? record.values : manualGeometry);
+    frameOverlayAvailable = !hasRecord || Boolean(matches);
+    showAlignmentState(!hasRecord ? '' : matches ? 'Aligned by stars' : 'Orientation pending for this image');
+    redraw_planetarium = true;
+}
+
+function previewFrameGeometry() {
+    if (frameAlignmentKey === 'manual') return;
+    $('#use-frame-alignment').prop('checked', false);
+    frameOverlayAvailable = true;
+    showAlignmentState('Manual orientation preview');
+}
+
+$('#use-frame-alignment').on('change', function() {
+    if (!lastFrame) return;
+    if (this.checked) {
+        frameAlignmentKey = null;
+        selectFrameAlignment(lastFrame.entry, lastFrame.width, lastFrame.height);
+    } else {
+        loadGeometry(manualGeometry);
+        previewFrameGeometry();
+    }
+    forceRedrawPlanetarium();
+});
 
 function calibrationGeometry() {
     return [...SOLVE_FIELDS.slice(0, 6).map(f => Number($('#' + f).val())),
@@ -899,6 +987,7 @@ $('#CALIBRATION_ENABLED').on('change', function() {
     forceRedrawPlanetarium();
 });
 $(SOLVE_FIELDS.map(f => '#' + f).concat('#POINTING_AZIMUTH').join(', ')).on('change', function() {
+    previewFrameGeometry();
     // A residual field belongs to one base alignment, not arbitrary new settings.
     lensCalibration = null;
     calibrationMessage = 'Alignment changed. Solve again to calculate an additional correction.';
@@ -961,6 +1050,8 @@ $('#lens_solve').on('click', function() {
     // use the timestamp of the frame actually being displayed, not whatever
     // the image-list poll most recently fetched
     payload['timestamp'] = last_image_timestamp;
+    // Keep the displayed frame available for reviewing a slow manual solve.
+    solvingFrame = lastFrame && lastFrame.entry;
 
     $('#lens_solve').prop('disabled', true);
     // Prevent concurrent save/solve requests; manual saving needs no solve.
@@ -976,6 +1067,11 @@ $('#lens_solve').on('click', function() {
         timeout: 60000,
         success: function(rdata) {
             if (rdata['success']) {
+                if (payload.timestamp !== last_image_timestamp) {
+                    setSolverMessage('The displayed image changed during the solve. Open that image in the gallery to try again.', 'info');
+                    return;
+                }
+                previewFrameGeometry();
                 precession = rdata['values']['PRECESSION'] === true;
                 SOLVE_FIELDS.forEach(function(f) {
                     $('#' + f).val(rdata['values'][f]);
@@ -1006,6 +1102,7 @@ $('#lens_solve').on('click', function() {
             setSolverMessage(msg, 'error');
         },
         complete: function() {
+            solvingFrame = null;
             $('#lens_solve').prop('disabled', false);
             $('#lens_save').prop('disabled', false);
             $('#lens_solve_spinner').hide();

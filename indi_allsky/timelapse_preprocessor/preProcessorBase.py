@@ -10,6 +10,8 @@ class PreProcessorBase(object):
         self.config = args[0]
 
 
+        self.frame_alignments = {}
+        self._sky_remap = None
         self._seqfolder = None
         self._keogram = None
         self._pre_scale = 100
@@ -47,6 +49,16 @@ class PreProcessorBase(object):
     def pre_scale(self, new_pre_scale):
         self._pre_scale = int(new_pre_scale)
         #logger.info('Setting timelapse image pre-scaler to %d%%', self._pre_scale)
+
+
+    def aligned_image(self, path, image):
+        geometry = self.frame_alignments.get(path)
+        if not geometry:
+            return image
+        if self._sky_remap is None:
+            from ..aligned_media import SkyRemap
+            self._sky_remap = SkyRemap()
+        return self._sky_remap.image(image, geometry)
 
 
     def main(self, *args, **kwargs):

@@ -118,6 +118,8 @@ class ImageWorker(Process):
         self.sqm_value = 0
 
         self.image_count = 0
+        self.star_alignment = None
+        self.sky_remap = None
         self.metadata_count = 0
         self.asi676mc_diagnostic_pending = {}
         # Populated only by the optional preceding-frame setting.  Each camera
@@ -233,12 +235,19 @@ class ImageWorker(Process):
 
         ### use this as a method to log uncaught exceptions
         try:
+            if self.config.get('CARDINAL_DIRS', {}).get('AUTO_ALIGN') and not self.config.get('FOCUS_MODE'):
+                from .star_alignment import StarAlignment
+                from .aligned_media import SkyRemap
+                self.star_alignment = StarAlignment(self.config)
+                self.sky_remap = SkyRemap()
             self.saferun()
         except Exception as e:
             tb = traceback.format_exc()
             self.error_q.put((str(e), tb))
             raise e
-
+        finally:
+            if self.star_alignment is not None:
+                self.star_alignment.close()
 
 
     def saferun(self):
@@ -715,35 +724,7 @@ class ImageWorker(Process):
         ##################################################
 
 
-        longterm_keogram_pixels = self.save_longterm_keogram_data(exp_date, camera_id)
-
-
-        self.image_processor.colormap()
-
-
-        self.image_processor.apply_image_circle_mask(i_ref.binning)
-
-
-        self.image_processor.realtimeKeogramUpdate()
-
-
-        if self.config.get('FISH2PANO', {}).get('ENABLE'):
-            if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 2):
-                pano_data = self.image_processor.fish2pano(i_ref.binning)
-
-
-                if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
-                    pano_data = self.image_processor.fish2pano_cardinal_dirs_label(pano_data)
-
-
-                self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
-
-
-        if self.config.get('CIRCULAR_DISPLAY', {}).get('ENABLE'):
-            if not self.config.get('FOCUS_MODE', False):
-                circular_display_image = self.image_processor.circular_display(i_ref.binning)
-                self.write_circular_display_img(circular_display_image, jpeg_exif=jpeg_exif)
-
+        solution, longterm_keogram_pixels = self.update_sky_products(i_ref, camera, i_dict['exp_time'], jpeg_exif)
 
         self.image_processor.apply_logo_overlay(i_ref.binning)
 
@@ -759,9 +740,9 @@ class ImageWorker(Process):
 
         self.image_processor.image_overlay()
 
-        self.image_processor.orb_image()
+        self.image_processor.orb_image(solution=solution)
 
-        self.image_processor.cardinal_dirs_label()
+        self.image_processor.cardinal_dirs_label(solution)
 
 
         # get ADS-B data
@@ -798,14 +779,19 @@ class ImageWorker(Process):
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
 
-        if not isinstance(self.image_processor.realtime_keogram_data, type(None)):
-            # keogram might be empty on dimension mismatch
+        if (self.star_alignment is None or solution) and self.image_processor.realtime_keogram_data is not None:
+            # Keogram might be empty on dimension mismatch.
             self.write_realtime_keogram(self.image_processor.realtime_keogram_trimmed, camera)
 
 
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
+            if self.star_alignment is not None and not asi676mc.excluded_from_downstream_measurements(i_ref.asi676mc_repair_result):
+                sensor_shape = None
+                if camera.height and camera.width:
+                    sensor_shape = (camera.height // i_ref.binning, camera.width // i_ref.binning)
+                self.star_alignment.offer_frame(new_filename, binning=i_ref.binning, sensor_shape=sensor_shape)
             self.start_image_save_post_hook(new_filename, exposure, gain, binning)
 
             image_metadata = {
@@ -917,6 +903,9 @@ class ImageWorker(Process):
                     image_add_data['aircraft'].append(aircraft)
 
 
+            if self.star_alignment is not None:
+                image_add_data['star_alignment'] = self.alignment_metadata()
+                image_add_data['utc_offset'] = image_metadata['utc_offset']
             image_metadata['data'] = image_add_data
 
 
@@ -2418,19 +2407,23 @@ class ImageWorker(Process):
     def write_panorama_img(self, pano_data, i_ref, camera, jpeg_exif=None):
         panorama_height, panorama_width = pano_data.shape[:2]
 
-        # Store the result so later configuration changes do not alter the warning.
-        source_height, source_width = self.image_processor.image.shape[:2]
-        binning = max(int(i_ref.binning), 1)
-        circle_diameter = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / binning)
-        circle_offset_x = int(self.config.get('LENS_OFFSET_X', 0) / binning)
-        circle_offset_y = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
-        circle_clipped = panoramaSourceCircleClipped(
-            source_width,
-            source_height,
-            circle_diameter,
-            circle_offset_x,
-            circle_offset_y,
-        )
+        # Record clipping against the footprint used by this capture.
+        solution = self.star_alignment.solution if self.star_alignment else None
+        if solution:
+            circle_clipped = self.image_processor.geographic_horizon_clipped(solution)
+        else:
+            source_height, source_width = self.image_processor.image.shape[:2]
+            binning = max(int(i_ref.binning), 1)
+            circle_diameter = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / binning)
+            circle_offset_x = int(self.config.get('LENS_OFFSET_X', 0) / binning)
+            circle_offset_y = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
+            circle_clipped = panoramaSourceCircleClipped(
+                source_width,
+                source_height,
+                circle_diameter,
+                circle_offset_x,
+                circle_offset_y,
+            )
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
@@ -2541,6 +2534,11 @@ class ImageWorker(Process):
             'fish2pano_circle_clipped'  : circle_clipped,
         }
 
+
+        if self.star_alignment is not None:
+            panorama_metadata['data']['star_alignment'] = self.alignment_metadata()
+            if self.star_alignment.solution:
+                panorama_metadata['data']['panorama_projection'] = 'geographic'
 
         panorama_entry = self._miscDb.addPanoramaImage(
             filename.relative_to(self.image_dir),
@@ -2704,7 +2702,71 @@ class ImageWorker(Process):
         self._miscUpload.upload_realtime_keogram(keogram_file, camera)
 
 
-    def save_longterm_keogram_data(self, exp_date, camera_id):
+    def update_sky_products(self, i_ref, camera, timestamp, jpeg_exif):
+        """Use one snapshot of the active geometry for this frame and its products."""
+        solution = None
+        border = self.image_processor.image_border()
+        if self.star_alignment is not None:
+            source_height, source_width = self.image_processor.image.shape[:2]
+            scaled_width, scaled_height = self.image_processor.scaled_size(source_width, source_height, self.config.get('IMAGE_SCALE', 100))
+            left, top, right, bottom = border
+            self.star_alignment.begin_frame(
+                camera.uuid, i_ref.day_date, bool(self.night_av[constants.NIGHT_NIGHT]),
+                timestamp, (scaled_width + left + right, scaled_height + top + bottom),
+                (self.position_av[constants.POSITION_LATITUDE], self.position_av[constants.POSITION_LONGITUDE]),
+            )
+            solution = self.star_alignment.solution
+
+        longterm_keogram_pixels = None
+        uncolored = (self.image_processor.image if solution and self.config.get('LONGTERM_KEOGRAM', {}).get('ENABLE', True) else None)
+        if self.star_alignment is None:
+            longterm_keogram_pixels = self.save_longterm_keogram_data(i_ref.exp_date, i_ref.camera_id)
+
+        self.image_processor.colormap()
+        self.image_processor.apply_image_circle_mask(i_ref.binning)
+
+        aligned_sky = None
+        if solution:
+            aligned_sky = self.sky_remap.image(
+                self.image_processor.image, solution, border=border,
+            )
+            if uncolored is not None:
+                longterm_keogram_pixels = self.save_longterm_keogram_data(
+                    i_ref.exp_date, i_ref.camera_id, uncolored, self.sky_remap.maps,
+                )
+                del uncolored
+        if self.star_alignment is None or aligned_sky is not None:
+            self.image_processor.realtimeKeogramUpdate(aligned_sky)
+
+        if self.config.get('FISH2PANO', {}).get('ENABLE'):
+            if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 2):
+                pano_data = self.image_processor.fish2pano(i_ref.binning, aligned_sky)
+
+
+                if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS') and (self.star_alignment is None or solution):
+                    pano_data = self.image_processor.fish2pano_cardinal_dirs_label(pano_data, geographic=bool(solution))
+
+
+                self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
+
+
+        if self.config.get('CIRCULAR_DISPLAY', {}).get('ENABLE'):
+            if not self.config.get('FOCUS_MODE', False):
+                circular_display_image = self.image_processor.circular_display(i_ref.binning, aligned_sky)
+                self.write_circular_display_img(circular_display_image, jpeg_exif=jpeg_exif)
+
+
+        return solution, longterm_keogram_pixels
+
+
+    def alignment_metadata(self):
+        solution = self.star_alignment.solution
+        if solution and self.config.get('PRIVACY_MODE'):
+            return dict(solution, location=[round(v) for v in solution['location']])
+        return solution
+
+
+    def save_longterm_keogram_data(self, exp_date, camera_id, image=None, maps=None):
         if self.image_processor.focus_mode:
             # disable processing in focus mode
             return
@@ -2716,18 +2778,26 @@ class ImageWorker(Process):
         offset_x = self.config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_X', 0)
         offset_y = self.config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_Y', 0)
 
-        image_height, image_width = self.image_processor.image.shape[:2]
+        if image is None:
+            image = self.image_processor.image
+        image_height, image_width = image.shape[:2]
 
 
         x = int(image_width / 2) + offset_x
         y = int(image_height / 2) - offset_y  # minus
 
 
-        rgb_pixel_list = list()
-        for p_y in range(5):
-            pixel = self.image_processor.image[y + p_y, x]
-            rgb_pixel_list.append([int(pixel[2]), int(pixel[1]), int(pixel[0])])  # bgr
-
+        if not (0 <= x < image_width and 0 <= y <= image_height - 5):
+            logger.warning('Long-term keogram sample is outside the image')
+            return
+        if maps is None:
+            column = image[y:y + 5, x]
+        else:
+            # Sample the geometric zenith from the original RGB data before
+            # false-color and overlays. Reuse the maps; only five pixels needed.
+            map1, map2 = maps
+            column = cv2.remap(image, map1[y:y + 5, x:x + 1], map2[y:y + 5, x:x + 1], cv2.INTER_LINEAR)[:, 0]
+        rgb_pixel_list = column[:, ::-1].tolist()
 
         self._miscDb.add_long_term_keogram_data(
             exp_date,

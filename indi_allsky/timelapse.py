@@ -2,6 +2,7 @@ import os
 import time
 from pathlib import Path
 import subprocess
+import tempfile
 import logging
 
 from . import timelapse_preprocessor
@@ -115,8 +116,15 @@ class TimelapseGenerator(object):
 
 
         # process images
-        self.pre_processor.main(file_list_ordered)
-        seqfolder = self.pre_processor.seqfolder
+        stream = None
+        if self.pre_processor.frame_alignments and hasattr(self.pre_processor, 'encoded_frames'):
+            suffix = '.jpg' if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg') else '.png'
+            codec = 'mjpeg' if suffix == '.jpg' else 'png'
+            source = ['-f', 'image2pipe', '-c:v', codec, '-i', 'pipe:0']
+            stream = self.pre_processor.encoded_frames(file_list_ordered, suffix)
+        else:
+            self.pre_processor.main(file_list_ordered)
+            source = ['-f', 'image2', '-i', str(self.pre_processor.seqfolder / ('%05d.' + self.config['IMAGE_FILE_TYPE']))]
 
 
         start = time.time()
@@ -142,10 +150,7 @@ class TimelapseGenerator(object):
             '-y',
             '-loglevel', 'level+error',
             '-r', '{0:0.2f}'.format(self.framerate),
-            '-f', 'image2',
-            #'-start_number', '0',
-            #'-pattern_type', 'glob',
-            '-i', '{0:s}/%05d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
+            *source,
             '-c:v', '{0:s}'.format(self.codec),
             '-b:v', '{0:s}'.format(self.bitrate),
             #'-filter:v', 'setpts=50*PTS',
@@ -184,19 +189,21 @@ class TimelapseGenerator(object):
 
 
         try:
-            ffmpeg_subproc = subprocess.run(
-                cmd,
-                env=ffmpeg_env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                preexec_fn=lambda: os.nice(19),
-                check=True
-            )
+            if stream is None:
+                ffmpeg_subproc = subprocess.run(cmd, env=ffmpeg_env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                               preexec_fn=lambda: os.nice(19), check=True)
+                output = ffmpeg_subproc.stdout
+            else:
+                output = self._encode_stream(cmd, ffmpeg_env, stream)
             elapsed_s = time.time() - start
             logger.info('Timelapse generated in %0.4f s', elapsed_s)
 
-            for line in ffmpeg_subproc.stdout.decode().split('\n'):
+            for line in output.decode().split('\n'):
                 logger.info('ffmpeg: %s', line)
+        except (OSError, ValueError, TimelapseException):
+            if stream is not None:
+                video_file_p.unlink(missing_ok=True)
+            raise
         except subprocess.CalledProcessError as e:
             elapsed_s = time.time() - start
 
@@ -217,3 +224,26 @@ class TimelapseGenerator(object):
         # set default permissions
         video_file_p.chmod(0o644)
 
+
+
+    @staticmethod
+    def _encode_stream(cmd, env, frames):
+        # Collect diagnostics without blocking ffmpeg while feeding its input.
+        with tempfile.TemporaryFile() as log, subprocess.Popen(
+                cmd, env=env, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT,
+                preexec_fn=lambda: os.nice(19)) as encoder:
+            try:
+                with encoder.stdin:
+                    for frame in frames:
+                        encoder.stdin.write(frame)
+            except BrokenPipeError:
+                pass  # Report the encoder's actual exit status and diagnostics.
+            except BaseException:
+                encoder.kill()
+                raise
+            code = encoder.wait()
+            log.seek(0)
+            output = log.read()
+            if code:
+                raise subprocess.CalledProcessError(code, cmd, output=output)
+            return output

@@ -50,3 +50,11 @@ For optimal precision, utilize the built-in automated astrometric solver:
 1. Capture an unclouded nighttime image with visible stars.
 2. In the Image Viewer, select the lens solver utility.
 3. The solver extracts star centroids, queries the embedded star catalog, fits WCS coordinates, and writes the calibrated polynomial distortion parameters (`CALIBRATION`) into the camera configuration.
+
+## Automatic alignment for a portable station
+
+Under **Config → Overlays → Cardinal Directions**, enable **Align automatically from stars**. Keep the station's clock and coordinates current. VirtualSky shows **Orientation pending for this image** on photos taken before two separate night exposures agree on the orientation. If you use the Astrophotography Companion with the local camera, it shows **Orientation pending** until those two exposures agree, then **Aligned by stars**. Capture continues while the solver runs. For cameras pointing nearly straight up, the automatic check uses the optical axis, image rotation and projected horizon to verify that the compass marks are stable. It rechecks during the night and starts a fresh alignment after a restart, a new night, a significant location change or a gap in capture. When the sky is cloudy, it waits for usable stars.
+
+Each confirmed exposure stores its own geometry. The compass on the original photograph and the VirtualSky overlay use the orientation for that exposure. Geographic panoramas start at north and progress east, south and west. North is up and east is left in registered keograms, star trails, and all-sky timelapses. If the camera is moved, frames from different confirmed setups can still be projected into this common sky. A selected panorama crop uses frames with the same panorama convention as its reference image.
+
+The original photos are available throughout calibration. Direction-dependent stacks exclude unconfirmed frames. When a movie contains calibrated exposures, its geographic sequence uses those exposures. Older manual recordings retain their original geometry. To return to manual operation, turn off **Align automatically from stars**.

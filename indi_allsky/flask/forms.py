@@ -4937,6 +4937,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__PIL_FONT_CUSTOM = StringField('Custom Font', validators=[TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator])
     TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Default Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     CARDINAL_DIRS__ENABLE            = BooleanField('Enable Cardinal Directions')
+    CARDINAL_DIRS__AUTO_ALIGN        = BooleanField('Align automatically from stars')
     CARDINAL_DIRS__FONT_COLOR        = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     CARDINAL_DIRS__SWAP_NS           = BooleanField('Swap North/South')
     CARDINAL_DIRS__SWAP_EW           = BooleanField('Swap East/West')
