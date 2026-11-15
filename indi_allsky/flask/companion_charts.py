@@ -176,7 +176,7 @@ def _read_samples(camera, start, end, tz, keys, *, local_images_allowed):
     if not local_images_allowed:
         query = query.filter(or_(Image.remote_url.isnot(None), Image.s3_key.isnot(None)))
     stored = Image.data['utc_offset'].as_integer()
-    values = [Image.data['temp_display'].as_string()]
+    values = [Image.data['temp_display'].as_string(), Image.data['sensor_valid_mask'].as_integer()]
     values.extend(Image.sqm if key == 'jsqm' else Image.data[key].as_string() for key in keys)
     local_start, local_end = start.astimezone(tz), end.astimezone(tz)
     offsets = {edge.replace(fold=fold).utcoffset() for edge in (local_start, local_end) for fold in (0, 1)}
@@ -250,9 +250,18 @@ def companion_charts(camera, config, now, tz, requested, *, local_images_allowed
     end = now if now.tzinfo else now.replace(tzinfo=tz)
     end = end.astimezone(timezone.utc)
     start = end - timedelta(hours=2)
-    for dated, stored, *values in _read_samples(camera, start, end, tz, selected,
+    for dated, stored, valid_mask, *values in _read_samples(camera, start, end, tz, selected,
                                                local_images_allowed=local_images_allowed):
         stored = stored or temp_code or ('c' if camera.local else None)
+        if valid_mask is not None:
+            try:
+                valid_mask = max(0, int(valid_mask))
+            except (ValueError, TypeError, OverflowError):
+                valid_mask = 0
         for key, data, value in zip(selected, series, values):
+            if valid_mask is not None and key.startswith('sensor_user_'):
+                slot = int(key.rsplit('_', 1)[1])
+                if 10 <= slot < 60 and not valid_mask & (1 << (slot - 10)):
+                    value = None
             data['points'].append([dated.isoformat(), _sample(value, slots[key], stored, temp_unit)])
     return list(metrics.values()), defaults, series

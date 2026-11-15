@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+from importlib import import_module
+from importlib.util import find_spec
 from pathlib import Path
 
 from flask import abort, render_template, request, session
@@ -9,6 +11,39 @@ from ..companion_battery import battery_reading
 from .base_views import BaseView
 from .companion_charts import companion_charts, sensor_probes
 from .misc import login_optional_media
+
+
+def _station_module(name):
+    # Older installations can serve the Companion without these station services.
+    return import_module(name) if find_spec(name) is not None else None
+
+
+archive_health = _station_module('indi_allsky.archive_health')
+sensor_health = _station_module('indi_allsky.sensor_health')
+star_alignment = _station_module('indi_allsky.star_alignment')
+
+
+def local_station_status(view):
+    status = {}
+    blocked = False
+    if not (view.local_indi_allsky and view.local_images_allowed):
+        return status, blocked
+
+    if archive_health is not None:
+        archive = archive_health.archive_state(view.indi_allsky_config)
+        blocked = archive.get('level') == archive_health.BLOCKED
+        # Only publish the reason code. Paths and other host details stay local.
+        status['archive'] = archive.get('reason', 'ok')
+    if sensor_health is not None:
+        status['ups_unreadable'] = sensor_health.ups_problem(Path('/run/indi-allsky-ups-watchdog/health.json'))
+    if star_alignment is not None and view.indi_allsky_config.get('CARDINAL_DIRS', {}).get('AUTO_ALIGN'):
+        try:
+            active_id = view._miscDb.getState('DB_CAMERA_ID')
+        except NoResultFound:
+            active_id = None
+        if active_id == str(view.camera.id):
+            status['orientation'] = star_alignment.read_alignment_status(view.indi_allsky_config, view.camera.uuid)
+    return status, blocked
 
 
 class CompanionView(BaseView):
@@ -46,7 +81,8 @@ def companion_status(view):
     zone = camera_timezone(view.camera)
     now = datetime.now(timezone.utc).astimezone(zone)
     image_only = request.args.get('image_only') == '1'
-    entry = view.getLatestImage(
+    station_status, blocked = local_station_status(view)
+    entry = {} if blocked else view.getLatestImage(
         view.camera.id, None, not_after=now.replace(tzinfo=None), include_sensor_data=not image_only,
     )
     data = {
@@ -55,7 +91,8 @@ def companion_status(view):
         'time_zone': getattr(zone, 'key', None),
         'offset_minutes': int(now.utcoffset().total_seconds() / 60),
         'capture_paused': bool(view.camera.capture_pause),
-        'image': latest_companion_image(view, now, entry),
+        'image': None if blocked else latest_companion_image(view, now, entry),
+        **station_status,
     }
     # The browser can discover a published frame promptly without recomputing
     # two hours of sensor readings and the ephemerides on each image check.

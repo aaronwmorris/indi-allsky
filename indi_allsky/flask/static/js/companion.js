@@ -20,6 +20,15 @@
     let imageServiceMessage = '';
     let detailMessage = '';
     let capturePaused = false;
+    let archiveIssue = '';
+    const archiveMessages = {
+        mount: 'Archive is not mounted', missing: 'Archive folder is missing',
+        reserve: 'Archive nearly full · timelapses and exports are on hold',
+        full: 'Archive full · capture paused', readonly: 'Archive is read-only · capture paused',
+        write: 'Cannot write to the archive', timeout: 'Archive is not responding', checking: 'Checking archive',
+        unknown: 'Cannot read archive status',
+    };
+    let upsUnreadable = false;
     let lastPayload;
     let battery;
     const staleAfter = Number(page.dataset.staleMs) || 90000;
@@ -95,6 +104,8 @@
         } else if (imageMessage) lines.push(imageMessage);
         else if (capturePaused) lines.push('Pi online · capture paused');
         else if (imageIsLate()) lines.push('Pi online · no new image');
+        if (archiveIssue) lines.push(archiveIssue);
+        if (upsUnreadable) lines.push('Cannot read UPS status');
         if (detailMessage && !lines.includes(detailMessage)) lines.push(detailMessage);
         const message = byId('connection-message');
         const text = lines.join(' ');
@@ -213,16 +224,16 @@
             x: Date.parse(time), y: Number.isFinite(value) ? value : null, capturedAt: time,
         })).filter(point => Number.isFinite(point.x));
         const values = samples.filter(point => point.y !== null);
-        const last = values[values.length - 1];
+        const last = samples[samples.length - 1];
         reading.hidden = !last;
-        reading.textContent = last ? formatReading(last.y) + (series.unit ? ' ' + series.unit : '') : '';
+        reading.textContent = last && last.y !== null ? formatReading(last.y) + (series.unit ? ' ' + series.unit : '') : '–';
         // Equal wall times on either side of a clock change have different UTC offsets.
         const sampleTime = point => {
             const time = dateAndTime(point.capturedAt);
             const offset = point.capturedAt.match(/[+-]\d{2}:\d{2}$/);
             return time.time + ' UTC' + (offset ? offset[0] : '');
         };
-        if (last) reading.title = 'Last reading at ' + sampleTime(last);
+        reading.title = last ? (last.y === null ? 'No valid reading at ' : 'Last reading at ') + sampleTime(last) : '';
         const visible = values.length > 0 && typeof Chart === 'function';
         plot.hidden = !visible;
         empty.hidden = !selects[slot].value || visible;
@@ -280,6 +291,14 @@
         clock = {timestamp, syncedAt: performance.now(), offset: payload.offset_minutes || 0};
     }
 
+    function showOrientation(state) {
+        const label = byId('orientation');
+        if (!label) return;
+        const text = state === 'aligned' ? 'Aligned by stars' : state === 'pending' ? 'Orientation pending' : '';
+        if (label.textContent !== text) label.textContent = text;
+        label.hidden = !text;
+    }
+
     function serviceError(issue, code, details) {
         if (issue === 'login') return 'Sign in again to view camera data';
         if (issue === 'forbidden') return 'Access to camera data denied';
@@ -297,10 +316,14 @@
     }, 2000, payload => {
         updateClock(payload);
         capturePaused = payload.capture_paused === true;
+        archiveIssue = archiveMessages[payload.archive] || '';
+        upsUnreadable = payload.ups_unreadable === true;
+        showOrientation(payload.orientation);
         updateImage(payload.image);
         imageServiceMessage = '';
         tick();
     }, (issue, code) => {
+        showOrientation(null);
         imageServiceMessage = serviceError(issue, code, false);
         if (!displayed) byId('empty-image').textContent = 'Image unavailable';
         updateStatus();

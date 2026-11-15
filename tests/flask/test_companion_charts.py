@@ -245,3 +245,18 @@ def test_minute_sampling_uses_utc_even_with_a_subminute_offset(station):
     for second in (5, 20, 35, 45):
         add(datetime(2026, 11, 7, 9, 0, second), {'sensor_user_35': second, 'utc_offset': 19830})
     assert [value for _, value in charts(['sensor_user_35'], at=at, zone=zone)[2][0]['points']] == [20, 45]
+
+
+@pytest.mark.parametrize('local', [True, False])
+def test_sensor_validity_masks_stale_samples_but_preserves_a_real_zero(station, local):
+    camera, add, charts, _ = station
+    camera.local = local
+    camera.data = {'sensor_user_35': 'Light sensor - Lux'}
+    for minute, data in (
+        (-3, {'sensor_user_35': 0}),   # legacy image, no validity mask
+        (-2, {'sensor_user_35': 10, 'sensor_valid_mask': 0}),   # stale previous sample
+        (-1, {'sensor_user_35': 0, 'sensor_valid_mask': 1 << 25}),   # genuinely dark
+    ):
+        add(minute, data)
+    series = charts(['sensor_user_35'])[2][0]
+    assert [p[1] for p in series['points']] == [0, None, 0]

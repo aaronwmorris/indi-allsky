@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import ephem
 from flask import Flask, abort, current_app, request
+from sqlalchemy.orm.exc import NoResultFound
 import pytest
 
 from indi_allsky.companion_astronomy import camera_timezone, night_ephemeris
@@ -20,8 +21,9 @@ def functions():
     # Exercise the actual route and camera setup without importing hardware services.
     directory = Path(__file__).resolve().parents[2] / 'indi_allsky/flask'
     names = {'cameraSetup', 'getCameraPrivacyLatLong', 'getSunSetDate',
-             'companion_status', 'latest_companion_image', 'verify_admin_network', 'local_images_allowed'}
-    scope = dict(datetime=datetime, timedelta=timedelta, timezone=timezone, math=math,
+             'companion_status', 'local_station_status', 'latest_companion_image', 'verify_admin_network', 'local_images_allowed'}
+    scope = dict(archive_health=None, sensor_health=None, star_alignment=None, Path=Path, NoResultFound=NoResultFound,
+                 datetime=datetime, timedelta=timedelta, timezone=timezone, math=math,
                  ephem=ephem, request=request, abort=abort, camera_timezone=camera_timezone,
                  app=current_app, ipaddress=ipaddress, socket=socket, cached_property=cached_property,
                  psutil=SimpleNamespace(net_if_addrs=lambda: {}),
@@ -133,3 +135,74 @@ def test_image_and_history_share_request_visibility(functions, monkeypatch, remo
     source = 'local' if expected else 'remote'
     assert data['image']['url'] == source
     assert data['series'] == [source]
+
+
+def test_companion_works_on_local_station_without_optional_services(functions):
+    view = view_for(functions, 45, 10, False)
+    view.getCameraById(3).local = True
+    view.indi_allsky_config['CARDINAL_DIRS'] = {'AUTO_ALIGN': True}
+    app = Flask(__name__)
+    app.add_url_rule('/status', view_func=lambda: functions.companion_status(view))
+    data = app.test_client().get('/status?camera_id=3').get_json()
+    assert data['image']['url'] == 'images/example.jpg'
+    assert not {'archive', 'ups_unreadable', 'orientation'}.intersection(data)
+
+
+@pytest.mark.parametrize('image_only', [False, True])
+def test_blocked_archive_skips_image_access_and_keeps_status_available(functions, monkeypatch, image_only):
+    view = view_for(functions, 45, 10, False)
+    view.getCameraById(3).local = True
+    view.getLatestImage = lambda *args, **kwargs: pytest.fail('blocked archive lookup')
+    scope = functions.local_station_status.__globals__
+    health = SimpleNamespace(BLOCKED=2, archive_state=lambda cfg: {'level': 2, 'reason': 'mount', 'mount': '/private/path'})
+    monkeypatch.setitem(scope, 'archive_health', health)
+    monkeypatch.setitem(scope, 'sensor_health', SimpleNamespace(ups_problem=lambda path: True))
+    app = Flask(__name__)
+    app.add_url_rule('/status', view_func=lambda: functions.companion_status(view))
+    data = app.test_client().get('/status?camera_id=3' + ('&image_only=1' if image_only else '')).get_json()
+    assert data['archive'] == 'mount' and data['image'] is None and data['ups_unreadable'] is True
+    assert '/private/path' not in str(data)
+    assert ('series' in data) != image_only
+
+
+@pytest.mark.parametrize('local,visible,enabled,active,reported', [
+    (True, True, True, '3', 'pending'),
+    (True, True, True, '3', 'aligned'),
+    (False, True, True, '3', None),
+    (True, False, True, '3', None),
+    (True, True, False, '3', None),
+    (True, True, True, '4', None),
+    (True, True, True, None, None),
+])
+def test_alignment_is_scoped_to_active_local_camera(functions, monkeypatch, local, visible, enabled, active, reported):
+    view = view_for(functions, 45, 10, False)
+    camera = view.getCameraById(3)
+    camera.local = local
+    camera.uuid = 'active-camera'
+    view.local_images_allowed = visible
+    view.indi_allsky_config['CARDINAL_DIRS'] = {'AUTO_ALIGN': enabled}
+
+    def get_state(key):
+        assert key == 'DB_CAMERA_ID' and local and visible and enabled
+        if active is None:
+            raise NoResultFound()
+        return active
+
+    def read_status(config, uuid):
+        assert uuid == camera.uuid and reported is not None
+        return reported
+
+    def check_visibility(*args):
+        assert local and visible
+        return {}
+
+    view._miscDb = SimpleNamespace(getState=get_state)
+    scope = functions.local_station_status.__globals__
+    monkeypatch.setitem(scope, 'star_alignment', SimpleNamespace(read_alignment_status=read_status))
+    monkeypatch.setitem(scope, 'archive_health', SimpleNamespace(BLOCKED=2, archive_state=check_visibility))
+    monkeypatch.setitem(scope, 'sensor_health', SimpleNamespace(ups_problem=lambda path: bool(check_visibility(path))))
+    app = Flask(__name__)
+    app.add_url_rule('/status', view_func=lambda: functions.companion_status(view))
+    data = app.test_client().get('/status?camera_id=3&image_only=1').get_json()
+    assert data.get('orientation') == reported
+    assert ('archive' in data) == ('ups_unreadable' in data) == (local and visible)

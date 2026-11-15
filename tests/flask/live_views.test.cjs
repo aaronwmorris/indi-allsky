@@ -271,3 +271,42 @@ test('companion formats English readings and keeps the date and offset of each c
     assert.equal(reading.textContent, '0.025 lx');
     assert.equal(reading.title, 'Last reading at 02:30 UTC+01:00');
 });
+
+test('companion reports orientation only on a current reply from an enabled camera', async () => {
+    const b = browser('companion');
+    const orientation = b.el('orientation');
+    b.requests[0].reply({...status(null), orientation: 'pending'});
+    b.requests[1].reply(full(null)); await b.flush();
+    assert.equal(orientation.textContent, 'Orientation pending');
+    assert.equal(orientation.hidden, false);
+    await b.advance(2000);
+    b.requests.at(-1).reply({...status(null), orientation: 'aligned'}); await b.flush();
+    assert.equal(orientation.textContent, 'Aligned by stars');
+    await b.advance(2000); b.requests.at(-1).fail(); await b.flush();
+    assert.equal(orientation.hidden, true);
+    b.emit('online');
+    b.requests.at(-2).reply(status(null)); b.requests.at(-1).reply(full(null)); await b.flush();
+    assert.equal(orientation.hidden, true);
+    assert.equal(orientation.textContent, '');
+});
+
+test('companion clears stale chart readings and reports local archive and UPS faults', async () => {
+    const b = browser('companion');
+    const payload = full(null);
+    const metric = {id: 'sensor_user_35', label: 'Lux', unit: 'lx'};
+    Object.assign(payload, {metrics: [metric], defaults: [metric.id],
+        series: [{...metric, points: [['2026-11-07T20:59:00+01:00', 2], ['2026-11-07T21:00:00+01:00', null]]}]});
+    b.requests[0].reply({...status(null), archive: 'mount', ups_unreadable: true});
+    b.requests[1].reply(payload);
+    await b.flush();
+    assert.equal(b.el('chart-slot-1.chart-value').textContent, '–');
+    assert.match(b.el('connection-message').textContent, /Cannot read UPS status/);
+    assert.match(b.el('connection-message').textContent, /Archive is not mounted/);
+    b.emit('online');
+    payload.series[0].points.push(['2026-11-07T21:01:00+01:00', 0]);
+    b.requests.at(-2).reply({...status(null), ups_unreadable: false});
+    b.requests.at(-1).reply(payload);
+    await b.flush();
+    assert.equal(b.el('chart-slot-1.chart-value').textContent, '0 lx');
+    assert.doesNotMatch(b.el('connection-message').textContent, /Cannot read UPS status|Archive is not mounted/);
+});
