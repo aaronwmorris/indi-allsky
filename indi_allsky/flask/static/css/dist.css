@@ -2833,9 +2833,6 @@
   .tw\:left-3\.5 {
     left: calc(var(--tw-spacing) * 3.5);
   }
-  .tw\:left-4 {
-    left: calc(var(--tw-spacing) * 4);
-  }
   @layer daisyui.l1.l2.l3 {
     .tw\:file-input {
       border: var(--border) solid #0000;
@@ -5806,26 +5803,6 @@
       color: var(--color-base-content);
       background-image: none;
     }
-    .tw\:badge-soft {
-      color: var(--badge-color, var(--color-base-content));
-      background-color: var(--badge-color, var(--color-base-content));
-    }
-    @supports (color: color-mix(in lab, red, red)) {
-      .tw\:badge-soft {
-        background-color: color-mix( in oklab, var(--badge-color, var(--color-base-content)) 8%, var(--color-base-100) );
-      }
-    }
-    .tw\:badge-soft {
-      border-color: var(--badge-color, var(--color-base-content));
-    }
-    @supports (color: color-mix(in lab, red, red)) {
-      .tw\:badge-soft {
-        border-color: color-mix( in oklab, var(--badge-color, var(--color-base-content)) 10%, var(--color-base-100) );
-      }
-    }
-    .tw\:badge-soft {
-      background-image: none;
-    }
     .tw\:badge-outline {
       color: var(--badge-color);
       --badge-bg: #0000;
@@ -6026,12 +6003,6 @@
     background-color: var(--color-base-300);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-base-300) 80%, transparent);
-    }
-  }
-  .tw\:bg-base-content\/2 {
-    background-color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-base-content) 2%, transparent);
     }
   }
   .tw\:bg-base-content\/5 {

@@ -3,13 +3,19 @@ Description=Indi AllSky Service
 After=network-online.target indiserver.service gunicorn-indi-allsky.service
 Wants=indiserver.service
  
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
 [Service]
+Environment="INDI_ALLSKY_SUPERVISED=1"
 EnvironmentFile=%ALLSKY_ETC%/indi-allsky.env
 WorkingDirectory=%ALLSKY_DIRECTORY%
 ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/python3 allsky.py --log syslog run
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
-RestartSec=5
+Restart=on-failure
+RestartSec=15s
+TimeoutStopSec=90s
 PrivateTmp=true
 UMask=0022
 

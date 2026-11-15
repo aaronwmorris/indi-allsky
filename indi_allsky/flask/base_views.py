@@ -6,6 +6,7 @@ import time
 import ipaddress
 import psutil
 import dbus
+from functools import cached_property
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -15,6 +16,9 @@ import ephem
 
 from .. import constants
 from .. import asi676mc
+from ..archive_health import archive_state, BLOCKED, LOW
+from ..sensor_health import ups_problem
+from ..live_status import CAPTURE_STATES, station_status
 
 from flask import request
 from flask import session
@@ -33,10 +37,9 @@ from sqlalchemy.sql.expression import false as sa_false
 
 from .misc import login_optional
 
-from . import db
-
 from .models import NotificationCategory
 from .models import IndiAllSkyDbCameraTable
+from .models import IndiAllSkyDbStateTable
 from .models import IndiAllSkyDbImageTable
 
 from .forms import IndiAllskyCameraSelectForm
@@ -79,6 +82,8 @@ class BaseView(View):
             self.camera = self.getCameraById(camera_id)
 
         self.local_indi_allsky = self.camera.local
+        self.sun_set_date = None
+        self.camera_is_night = True
         self.getSunSetDate()
 
         self.daytime_capture = self.camera.daytime_capture
@@ -209,6 +214,9 @@ class BaseView(View):
         longitude = self.camera.longitude
         latitude = self.camera.latitude
         elevation = self.camera.elevation
+        if longitude is None or latitude is None or self.camera.nightSunAlt is None:
+            self.sun_set_date = None
+            return
 
         # this can be eventually removed
         if isinstance(elevation, type(None)):
@@ -230,6 +238,7 @@ class BaseView(View):
 
         obs.horizon = math.radians(self.camera.nightSunAlt)
         sun.compute(obs)
+        self.camera_is_night = sun.alt <= obs.horizon
 
         try:
             self.sun_set_date = obs.next_setting(sun, use_center=True).datetime()
@@ -242,81 +251,64 @@ class BaseView(View):
             self.sun_set_date = None
 
 
-    def get_indi_allsky_status(self):
-        data = {}
+    @cached_property
+    def live_states(self):
+        return {row.key: row for row in IndiAllSkyDbStateTable.query.filter(
+            IndiAllSkyDbStateTable.key.in_(('DB_CAMERA_ID', 'CAPTURE_HEALTH', 'STATUS', 'WATCHDOG')))}
 
+
+    def get_indi_allsky_status(self, *, notify=True):
+        if self.camera.id < 1:
+            return station_status(*CAPTURE_STATES[constants.STATUS_NOCAMERA])
         if not self.local_indi_allsky:
-            data['status'] = '<span class="tw:text-base-content/60">REMOTE</span>'
-            return data
-
-
-        try:
-            watchdog_time = int(self._miscDb.getState('WATCHDOG'))
-        except NoResultFound:
-            data['status'] = '<span class="tw:text-warning">UNKNOWN</span>'
-            return data
-        except ValueError:
-            data['status'] = '<span class="tw:text-warning">UNKNOWN</span>'
-            return data
-
-
-        now = time.time()
-
-        if now > (watchdog_time + 600):
-            self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'watchdog',
-                'Watchdog expired.  indi-allsky may be in a failed state.',
-                expire=timedelta(minutes=60),
-            )
-            data['status'] = '<span class="tw:text-error">DOWN</span>'
-            return data
-
-
-        ### assuming indi-allsky process is running if we reach this point
-
-
-        if self.indi_allsky_config.get('FOCUS_MODE', False):
-            data['status'] = '<span class="tw:text-warning">FOCUS MODE</span>'
-            return data
-
+            return station_status('remote', 'REMOTE', 'tw:text-base-content/60')
+        states = self.live_states
+        active = states.get('DB_CAMERA_ID')
+        if active is not None and active.value != str(self.camera.id):
+            return station_status('inactive', 'INACTIVE CAMERA', 'tw:text-base-content/60')
 
         try:
-            status = int(self._miscDb.getState('STATUS'))
-        except NoResultFound:
-            # legacy
-            data['status'] = '<span class="tw:text-success">RUNNING</span>'
-            return data
-        except ValueError:
-            # legacy
-            data['status'] = '<span class="tw:text-error">UNKNOWN</span>'
-            return data
+            watchdog_time = int(states['WATCHDOG'].value)
+        except (KeyError, TypeError, ValueError):
+            return station_status('unknown', 'UNKNOWN', 'tw:text-warning')
+        if time.time() > watchdog_time + 600:
+            if notify:
+                self._miscDb.addNotification(
+                    NotificationCategory.GENERAL, 'watchdog', 'Watchdog expired.  indi-allsky may be in a failed state.',
+                    expire=timedelta(minutes=60),
+                )
+            return station_status('down', 'DOWN', 'tw:text-error')
+        entry = states.get('STATUS')
+        try:
+            # Older capture daemons publish only WATCHDOG.
+            code = int(entry.value) if entry is not None else constants.STATUS_RUNNING
+            if code == constants.STATUS_RUNNING and self.indi_allsky_config.get('FOCUS_MODE', False):
+                return station_status('focus', 'FOCUS MODE', 'tw:text-warning')
+            return station_status(*CAPTURE_STATES[code])
+        except (KeyError, TypeError, ValueError):
+            return station_status('unknown', 'UNKNOWN', 'tw:text-error')
 
 
-        if status == constants.STATUS_RUNNING:
-            data['status'] = '<span class="tw:text-success">RUNNING</span>'
-        elif status == constants.STATUS_SLEEPING:
-            data['status'] = '<span class="tw:text-base-content/60">SLEEPING</span>'
-        elif status == constants.STATUS_RELOADING:
-            data['status'] = '<span class="tw:text-warning">RELOADING</span>'
-        elif status == constants.STATUS_STARTING:
-            data['status'] = '<span class="tw:text-info">STARTING</span>'
-        elif status == constants.STATUS_STOPPING:
-            data['status'] = '<span class="tw:text-primary">STOPPING</span>'
-        elif status == constants.STATUS_STOPPED:
-            data['status'] = '<span class="tw:text-primary">STOPPED</span>'
-        elif status == constants.STATUS_PAUSED:
-            data['status'] = '<span class="tw:text-base-content/60">PAUSED</span>'
-        elif status == constants.STATUS_NOCAMERA:
-            data['status'] = '<span class="tw:text-error">NO CAMERA</span>'
-        elif status == constants.STATUS_CAMERAERROR:
-            data['status'] = '<span class="tw:text-error">CAMERA ERROR</span>'
-        elif status == constants.STATUS_NOINDISERVER:
-            data['status'] = '<span class="tw:text-error">NO INDISERVER</span>'
-        else:
-            data['status'] = '<span class="tw:text-error">UNKNOWN</span>'
+    @cached_property
+    def latest_image_entry(self):
+        return IndiAllSkyDbImageTable.query.filter(
+            IndiAllSkyDbImageTable.camera_id == self.camera.id,
+            IndiAllSkyDbImageTable.createDate > self.camera_now - timedelta(minutes=15),
+        ).order_by(IndiAllSkyDbImageTable.createDate.desc()).first()
 
-        return data
+
+    def render_status_panel(self, station):
+        # Mark only the station field. Custom WEB_STATUS_TEMPLATE HTML and the
+        # access-checked archive/UPS diagnostics keep their existing format.
+        panel_data = {'status': '<span data-station-state class="{class_name}">{label}</span>'.format(**station)}
+        panel_data.update(self.get_camera_info())
+        panel_data.update(self.get_astrometric_info())
+        panel_data.update(self.get_smoke_info())
+        panel_data.update(self.get_aurora_info())
+        panel_data.update(self.get_image_data())
+        panel_data['uptime'] = int(time.time() - psutil.boot_time())
+        panel_data['uptime_str'] = self.getUptime()
+        return self.get_status_text(panel_data) + self.get_web_extra_text()
 
 
     def get_camera_info(self):
@@ -878,6 +870,25 @@ class BaseView(View):
             return 'TEMPLATE ERROR'
 
 
+        if self.local_indi_allsky and (
+            (current_user.is_authenticated and current_user.is_admin)
+            or (self.login_disabled and self.verify_admin_network())
+        ):
+            archive = archive_state(self.indi_allsky_config)
+            if archive.get('level') == LOW:
+                status_text += '<div class="tw:text-warning">Archive space is low. Video and export jobs are waiting.</div>'
+            elif archive.get('level') == BLOCKED:
+                reason = archive.get('reason')
+                message = {
+                    'checking': 'Checking image archive.',
+                    'mount': 'Archive mount unavailable. Capture paused.',
+                    'missing': 'Archive directory missing. Capture paused.',
+                    'full': 'Archive full. Capture paused.',
+                    'readonly': 'Archive is read-only. Capture paused.',
+                }.get(reason, 'Cannot write to the archive. Capture paused.')
+                status_text += f'<div class="tw:text-warning">{message}</div>'
+            if ups_problem(Path('/run/indi-allsky-ups-watchdog/health.json')):
+                status_text += '<div class="tw:text-warning">No recent valid UPS reading.</div>'
         return status_text
 
 
@@ -1173,18 +1184,6 @@ class TemplateView(BaseView):
         self.night = True
 
 
-        # query the latest image entry
-        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
-        self.latest_image_entry = db.session.query(
-            IndiAllSkyDbImageTable,
-        )\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
-            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .first()
-
-
     def render_template(self, context):
         return render_template(self.template_name, **context)
 
@@ -1195,26 +1194,11 @@ class TemplateView(BaseView):
 
 
     def get_context(self):
-        status_data = dict()
-        status_data.update(self.get_indi_allsky_status())
-        status_data.update(self.get_camera_info())
-        status_data.update(self.get_astrometric_info())
-        status_data.update(self.get_smoke_info())
-        status_data.update(self.get_aurora_info())
-        status_data.update(self.get_image_data())
-
-
-        status_data['uptime'] = int(time.time() - psutil.boot_time())
-        status_data['uptime_str'] = self.getUptime()
-
-
-        #app.logger.info('Status data: %s', status_data)
-
         context = {
             'website_title'      : self.indi_allsky_config.get('WEBSITE', {}).get('TITLE', 'indi-allsky'),
             'page_title'         : self.page_title,
             'camera_id'          : self.camera.id,
-            'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
+            'status_text'        : self.render_status_panel(self.get_indi_allsky_status()),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
             'docker'             : self.docker,

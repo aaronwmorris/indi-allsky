@@ -15,7 +15,7 @@ from .fake_indi import FakeIndiCcd
 
 from .. import constants
 
-from ..exceptions import TimeOutException
+from ..exceptions import CameraException, TimeOutException
 from ..exceptions import BinModeException
 
 
@@ -137,7 +137,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
-        if self.active_exposure:
+        if self.active_exposure or self._libCameraProcessRunning():
             return
 
 
@@ -301,12 +301,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self.exposureStartTime = time.time()
 
-        self.libcamera_process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
-
+        # rpicam diagnostics go directly to the service journal. A pipe read
+        # only after wait()/poll() can fill and deadlock a noisy child.
+        self.libcamera_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL)
         self.active_exposure = True
 
 
@@ -317,51 +314,34 @@ class IndiClientLibCameraGeneric(IndiClient):
         if sync:
             try:
                 self.libcamera_process.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                logger.error('Exposure timeout')
-                raise TimeOutException('Timeout waiting for exposure')
+            except subprocess.TimeoutExpired as exc:
+                self.abortCcdExposure()
+                raise TimeOutException('Timeout waiting for exposure') from exc
+            if not self._finishExposure():
+                raise CameraException('rpicam-still did not produce an image')
 
 
-            if self.libcamera_process.returncode != 0:
-                # log errors
-                stdout = self.libcamera_process.stdout
-                for line in stdout.readlines():
-                    logger.error('rpicam-still error: %s', line)
-
-                # not returning, just log the error
-
-            self.active_exposure = False
-
-            self._processMetadata()
-
-            self._queueImage()
+    def _finishExposure(self):
+        self.active_exposure = False
+        try:
+            valid_file = self.current_exposure_file_p.stat().st_size > 0
+        except OSError:
+            valid_file = False
+        if self.libcamera_process.returncode or not valid_file:
+            logger.error('rpicam-still failed: exit=%s, nonempty output=%s',
+                         self.libcamera_process.returncode, valid_file)
+            self._removeCaptureFiles()
+            return False
+        self._processMetadata()
+        self._queueImage()
+        return True
 
 
     def getCcdExposureStatus(self):
-        # returns camera_ready, exposure_state
         if self._libCameraProcessRunning():
             return False, 'BUSY'
-
-
-        if self.active_exposure:
-            # if we get here, that means the camera is finished with the exposure
-            self.active_exposure = False
-
-
-            if self.libcamera_process.returncode != 0:
-                # log errors
-                stdout = self.libcamera_process.stdout
-                for line in stdout.readlines():
-                    logger.error('rpicam-still error: %s', line)
-
-                # not returning, just log the error
-
-
-            self._processMetadata()
-
-            self._queueImage()
-
-
+        if self.active_exposure and not self._finishExposure():
+            return True, 'ERROR'
         return True, 'READY'
 
 
@@ -512,35 +492,36 @@ class IndiClientLibCameraGeneric(IndiClient):
 
     def abortCcdExposure(self):
         logger.warning('Aborting exposure')
-
         self.active_exposure = False
-
-        for _ in range(5):
-            if not self._libCameraProcessRunning():
-                break
-
-            self.libcamera_process.terminate()
-            time.sleep(0.5)
-            continue
-
-
         if self._libCameraProcessRunning():
-            self.libcamera_process.kill()
-            self.libcamera_process.poll()  # close out the process
+            self.libcamera_process.terminate()
+            try:
+                self.libcamera_process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self.libcamera_process.kill()
+                try:
+                    self.libcamera_process.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    logger.error('rpicam-still pid %d did not exit after KILL', self.libcamera_process.pid)
+                    return False
+        self._removeCaptureFiles()
+        return True
 
 
-        try:
-            if self.current_exposure_file_p:
-                self.current_exposure_file_p.unlink()
-        except FileNotFoundError:
-            pass
+    def closeCameraProcess(self):
+        # MQTT subclasses have no local rpicam subprocess; their remote
+        # command must not be aborted during local subprocess cleanup.
+        if self.libcamera_process is None:
+            return True
+        if self._libCameraProcessRunning() or self.active_exposure:
+            return self.abortCcdExposure()
+        return True
 
 
-        try:
-            if self.current_metadata_file_p:
-                self.current_metadata_file_p.unlink()
-        except FileNotFoundError:
-            pass
+    def _removeCaptureFiles(self):
+        for path in (self.current_exposure_file_p, self.current_metadata_file_p):
+            if path is not None:
+                path.unlink(missing_ok=True)
 
 
     def _queueImage(self):

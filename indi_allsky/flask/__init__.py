@@ -164,12 +164,22 @@ def create_app():
         return IndiAllSkyDbUserTable.query.get(int(user_id))
 
 
+    @app.route('/indi-allsky/healthz', methods=['GET'])
+    def web_health():
+        # Only test that a Flask worker can dispatch HTTP. The camera, data
+        # store and login providers have independent failure modes.
+        return 'indi-allsky-web-ok\n', 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
+
     @app.before_request
     def refresh_oidc_token():
         from flask_login import current_user, logout_user
         from flask import redirect, url_for, request, session
         import time
 
+
+        if request.endpoint == 'web_health':
+            return
 
         # Skip for static files and common public assets to save DB hits
         # Note: This should not be necessary since the web server serves static content and images directly, bypassing gunicorn

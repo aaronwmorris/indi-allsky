@@ -422,8 +422,8 @@ class IndiAllSkyConfigBase(object):
         "FFMPEG_VFSCALE"            : "",
         "FFMPEG_VFSCALE_DAY"        : "",
         "FFMPEG_VFSCALE_STARTRAIL"  : "",
-        "FFMPEG_EXTRA_OPTIONS"      : "-level 3.1",
-        "FFMPEG_EXTRA_OPTIONS_DAY"  : "-level 3.1",
+        "FFMPEG_EXTRA_OPTIONS"      : "",
+        "FFMPEG_EXTRA_OPTIONS_DAY"  : "",
         "FFMPEG_CODEC"              : "libx264",
         "FITSHEADERS" : [
             [ "INSTRUME", "indi-allsky" ],

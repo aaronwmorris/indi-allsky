@@ -57,9 +57,6 @@ if __name__ == "__main__":
     except RuntimeError:
         pass
 
-    from indi_allsky.allsky import IndiAllSky
-
-
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
@@ -110,7 +107,15 @@ if __name__ == "__main__":
         kwargs_dict['camera_id'] = args.cameraId
 
 
-    ia = IndiAllSky()
+    def create_supervisor():
+        from indi_allsky.allsky import IndiAllSky
+        return IndiAllSky()
+
+    if args.action == 'run':
+        from indi_allsky.storage_startup import retry_storage_start
+        ia = retry_storage_start(create_supervisor)
+    else:
+        ia = create_supervisor()
     ia.pid_file = args.pid
 
     action_func = getattr(ia, args.action)

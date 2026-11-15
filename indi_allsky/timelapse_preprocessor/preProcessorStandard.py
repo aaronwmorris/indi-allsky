@@ -20,7 +20,9 @@ class PreProcessorStandard(PreProcessorBase):
         self._seqfolder = Path(self.temp_seqfolder.name)
 
 
-    def main(self, file_list):
+    def main(self, file_list, activity=None):
+        if activity is not None:
+            file_list = activity.track('Preparing frames', file_list, len(file_list))
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
             p_symlink = self.seqfolder.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))

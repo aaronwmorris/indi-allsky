@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the local indi-allsky web service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 "%h/.local/lib/indi-allsky/web_recovery.py" --unit %GUNICORN_SERVICE_NAME% --port %HTTPS_PORT%
+TimeoutStartSec=35
+RuntimeDirectory=indi-allsky-web-recovery
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+UMask=0077
+NoNewPrivileges=yes

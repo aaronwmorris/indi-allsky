@@ -50,7 +50,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         self._seqfolder = Path(self.temp_seqfolder.name)
 
 
-    def main(self, file_list):
+    def main(self, file_list, activity=None):
         # scale settings
         scaled_image_circle = int(self.image_circle * (self.pre_scale / 100))
         scaled_x_offset = int(self.x_offset * (self.pre_scale / 100))
@@ -93,6 +93,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         process_start = time.time()
 
+        if activity is not None:
+            file_list = activity.track('Preparing frames', file_list, len(file_list))
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
 
@@ -111,7 +113,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         process_elapsed_s = time.time() - process_start
-        logger.info('Pre-processing in %0.4f s (%0.2f images/s)', process_elapsed_s, len(file_list) / process_elapsed_s)
+        logger.info('Pre-processing in %0.4f s (%0.2f images/s)', process_elapsed_s, self.file_list_len / process_elapsed_s)
+        return self.image_count
 
 
     def wrap(self, i, f, seqfolder_p, image_circle, x_offset, y_offset):

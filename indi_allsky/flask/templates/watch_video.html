@@ -44,6 +44,10 @@ var file_view = "{{ file_view }}";
         <div id="delete-failure-message" class="tw:alert tw:alert-error tw:text-sm" style="display: none;" role="alert"></div>
         {% endif %}
 
+        {% if night_movie_status %}
+        <p class="tw:alert tw:alert-warning" role="status">{{ night_movie_status }}</p>
+        {% endif %}
+
         <!-- Video Player Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4 tw:flex tw:items-center tw:justify-center">
             <video class="tw:max-w-full tw:rounded-[var(--radius-field)] tw:shadow-lg" style="max-height: 80vh; width: auto; height: auto; object-fit: contain;" controls autoplay>

@@ -117,6 +117,12 @@ class FlushImages(object):
 
         signal.signal(signal.SIGINT, self.sigint_handler_main)
 
+        if self.flush_videos:
+            # Do this before flushImages removes evidence from a source-only
+            # period, including any repair already encoding from those images.
+            from indi_allsky.config import IndiAllSkyConfig
+            from indi_allsky.media_delete import suppress_flushed_periods
+            suppress_flushed_periods(IndiAllSkyConfig().config, self.camera_id)
 
         if self.flush_images:
             self.flushImages(self.camera_id)

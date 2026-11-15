@@ -3,7 +3,11 @@ Description=Indi AllSky Main Service
 After=network-online.target indiserver.service
 Wants=indiserver.service
 
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
 [Service]
+Environment="INDI_ALLSKY_SUPERVISED=1"
 Type=simple
 User=indi-allsky
 Group=indi-allsky
@@ -13,8 +17,9 @@ EnvironmentFile=-/etc/indi-allsky/indi-allsky.env
 ExecStart=/var/lib/indi-allsky/venv/bin/python3 /usr/share/indi-allsky/allsky.py --log syslog run
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
-Restart=always
-RestartSec=5
+Restart=on-failure
+RestartSec=15s
+TimeoutStopSec=90s
 PrivateTmp=true
 UMask=0022
 

@@ -26,6 +26,7 @@ class LightSensorTsl2561(SensorBase):
 
         if self.disable_day:
             data = {
+                'sample_disabled': True,
                 'data' : (0.0, 0.0, 0.0, 0.0, 0.0),
             }
 
