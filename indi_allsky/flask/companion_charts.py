@@ -13,12 +13,13 @@ _LABELS = {
     'sky': 'Sky Temperature',
     'lux': 'Sky Brightness (lux)',
     'sqm': 'Sky Brightness (sensor SQM)',
+    'lux_mag': 'Magnitude estimate from lux',
     'camera_sqm': 'Sky Brightness (camera SQM)',
     'jsqm': 'Relative Sky Brightness (jSQM)',
     'air': 'Air Temperature',
     'humidity': 'Relative Humidity',
 }
-_UNITS = {'lux': 'lx', 'sqm': 'mag/arcsec²', 'camera_sqm': 'mag/arcsec²',
+_UNITS = {'lux': 'lx', 'sqm': 'mag/arcsec²', 'lux_mag': 'mag/arcsec²', 'camera_sqm': 'mag/arcsec²',
           'jsqm': 'rel.', 'humidity': '%'}
 _TEMP_UNITS = {'c': '°C', 'f': '°F', 'k': 'K'}
 
@@ -56,9 +57,24 @@ def sensor_probes(camera, config):
 def _slots(camera, config):
     probes = sensor_probes(camera, config)
     humid_devices = {device for device, probe in probes.values() if probe == 'relative humidity' and device}
+    # These light meters publish both illuminance and a magnitude calculated from it.
+    # A separate SQM on the same station can have its own reference calibration.
+    lux_devices = set()
+    for device, probe in probes.values():
+        if probe != 'lux':
+            continue
+        if camera.local:
+            driver = config.get('TEMP_SENSOR', {}).get(f'{device.upper()}_CLASSNAME', '')
+            if driver and driver.startswith('blinka_light_sensor_'):
+                lux_devices.add(device)
+        elif device.partition(' - ')[0] in ('tsl2591 (i2c)', 'tsl2561 (i2c)', 'bh1750 (i2c)',
+                                             'ltr390 (i2c)', 'veml770 (i2c)', 'veml7700 (i2c)'):
+            lux_devices.add(device)
     slots = {}
     for index, (device, probe) in sorted(probes.items()):
         kind = _probe_kind(probe, device in humid_devices)
+        if kind == 'sqm' and device in lux_devices:
+            kind = 'lux_mag'
         if kind:
             slots[f'sensor_user_{index}'] = kind
 
@@ -77,7 +93,7 @@ def _sample(value, kind, stored_temp_unit, display_temp_unit):
     if not math.isfinite(number) or isinstance(value, bool):
         return None
     # Light sensors and the camera write zero to SQM when no magnitude was calculated.
-    if kind in ('sqm', 'camera_sqm') and number == 0:
+    if kind in ('sqm', 'lux_mag', 'camera_sqm') and number == 0:
         return None
     if kind not in ('sky', 'air'):
         return number
@@ -236,7 +252,7 @@ def companion_charts(camera, config, now, tz, requested, *, local_images_allowed
         metrics[key] = {'id': key, 'label': label, 'unit': _UNITS.get(kind, temp_unit)}
 
     defaults = []
-    for kinds in [('sky',), ('lux', 'sqm', 'camera_sqm', 'jsqm')]:
+    for kinds in [('sky',), ('lux', 'sqm', 'camera_sqm', 'lux_mag', 'jsqm')]:
         for kind in kinds:
             match = next((key for key in slots if slots[key] == kind), None)
             if match is not None:

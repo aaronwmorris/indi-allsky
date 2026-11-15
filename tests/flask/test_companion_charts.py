@@ -111,6 +111,30 @@ def test_remote_uses_its_own_probe_names_and_units(station):
     assert defaults == ['jsqm'] and metrics[0]['unit'] == 'rel.'
 
 
+@pytest.mark.parametrize('local', [True, False])
+def test_lux_trend_and_derived_magnitude_are_distinct(station, local):
+    camera, add, charts, _ = station
+    camera.local = local
+    camera.data = {'sensor_user_35': 'TSL2591 (i2c) - light meter - Lux',
+                   'sensor_user_39': 'TSL2591 (i2c) - light meter - SQM',
+                   'sensor_user_44': 'Unihedron - sky meter - SQM'}
+    config = {'TEMP_SENSOR': {'C_CLASSNAME': 'blinka_light_sensor_tsl2591_i2c'},
+              'CAMERA_SQM': {'ENABLE': True}}
+    add(-1, {'sensor_user_35': 0, 'sensor_user_39': 0})
+    add(0, {'sensor_user_35': 0.00084, 'sensor_user_39': 33.7})
+    metrics, defaults, series = charts(['sensor_user_35', 'sensor_user_39'], config)
+    assert defaults[-1] == 'sensor_user_35'
+    assert [(s['label'], s['unit']) for s in series] == [
+        ('Sky Brightness (lux)', 'lx'), ('Magnitude estimate from lux', 'mag/arcsec²')]
+    assert [value for _, value in series[0]['points']] == [0, 0.00084]
+    assert [value for _, value in series[1]['points']] == [None, 33.7]
+    labels = {m['id']: m['label'] for m in metrics}
+    if local:
+        assert labels['sensor_user_8'] == 'Sky Brightness (camera SQM)'
+    else:
+        assert labels['sensor_user_44'] == 'Sky Brightness (sensor SQM)'
+
+
 def test_sqm_sentinels_and_remote_image_visibility(station):
     camera, add, charts, _ = station
     camera.web_nonlocal_images = True
