@@ -78,13 +78,14 @@ class GlobalMapWebTest(unittest.TestCase):
         with template_rendered.connected_to(receive,APP):r=self.client.get('/indi-allsky/config')
         data=copy.deepcopy(captured[-1].data)
         data.update(GLOBAL_ALLSKY_MAP__ENABLE=True,GLOBAL_ALLSKY_MAP__IMAGE_URL=self.IMAGE_URL,
-                    GLOBAL_ALLSKY_MAP__EQUIPMENT='Synthetic heater',WEBSITE__PUBLIC_URL='',
+                    GLOBAL_ALLSKY_MAP__EQUIPMENT='Synthetic heater',WEBSITE__PUBLIC_URL='https://website.other.example/archive/',
                     RELOAD_ON_SAVE=False,CONFIG_NOTE='map test save')
         r=self.client.post('/indi-allsky/ajax/config',json=data)
         self.assertEqual(r.status_code,200,r.get_json())
         latest=IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
         self.assertEqual(latest.data['GLOBAL_ALLSKY_MAP']['IMAGE_URL'],self.IMAGE_URL)
         self.assertEqual(latest.data['GLOBAL_ALLSKY_MAP']['EQUIPMENT'],'Synthetic heater')
+        self.assertEqual(latest.data['WEBSITE']['PUBLIC_URL'], 'https://website.other.example/archive/')
         self.assertIsNone(G.GlobalMapService().identifier())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(),0)
 
@@ -98,6 +99,30 @@ class GlobalMapWebTest(unittest.TestCase):
         self.assertEqual(task.state,TaskQueueState.SUCCESS);self.assertEqual(call.call_count,1)
         self.assertFalse(self.sent['force']);self.assertEqual(self.sent['image_url'],self.IMAGE_URL)
         self.assertTrue(G.GlobalMapService().state()['registered'])
+
+    def test_different_domain_preview_and_worker_preserve_both_urls(self):
+        website = 'https://website.other.example:8443/Archive/?view=sky'
+        image = 'https://images.example.org/Latest.JPG?raw=1'
+        entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+        cfg = copy.deepcopy(entry.data)
+        cfg['WEBSITE']['PUBLIC_URL'] = website
+        cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = image
+        entry.data = cfg
+        db.session.commit()
+        page = self.client.get('/indi-allsky/config')
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b'they may use different domains', page.data)
+        preview = self.preview()
+        self.assertEqual(preview['metadata']['website_url'], website)
+        self.assertEqual(preview['metadata']['image_url'], image)
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        self.assertEqual(response.status_code, 200, response.get_json())
+        task, call = self.worker(response.get_json()['task_id'])
+        self.assertEqual(task.state, TaskQueueState.SUCCESS)
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual(self.sent['website_url'], website)
+        self.assertEqual(self.sent['image_url'], image)
 
     def test_worker_uses_fresh_config_after_disable(self):
         preview=self.preview();r=self.client.post(self.endpoint,json={'operation':'register','preview_token':preview['preview_token']})

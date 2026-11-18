@@ -19,8 +19,9 @@ URLs and descriptions may still reveal the installation's location. Review all
 metadata before publishing. Do not use allsky-map.com or its subdomains as the
 Image URL: its image proxy is not third-party image hosting.
 
-An Image URL alone is valid. A Website URL requires an Image URL on the same
-domain. Both must be public HTTP(S) URLs without login requirements. Equipment
+Both URLs may be empty, or an Image URL may be supplied alone. A Website URL
+requires an Image URL, but they may use different domains. Supplied URLs must
+be public HTTP(S) URLs without login requirements. Equipment
 is sent identically in `equipmentinfo` and `allsky_settings.equipmentinfo`;
 `website_settings` remains empty. No other configuration is serialized.
 

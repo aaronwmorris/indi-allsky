@@ -111,16 +111,33 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(data['equipmentinfo'], '')
         self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
 
-    def test_urls_image_only_and_same_domain_without_rewriting(self):
-        G.validate_urls('', 'https://images.example.org/latest.jpg')
-        G.validate_urls('https://example.org:8443/archive/', 'https://www.example.org/latest.jpg')
-        for website,image in [('https://example.org/', ''),('https://example.org/','https://cdn.other.org/latest.jpg'),
-              ('','ftp://example.org/x'),('','https://user:pass@example.org/x'),('','https://127.0.0.1/x'),
-              ('',' https://example.org/x'),('','https://example.org/x#frag')]:
-            with self.subTest(website=website,image=image), self.assertRaises(G.MapError):G.validate_urls(website,image)
-        data=self.s._payload(self.cfg,True)
-        self.assertEqual(data['image_url'],self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'])
-        self.assertEqual(data['website_url'],'')
+    def test_url_combinations_preserve_supplied_values_without_host_matching(self):
+        pairs = [('', ''), ('', 'https://images.example.org/latest.jpg'),
+                 ('https://example.org:8443/archive/', 'https://example.org/latest.jpg'),
+                 ('https://www.example.org/Archive/?view=sky',
+                  'https://cdn.other.org:8443/Latest.JPG?raw=1&size=full')]
+        for website, image in pairs:
+            with self.subTest(website=website, image=image):
+                G.validate_urls(website, image)
+                self.cfg['WEBSITE']['PUBLIC_URL'] = website
+                self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = image
+                data = self.s._payload(self.cfg, True)
+                self.assertEqual(data['website_url'], website)
+                self.assertEqual(data['image_url'], image)
+
+    def test_url_validation_still_rejects_missing_image_and_unsafe_values(self):
+        with self.assertRaises(G.MapError):
+            G.validate_urls('https://example.org/', '')
+        invalid = ['ftp://example.org/x', 'https://user:pass@example.org/x',
+                   'https://127.0.0.1/x', 'https://10.0.0.1/x', 'https://[::1]/x',
+                   ' https://example.org/x', 'https://example.org/x#frag',
+                   'https://example.org:invalid/x', 'https://example.org/a b',
+                   'https://example.org/\n', 'https://localhost/x', 'https://host.local/x']
+        for value in invalid:
+            with self.subTest(image=value), self.assertRaises(G.MapError):
+                G.validate_urls('', value)
+            with self.subTest(website=value), self.assertRaises(G.MapError):
+                G.validate_urls(value, 'https://images.example.org/latest.jpg')
 
     def test_coordinates_zero_sign_bounds_privacy(self):
         for val,lat,expected in [(51.5,True,'51.5N'),(-.12,False,'0.12W'),(0,True,'0N'),
@@ -358,7 +375,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(len(self.calls),2)
 
 
-    def test_image_host_policy_and_unchanged_domain_pairing(self):
+    def test_image_host_policy_with_independent_public_url_hosts(self):
         forbidden = ['allsky-map.com', 'www.allsky-map.com', 'nested.cdn.allsky-map.com',
                      'ALLSKY-MAP.COM', 'allsky-map.com.', 'cdn.Allsky-Map.Com..', 'allsky-map.com:443']
         for host in forbidden:
@@ -373,11 +390,9 @@ class GlobalMapTest(unittest.TestCase):
                 G.validate_urls('', 'https://' + host + '/image')
         G.validate_urls('https://example.org/', 'https://www.example.org/image')
         G.validate_urls('https://example.org./', 'https://example.org./image')
-        # M10 remains unchanged: terminal-dot policy checks do not alter pair matching.
-        with self.assertRaises(G.MapError):
-            G.validate_urls('https://example.org/', 'https://example.org./image')
-        with self.assertRaises(G.MapError):
-            G.validate_urls('https://example.org/', 'https://cdn.example.org/image')
+        # Host differences, including terminal dots, are not a pairing restriction.
+        G.validate_urls('https://example.org/', 'https://example.org./image')
+        G.validate_urls('https://example.org/', 'https://cdn.example.org/image')
 
     def test_forbidden_image_is_checked_again_before_queued_post(self):
         preview = self.s.preview()

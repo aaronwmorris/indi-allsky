@@ -56,13 +56,11 @@ class _NoRedirect(request.HTTPRedirectHandler):
 
 
 def validate_urls(website, image):
-    """Image alone is valid; a website requires an image on the same host."""
-    hosts = []
+    """URLs may use different hosts; a website still requires an image."""
     for index, value in enumerate((website, image)):
         if not isinstance(value, str):
             raise MapError('Public URLs must be text')
         if not value:
-            hosts.append(None)
             continue
         if value != value.strip() or any(ord(c) < 33 for c in value):
             raise MapError('Public URLs must not contain spaces or control characters')
@@ -86,11 +84,8 @@ def validate_urls(website, image):
         else:
             if not address.is_global:
                 raise MapError('Public URLs must not contain private/local IP addresses')
-        hosts.append(host.lower().removeprefix('www.'))
     if website and not image:
         raise MapError('Website URL requires an Image URL')
-    if website and hosts[0] != hosts[1]:
-        raise MapError('Website and Image URLs must use the same domain')
 
 
 def coordinate(value, latitude, private=False):
