@@ -568,7 +568,7 @@ class GlobalMapService:
                 if operation != 'remove':
                     state.update(last_success=now, payload_hash=payload_hash, auto_not_before=now + 300)
             elif result['status'] in ('STALE', 'DISABLED'):
-                state['needs_review'] = False
+                pass  # No request sent; preserve any earlier unresolved review.
             elif result['status'] == 'ALREADY_UPDATED':
                 state['auto_not_before'] = now + QUOTA_SECONDS
             else:

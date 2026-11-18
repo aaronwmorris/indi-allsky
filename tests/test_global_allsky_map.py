@@ -210,6 +210,7 @@ class GlobalMapTest(unittest.TestCase):
         task=db.session.get(IndiAllSkyDbTaskQueueTable,task_id);task.setRunning()
         self.assertEqual(self.s.execute(task,**task.data['kwargs'])['status'],'DISABLED')
         self.assertEqual(self.calls,[]);self.assertIsNone(self.s.schedule())
+        self.assertFalse(self.s.state().get('needs_review', False))
 
     def test_stale_preview_does_not_send_changed_metadata(self):
         preview=self.s.preview();task_id=self.s.enqueue('register',preview['preview_token'])
@@ -217,6 +218,7 @@ class GlobalMapTest(unittest.TestCase):
         task=db.session.get(IndiAllSkyDbTaskQueueTable,task_id);task.setRunning()
         self.assertEqual(self.s.execute(task,**task.data['kwargs'])['status'],'STALE')
         self.assertEqual(self.calls,[]);self.assertFalse(self.s.state().get('registered'))
+        self.assertFalse(self.s.state().get('needs_review', False))
 
     def test_successful_task_is_never_posted_twice(self):
         task,result=self.run_job();self.assertTrue(result['ok'])
@@ -231,6 +233,51 @@ class GlobalMapTest(unittest.TestCase):
         _,result=self.run_job('update');self.assertFalse(result['ok'])
         self.assertTrue(self.s.state()['needs_review'])
         self.now+=G.REFRESH_SECONDS*2;self.assertIsNone(self.s.schedule());self.assertEqual(len(self.calls),2)
+
+    def _assert_unsent_outcome_preserves_review(self, outcome):
+        self.run_job()
+        self.now += 301
+        def timeout(req, **kwargs):
+            self.calls.append((req, kwargs))
+            raise error.URLError('synthetic ambiguous timeout')
+        self.s.opener = timeout
+        previous, result = self.run_job('update')
+        self.assertFalse(result['ok'])
+        self.assertTrue(self.s.state()['needs_review'])
+        self.now += 301
+        preview = self.s.preview()
+        task_id = self.s.enqueue('update', preview['preview_token'])
+        before = self.s.state()
+        if outcome == 'STALE':
+            self.cfg['OWNER'] = 'Changed after manual update was queued'
+        else:
+            self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'] = False
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        result = self.s.execute(task, **task.data['kwargs'])
+        self.assertEqual(result['status'], outcome)
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+        after = self.s.state()
+        self.assertTrue(after['needs_review'])
+        self.assertNotIn('pending', after)
+        for key in ('registered', 'last_success', 'last_attempt', 'attempts', 'attempted_task', 'payload_hash'):
+            self.assertEqual(after[key], before[key], key)
+        self.assertEqual(after['attempted_task'], previous.id)
+        self.assertTrue(after['last_status'].startswith(outcome + ':'))
+        self.assertEqual(len(self.calls), 2)  # Registration and the ambiguous update only.
+        # Re-enable and wait until a refresh is due: review, not Disable/cooldown, blocks it.
+        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'] = True
+        self.now += G.REFRESH_SECONDS + 1
+        self.assertIsNone(self.s.schedule())
+        self.assertTrue(self.s.state()['needs_review'])
+        self.assertEqual(len(self.calls), 2)
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 3)
+
+    def test_stale_manual_update_preserves_review_after_ambiguous_request(self):
+        self._assert_unsent_outcome_preserves_review('STALE')
+
+    def test_disabled_manual_update_preserves_review_after_ambiguous_request(self):
+        self._assert_unsent_outcome_preserves_review('DISABLED')
 
     def test_five_attempt_budget_and_explicit_force(self):
         for i in range(5):
