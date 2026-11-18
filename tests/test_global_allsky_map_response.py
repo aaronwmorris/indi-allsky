@@ -23,7 +23,7 @@ class MapResponseTest(unittest.TestCase):
         return response
 
     def test_canonical_release_package_development_and_user_agent(self):
-        versions = ['indi_v2026.11.11', 'indi_v2026.11.11+trixie.qhy.globalmap.3fbb60d2',
+        versions = ['indi_v2026.11.11', 'indi_v2026.11.11+debian.development.abcdef01',
                     'indi_v2026.11.11-dev', 'indi_v2026.11.11.dev1', 'indi_v2026.11.11~rc1']
         for version in versions:
             with self.subTest(version=version), patch.object(G, '__version__', version):

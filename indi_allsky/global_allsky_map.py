@@ -4,6 +4,7 @@ import html
 import http.client
 import ipaddress
 import json
+import logging
 import math
 import platform
 import re
@@ -30,6 +31,8 @@ TIMEOUT = 15
 MAX_RESPONSE = 8192
 MAX_DIAGNOSTIC_BODY = 2048
 
+logger = logging.getLogger('indi_allsky')
+
 
 class MapError(ValueError):
     pass
@@ -55,7 +58,7 @@ class _NoRedirect(request.HTTPRedirectHandler):
 def validate_urls(website, image):
     """Image alone is valid; a website requires an image on the same host."""
     hosts = []
-    for value in (website, image):
+    for index, value in enumerate((website, image)):
         if not isinstance(value, str):
             raise MapError('Public URLs must be text')
         if not value:
@@ -71,7 +74,10 @@ def validate_urls(website, image):
             raise MapError('Invalid public URL') from exc
         if parts.scheme not in ('http', 'https') or not host or parts.username is not None or parts.password is not None or parts.fragment:
             raise MapError('Use public HTTP(S) URLs without credentials or fragments')
-        if host.lower() == 'localhost' or host.lower().endswith('.local'):
+        policy_host = host.lower().rstrip('.')
+        if index == 1 and (policy_host == 'allsky-map.com' or policy_host.endswith('.allsky-map.com')):
+            raise MapError('allsky-map.com must not be used to host images for the Global Allsky Map')
+        if policy_host == 'localhost' or policy_host.endswith('.local'):
             raise MapError('Public URLs must be reachable outside the local network')
         try:
             address = ipaddress.ip_address(host)
@@ -372,7 +378,14 @@ class GlobalMapService:
                 public['last_status'] = 'Interrupted request; manual review required, not retried'
         latest_response = self._read(RESPONSE_KEY)
         if latest_response:
-            public['response_evidence'] = json.loads(latest_response)
+            try:
+                evidence = json.loads(latest_response)
+                if not isinstance(evidence, dict):
+                    raise ValueError('not an object')
+            except ValueError:
+                public['response_evidence_error'] = 'Stored response evidence is invalid'
+            else:
+                public['response_evidence'] = evidence
         public['dirty'] = False
         if state.get('registered'):
             try:
@@ -384,7 +397,7 @@ class GlobalMapService:
     def _budget(self, state, force, removing=False):
         now = self.clock()
         attempts = [a for a in state.get('attempts', []) if now - a['time'] < QUOTA_SECONDS]
-        if not force and sum(not a['force'] for a in attempts) >= MAX_UPDATES:
+        if not removing and not force and sum(not a['force'] for a in attempts) >= MAX_UPDATES:
             raise MapError('Five ordinary attempts in the last 24 hours; wait for quota or explicitly force an update')
         if not removing and now - state.get('last_attempt', -QUOTA_SECONDS) < MIN_INTERVAL:
             raise MapError('Wait one minute between map requests')
@@ -420,6 +433,9 @@ class GlobalMapService:
                             raise MapError('Disabled; publication is in progress. Retry removal after it finishes.')
                         task.state = TaskQueueState.EXPIRED
                     else:
+                        intent = task.data['kwargs']
+                        if not automatic and (intent['operation'] != operation or intent.get('payload_hash') != digest):
+                            raise MapError('A different map request is pending; wait for it to finish')
                         return pending
                 elif automatic and state.get('attempted_task') == pending:
                     state['needs_review'] = True
@@ -475,6 +491,7 @@ class GlobalMapService:
         from .flask import db
         now = self.clock()
         identifier = None
+        unexpected = False
         try:
             if operation not in ('register', 'update', 'force', 'remove'):
                 raise MapError('Invalid queued operation')
@@ -496,7 +513,8 @@ class GlobalMapService:
                 if state.get('pending') != task.id or state.get('attempted_task') == task.id:
                     raise _AlreadyAttempted('Stale/already attempted task; no POST repeated')
                 attempts = self._budget(state, operation == 'force', removing)
-                attempts.append({'time': now, 'force': operation == 'force'})
+                if not removing:
+                    attempts.append({'time': now, 'force': operation == 'force'})
                 state.update(attempts=attempts[-16:], last_attempt=now, attempted_task=task.id,
                              last_status='Sending ' + operation)
             self._change(claim)  # Commits before network wait; no write transaction held.
@@ -519,7 +537,10 @@ class GlobalMapService:
                 db.session.commit()
             result = post(data, self.opener, record=record_response)
         except _AlreadyAttempted as exc:
+            from .flask.models import TaskQueueState
             db.session.rollback()
+            if task.state in (TaskQueueState.MANUAL, TaskQueueState.QUEUED, TaskQueueState.RUNNING):
+                task.setFailed('Global map task no longer owns an unattempted request')
             return {'ok': False, 'status': 'NOT_SENT', 'message': str(exc)}
         except (_MetadataChanged, _Disabled) as exc:
             db.session.rollback()
@@ -527,11 +548,17 @@ class GlobalMapService:
         except (MapError, ValueError) as exc:
             db.session.rollback()
             result = {'ok': False, 'status': 'FAILED', 'message': str(exc)}
+        except Exception as exc:
+            db.session.rollback()
+            logger.error('Global Allsky Map execution failed (%s)', type(exc).__name__)
+            unexpected = True
+            result = {'ok': False, 'status': 'FAILED', 'message': 'Unexpected map failure; inspect task status before retrying'}
         message = str(result.get('message') or result['status']).replace(identifier or '<none>', '[installation-id]')[:200]
         result['message'] = message
         def finish(state):
-            if state.get('pending') == task.id:
-                state.pop('pending', None)
+            if state.get('pending') != task.id:
+                return  # A superseded task must not alter its replacement's state.
+            state.pop('pending', None)
             state['last_status'] = result['status'] + ': ' + message
             if 'maximum' in result:
                 state['quota'] = {k: result[k] for k in ('updates', 'maximum') if k in result}
@@ -545,7 +572,9 @@ class GlobalMapService:
             elif result['status'] == 'ALREADY_UPDATED':
                 state['auto_not_before'] = now + QUOTA_SECONDS
             else:
-                state['needs_review'] = True
+                # Before a durable claim no POST was made; retain any earlier review.
+                state['needs_review'] = (not unexpected or state.get('attempted_task') == task.id
+                                         or bool(state.get('needs_review')))
         self._change(finish)
         if result['ok']:
             task.setSuccess('Global map ' + result['status'])

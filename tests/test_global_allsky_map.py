@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 from urllib import error
 
@@ -223,6 +222,7 @@ class GlobalMapTest(unittest.TestCase):
         task,result=self.run_job();self.assertTrue(result['ok'])
         self.assertEqual(self.s.execute(task,**task.data['kwargs'])['status'],'NOT_SENT')
         self.assertEqual(len(self.calls),1);self.assertTrue(self.s.state()['registered'])
+        self.assertEqual(task.state,TaskQueueState.SUCCESS)
 
     def test_ambiguous_timeout_pauses_automatic_requests(self):
         self.run_job();self.now+=301
@@ -303,11 +303,263 @@ class GlobalMapTest(unittest.TestCase):
         old.setRunning()
         result=self.s.execute(old,**old.data['kwargs'])
         self.assertEqual(result['status'],'NOT_SENT')
+        self.assertEqual(old.state,TaskQueueState.FAILED)
         self.assertEqual(self.s.state()['pending'],new_id)
         self.assertEqual(len(self.calls),1)
         new=db.session.get(IndiAllSkyDbTaskQueueTable,new_id);new.setRunning()
         self.assertTrue(self.s.execute(new,**new.data['kwargs'])['ok'])
         self.assertEqual(len(self.calls),2)
+
+
+    def test_image_host_policy_and_unchanged_domain_pairing(self):
+        forbidden = ['allsky-map.com', 'www.allsky-map.com', 'nested.cdn.allsky-map.com',
+                     'ALLSKY-MAP.COM', 'allsky-map.com.', 'cdn.Allsky-Map.Com..', 'allsky-map.com:443']
+        for host in forbidden:
+            with self.subTest(host=host), self.assertRaises(G.MapError):
+                G.validate_urls('', 'https://' + host + '/api/cameras/example/image')
+        for host in ['notallsky-map.com', 'fooallsky-map.com', 'allsky-map.com.example.org']:
+            G.validate_urls('', 'https://' + host + '/latest.jpg')
+        # Only the image host is forbidden; do not couple this to ALLSKYMAP.API_URL.
+        G.validate_urls('https://allsky-map.com.example.org/', 'https://allsky-map.com.example.org/image')
+        for host in ['localhost.', 'LOCALHOST..', 'camera.local.', 'CAMERA.LOCAL..']:
+            with self.subTest(host=host), self.assertRaises(G.MapError):
+                G.validate_urls('', 'https://' + host + '/image')
+        G.validate_urls('https://example.org/', 'https://www.example.org/image')
+        G.validate_urls('https://example.org./', 'https://example.org./image')
+        # M10 remains unchanged: terminal-dot policy checks do not alter pair matching.
+        with self.assertRaises(G.MapError):
+            G.validate_urls('https://example.org/', 'https://example.org./image')
+        with self.assertRaises(G.MapError):
+            G.validate_urls('https://example.org/', 'https://cdn.example.org/image')
+
+    def test_forbidden_image_is_checked_again_before_queued_post(self):
+        preview = self.s.preview()
+        task_id = self.s.enqueue('register', preview['preview_token'])
+        self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = 'https://ALLSKY-MAP.COM./image'
+        with self.assertRaises(G.MapError):
+            self.s.preview()
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        result = self.s.execute(task, **task.data['kwargs'])
+        self.assertFalse(result['ok'])
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+        self.assertEqual(self.calls, [])
+        self.assertNotIn('attempted_task', self.s.state())
+
+    def test_remove_exempts_full_budget_without_consuming_or_evicting_attempts(self):
+        self.s.preview()
+        attempts = [{'time': self.now - 10, 'force': False} for _ in range(5)]
+        self.s._change(lambda state: state.update(attempts=attempts, registered=True))
+        for _ in range(3):
+            task_id = self.s.enqueue('remove')
+            task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+            task.setRunning()
+            # Server failure leaves withdrawal available and does not invent success.
+            self.s.opener = lambda *a, **k: Response(b'RETURN ERROR refused')
+            result = self.s.execute(task, **task.data['kwargs'])
+            self.assertFalse(result['ok'])
+            self.assertTrue(self.s.state()['registered'])
+            self.assertEqual(self.s.state()['attempts'], attempts)
+            self.assertEqual(self.s.state()['attempted_task'], task_id)
+        self.s.opener = self.open
+        task_id = self.s.enqueue('remove')
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
+        self.assertEqual(self.s.state()['attempts'], attempts)
+        self.assertFalse(self.s.state()['registered'])
+        self.assertEqual(json.loads(self.calls[-1][0].data)['website_url'], 'DELETE')
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('update', self.s.preview()['preview_token'])
+
+    def test_remove_with_identifier_and_no_history_is_still_available(self):
+        identifier = self.s.preview()['metadata']['machine_id']
+        self.assertEqual(identifier, '(installation identifier hidden)')
+        task_id = self.s.enqueue('remove')
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
+        self.assertEqual(self.s.state()['attempts'], [])
+
+    def test_remove_does_not_release_an_attempted_active_publication(self):
+        preview = self.s.preview()
+        task_id = self.s.enqueue('register', preview['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.s._change(lambda state: state.update(attempted_task=task_id, last_attempt=self.now))
+        before = self.s.state()
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('remove')
+        self.assertEqual(self.s.state(), before)
+        self.assertEqual(task.state, TaskQueueState.RUNNING)
+        self.assertEqual(self.calls, [])
+
+    def test_remove_ambiguous_or_quota_response_never_claims_deletion(self):
+        self.s.preview()
+        self.s._change(lambda state: state.update(registered=True))
+        for body in [b'unknown', b'RETURN ALREADY_UPDATED 5']:
+            with self.subTest(body=body):
+                self.s.opener = lambda *a, **k: Response(body)
+                task_id = self.s.enqueue('remove')
+                task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+                task.setRunning()
+                self.assertFalse(self.s.execute(task, **task.data['kwargs'])['ok'])
+                self.assertTrue(self.s.state()['registered'])
+                self.assertFalse(self.s.state()['attempts'])
+
+    def test_manual_pending_intent_is_not_silently_changed(self):
+        self.run_job()
+        self.now += G.REFRESH_SECONDS
+        task_id = self.s.schedule()
+        token = self.s.preview()['preview_token']
+        self.assertEqual(self.s.enqueue('update', token), task_id)
+        with self.assertRaisesRegex(G.MapError, 'different map request'):
+            self.s.enqueue('force', token)
+        self.cfg['OWNER'] = 'Changed owner'
+        with self.assertRaisesRegex(G.MapError, 'different map request'):
+            self.s.enqueue('update', self.s.preview()['preview_token'])
+        self.assertIsNone(self.s.schedule())
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        self.assertEqual(task.data['kwargs']['operation'], 'update')
+        self.assertEqual(len(self.calls), 1)
+
+    def test_malformed_response_evidence_is_read_only_but_core_state_fails_closed(self):
+        self.s.preview()
+        for value in ['bad json', '[]', 'null', '"text"']:
+            self.s._ensure(G.RESPONSE_KEY, value)
+            row = IndiAllSkyDbStateTable.query.filter_by(key=G.RESPONSE_KEY).one()
+            row.value = value
+            db.session.commit()
+            with self.subTest(value=value):
+                status = self.s.status()
+                self.assertEqual(status['response_evidence_error'], 'Stored response evidence is invalid')
+                self.assertNotIn('response_evidence', status)
+                self.assertEqual(self.s._read(G.RESPONSE_KEY), value)
+                self.assertEqual(self.s.state(), {})
+        self.s._ensure(G.STATE_KEY, '{broken')
+        with self.assertRaises(G.MapError):
+            self.s.status()
+
+    def test_unexpected_preclaim_failure_preserves_earlier_review(self):
+        for existing_review in [False, True]:
+            with self.subTest(existing_review=existing_review):
+                token = self.s.preview()['preview_token']
+                task_id = self.s.enqueue('register', token)
+                task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+                task.setRunning()
+                self.s._change(lambda state: state.update(needs_review=existing_review))
+                with patch.object(self.s, '_payload', side_effect=RuntimeError('private exception')):
+                    result = self.s.execute(task, **task.data['kwargs'])
+                self.assertEqual(task.state, TaskQueueState.FAILED)
+                self.assertEqual(self.s.state()['needs_review'], existing_review)
+                self.assertNotIn('attempted_task', self.s.state())
+                self.assertNotIn('private exception', result['message'])
+        self.assertEqual(self.calls, [])
+
+    def test_unexpected_after_claim_and_evidence_failure_are_not_retried(self):
+        for phase in ['post', 'evidence']:
+            self.now += 301
+            token = self.s.preview()['preview_token']
+            task_id = self.s.enqueue('register', token)
+            task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+            task.setRunning()
+            if phase == 'post':
+                def fail(*args, **kwargs):
+                    raise RuntimeError('private ' + self.s.identifier())
+                context = patch.object(G, 'post', side_effect=fail)
+            else:
+                original = self.s._ensure
+                def fail(key, value):
+                    if key == G.RESPONSE_KEY:
+                        raise RuntimeError('evidence persistence unavailable')
+                    return original(key, value)
+                context = patch.object(self.s, '_ensure', side_effect=fail)
+            with context:
+                result = self.s.execute(task, **task.data['kwargs'])
+            self.assertFalse(result['ok'])
+            self.assertEqual(task.state, TaskQueueState.FAILED)
+            self.assertTrue(self.s.state()['needs_review'])
+            self.assertEqual(self.s.state()['attempted_task'], task_id)
+            self.assertIsNone(self.s.schedule())
+            self.assertEqual(self.s.execute(task, **task.data['kwargs'])['status'], 'NOT_SENT')
+        self.assertEqual(len(self.calls), 1)
+
+    def test_superseded_finish_does_not_change_new_owner_or_status(self):
+        token = self.s.preview()['preview_token']
+        task_id = self.s.enqueue('register', token)
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        replacement = {'pending': task_id + 100, 'registered': True,
+                       'last_status': 'Replacement result', 'needs_review': True,
+                       'quota': {'maximum': 99}, 'attempted_task': task_id + 100}
+        def late_result(*args, **kwargs):
+            self.s._change(lambda state: (state.clear(), state.update(replacement)))
+            return {'ok': True, 'status': 'UPDATED', 'message': ''}
+        with patch.object(G, 'post', side_effect=late_result):
+            self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
+        self.assertEqual(self.s.state(), replacement)
+        self.assertEqual(task.state, TaskQueueState.SUCCESS)
+
+    def test_claim_commit_error_retains_durable_claim_and_requires_review(self):
+        token = self.s.preview()['preview_token']
+        task_id = self.s.enqueue('register', token)
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        original = self.s._change
+        def committed_then_error(change):
+            result = original(change)
+            if change.__name__ == 'claim':
+                raise RuntimeError('claim commit acknowledgement failed')
+            return result
+        with patch.object(self.s, '_change', side_effect=committed_then_error):
+            result = self.s.execute(task, **task.data['kwargs'])
+        self.assertFalse(result['ok'])
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+        self.assertEqual(self.calls, [])
+        self.assertTrue(self.s.state()['needs_review'])
+        self.assertEqual(self.s.state()['attempted_task'], task_id)
+        self.assertEqual(self.s.execute(task, **task.data['kwargs'])['status'], 'NOT_SENT')
+
+    def test_not_sent_preserves_all_existing_terminal_task_states(self):
+        task, _ = self.run_job()
+        for terminal in (TaskQueueState.SUCCESS, TaskQueueState.FAILED, TaskQueueState.EXPIRED):
+            task.state = terminal
+            db.session.commit()
+            before = self.s.state()
+            self.assertEqual(self.s.execute(task, **task.data['kwargs'])['status'], 'NOT_SENT')
+            self.assertEqual(task.state, terminal)
+            self.assertEqual(self.s.state(), before)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_periodic_feature_failure_does_not_skip_core_housekeeping(self):
+        from indi_allsky.allsky import IndiAllSky
+        from unittest.mock import Mock
+        worker = IndiAllSky.__new__(IndiAllSky)
+        worker.periodic_tasks_time = 0
+        worker.periodic_tasks_offset = 300
+        worker.cleanup_tasks_time = 0
+        worker.cleanup_tasks_offset = 300
+        for name in ['aurora', 'smoke', 'sat_data', 'backup']:
+            setattr(worker, name + '_tasks_time', self.now + 100)
+        worker.config = {}
+        worker._flushOldTasks = Mock()
+        worker._systemHealthCheck = Mock()
+        def poison_session():
+            db.session.add(IndiAllSkyDbStateTable(key='DB_CAMERA_ID', value='duplicate'))
+            db.session.flush()  # Leaves the session requiring rollback.
+        for failure in [RuntimeError('private'), G.MapError('Expected scheduling error'), poison_session]:
+            worker.periodic_tasks_time = 0
+            worker.cleanup_tasks_time = 0
+            worker._flushOldTasks.reset_mock()
+            worker._systemHealthCheck.reset_mock()
+            worker._flushOldTasks.side_effect = lambda: IndiAllSkyDbCameraTable.query.count()
+            with patch.object(G.GlobalMapService, 'schedule', side_effect=failure), \
+                    patch('indi_allsky.allsky.time.time', return_value=self.now), \
+                    patch.object(db.session, 'rollback', wraps=db.session.rollback) as rollback:
+                worker._periodic_tasks()
+            rollback.assert_called_once()
+            worker._flushOldTasks.assert_called_once()
+            worker._systemHealthCheck.assert_called_once()
 
 
 if __name__ == '__main__':

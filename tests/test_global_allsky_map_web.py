@@ -1,6 +1,5 @@
 """Installed architecture in a synthetic Flask/SQLite app; no listening server or devices."""
 import copy
-import json
 import re
 import uuid
 import unittest
@@ -29,7 +28,7 @@ class GlobalMapWebTest(unittest.TestCase):
                                        name='Synthetic',active=True,staff=True,admin=True)
         db.session.add(self.user);db.session.flush()
         self.cfg=copy.deepcopy(IndiAllSkyConfigBase._base_config)
-        self.cfg.update(VARLIB_FOLDER=_TMP.name,IMAGE_FOLDER=_TMP.name,DETECT_MASK='')
+        self.cfg.update(VARLIB_FOLDER=_TMP.name,IMAGE_FOLDER=_TMP.name,IMAGE_EXPORT_FOLDER=_TMP.name,DETECT_MASK='')
         self.cfg['GLOBAL_ALLSKY_MAP'].update(ENABLE=True,IMAGE_URL=self.IMAGE_URL)
         entry=IndiAllSkyDbConfigTable(data=self.cfg,level=__config_level__,user_id=self.user.id,encrypted=False,note='fixture')
         db.session.add(entry);db.session.flush()
@@ -143,6 +142,170 @@ class GlobalMapWebTest(unittest.TestCase):
         r=self.client.post(self.endpoint,json={'operation':'preview'},headers={'X-CSRFToken':token})
         self.assertEqual(r.status_code,200,r.get_json())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(),0)
+
+
+    def test_shared_metadata_consent_notice_is_rendered(self):
+        page = self.client.get('/indi-allsky/config')
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b'changes to the shared Owner, Location, coordinates, Lens or Privacy Mode', page.data)
+        self.assertIn(b'are published automatically', page.data)
+
+    def test_common_form_validator_rejects_proxy_only_when_enabled(self):
+        from types import SimpleNamespace
+        from wtforms.validators import ValidationError
+        from indi_allsky.flask.forms import GLOBAL_ALLSKY_MAP_urls_validator
+        form = SimpleNamespace(WEBSITE__PUBLIC_URL=SimpleNamespace(data=''),
+            GLOBAL_ALLSKY_MAP__IMAGE_URL=SimpleNamespace(data='https://CDN.ALLSKY-MAP.COM./image'),
+            GLOBAL_ALLSKY_MAP__ENABLE=SimpleNamespace(data=True))
+        with self.assertRaises(ValidationError):
+            GLOBAL_ALLSKY_MAP_urls_validator(form, None)
+        form.GLOBAL_ALLSKY_MAP__ENABLE.data = False
+        GLOBAL_ALLSKY_MAP_urls_validator(form, None)
+        # Disabled form saving does not turn a forbidden URL into publishable metadata.
+        self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = form.GLOBAL_ALLSKY_MAP__IMAGE_URL.data
+        with self.assertRaises(G.MapError):
+            G.payload(self.cfg, IndiAllSkyDbCameraTable.query.first(), 'a' * 32)
+
+    def test_worker_unexpected_execute_failure_is_terminal_and_worker_continues(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setQueued()
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        with patch.object(G.GlobalMapService, 'execute', side_effect=RuntimeError('private error')):
+            worker.processTask({'task_id': task.id})
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+        # An unrelated next task can still be dispatched in the same worker object.
+        from indi_allsky.flask.models import TaskQueueQueue
+        following = IndiAllSkyDbTaskQueueTable(queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.QUEUED, priority=100, data={'action': 'syntheticFollowingTask'})
+        db.session.add(following)
+        db.session.commit()
+        worker.syntheticFollowingTask = Mock(side_effect=lambda job: job.setSuccess('Completed'))
+        worker.processTask({'task_id': following.id})
+        self.assertEqual(following.state, TaskQueueState.SUCCESS)
+        self.assertTrue(G.GlobalMapService().status()['pending'])
+
+    def test_worker_finish_failure_retains_claim_and_surfaces_review(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setQueued()
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        original = G.GlobalMapService._change
+        def fail_finish(service, change):
+            if change.__name__ == 'finish':
+                raise RuntimeError('finish unavailable')
+            return original(service, change)
+        with patch.object(G, 'post', return_value={'ok': True, 'status': 'UPDATED', 'message': ''}) as post, \
+                patch.object(G.GlobalMapService, '_change', new=fail_finish):
+            worker.processTask({'task_id': task.id})
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+        state = G.GlobalMapService().state()
+        self.assertEqual(state['attempted_task'], task.id)
+        self.assertEqual(state['pending'], task.id)
+        self.assertTrue(G.GlobalMapService().status()['needs_review'])
+        self.assertIsNone(G.GlobalMapService().schedule())
+
+    def test_worker_terminalisation_failure_preserves_committed_success(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setQueued()
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        original = IndiAllSkyDbTaskQueueTable.setSuccess
+        def committed_then_error(job, message):
+            original(job, message)
+            raise RuntimeError('after success commit')
+        with patch.object(G, 'post', return_value={'ok': True, 'status': 'UPDATED', 'message': ''}), \
+                patch.object(IndiAllSkyDbTaskQueueTable, 'setSuccess', new=committed_then_error):
+            worker.processTask({'task_id': task.id})
+        self.assertEqual(task.state, TaskQueueState.SUCCESS)
+        self.assertTrue(G.GlobalMapService().state()['registered'])
+
+    def test_worker_notification_failure_does_not_downgrade_success(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setQueued()
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        worker._miscDb.clearNotification.side_effect = RuntimeError('private notification error')
+        with patch.object(G, 'post', return_value={'ok': True, 'status': 'UPDATED', 'message': ''}):
+            worker.processTask({'task_id': task.id})
+        self.assertEqual(task.state, TaskQueueState.SUCCESS)
+        self.assertTrue(G.GlobalMapService().state()['registered'])
+        self.assertNotIn('pending', G.GlobalMapService().state())
+
+    def test_worker_persistent_cleanup_failure_is_contained_without_false_success(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setRunning()
+        service = G.GlobalMapService()
+        service._change(lambda state: state.update(attempted_task=task.id, last_status='Sending register'))
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        with patch.object(G.GlobalMapService, 'execute', side_effect=RuntimeError('db unavailable')), \
+                patch.object(db.session, 'rollback', side_effect=RuntimeError('rollback unavailable')):
+            worker.publishGlobalAllskyMap(task, **task.data['kwargs'])
+        self.assertEqual(task.state, TaskQueueState.RUNNING)
+        self.assertEqual(service.state()['attempted_task'], task.id)
+        self.assertEqual(service.state()['pending'], task.id)
+        self.assertFalse(service.state().get('registered'))
+
+    def test_worker_failed_task_persistence_is_contained_and_logs_only_types(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setRunning()
+        service = G.GlobalMapService()
+        service._change(lambda state: state.update(attempted_task=task.id, last_status='Sending register'))
+        identifier = service.identifier()
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        with self.assertLogs('indi_allsky', level='ERROR') as logs, \
+                patch.object(G.GlobalMapService, 'execute', side_effect=RuntimeError('private ' + identifier)), \
+                patch.object(IndiAllSkyDbTaskQueueTable, 'setFailed', side_effect=RuntimeError('private ' + identifier)):
+            worker.publishGlobalAllskyMap(task, **task.data['kwargs'])
+        self.assertNotIn(identifier, str(logs.output))
+        self.assertNotIn('private', str(logs.output))
+        self.assertIn('RuntimeError', str(logs.output))
+        self.assertEqual(task.state, TaskQueueState.RUNNING)
+        self.assertEqual(service.state()['attempted_task'], task.id)
+        self.assertEqual(service.state()['pending'], task.id)
+
+    def test_worker_uncommitted_terminalisation_failure_is_best_effort_failed(self):
+        from indi_allsky.video import VideoWorker
+        preview = self.preview()
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+                                                       'preview_token': preview['preview_token']})
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, response.get_json()['task_id'])
+        task.setQueued()
+        worker = VideoWorker.__new__(VideoWorker)
+        worker._miscDb = Mock()
+        with patch.object(G, 'post', return_value={'ok': True, 'status': 'UPDATED', 'message': ''}), \
+                patch.object(IndiAllSkyDbTaskQueueTable, 'setSuccess', side_effect=RuntimeError('commit failed')):
+            worker.processTask({'task_id': task.id})
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+        # A durable server success is retained even though task terminalisation failed.
+        self.assertTrue(G.GlobalMapService().state()['registered'])
 
 
 if __name__=='__main__':unittest.main()

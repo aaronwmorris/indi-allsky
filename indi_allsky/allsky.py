@@ -1486,11 +1486,19 @@ class IndiAllSky(object):
         logger.warning('Periodic tasks triggered')
 
         # Metadata-only publication uses the existing manual VIDEO task dispatcher.
-        from .global_allsky_map import GlobalMapService, MapError
+        global_map = None
         try:
-            GlobalMapService().schedule()
-        except MapError as exc:
-            logger.warning('Global Allsky Map scheduling: %s', str(exc))
+            from . import global_allsky_map as global_map
+            global_map.GlobalMapService().schedule()
+        except Exception as exc:
+            try:
+                db.session.rollback()
+            except Exception as rollback_exc:
+                logger.error('Global Allsky Map scheduling rollback failed (%s)', type(rollback_exc).__name__)
+            if global_map is not None and isinstance(exc, global_map.MapError):
+                logger.warning('Global Allsky Map scheduling: %s', str(exc))
+            else:
+                logger.error('Global Allsky Map scheduling failed (%s)', type(exc).__name__)
 
 
 

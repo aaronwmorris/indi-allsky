@@ -14,6 +14,7 @@
     <label>{{ form_config.GLOBAL_ALLSKY_MAP__EQUIPMENT.label }} {{ form_config.GLOBAL_ALLSKY_MAP__EQUIPMENT(class='tw:input tw:input-bordered tw:w-full') }}</label>
     <div id="GLOBAL_ALLSKY_MAP__EQUIPMENT-error" class="tw:text-error" style="display:none"></div>
     <p>Location, owner and lens reuse their existing Config settings; camera/computer/version are automatic. Save changes first, then Preview the saved metadata. Preview stores an installation identifier locally but sends nothing. First registration always requires Register.</p>
+    <p>Once registered and enabled, changes to the shared Owner, Location, coordinates, Lens or Privacy Mode settings are published automatically.</p>
     <div class="tw:flex tw:flex-wrap tw:gap-2">
       <button type="button" class="tw:btn" data-global-map="preview">Preview saved metadata</button>
       <button type="button" class="tw:btn" data-global-map="register" disabled>Register / Update</button>
@@ -21,7 +22,7 @@
       <button type="button" class="tw:btn" data-global-map="remove">Remove and disable…</button>
       <button type="button" class="tw:btn" id="global-map-refresh">Refresh status</button>
     </div>
-    <p>Registered, enabled installations refresh about every 48 hours and after metadata changes. Ordinary requests are limited to five attempts in a rolling 24 hours. Force is a deliberate server-quota override, never automatic. Failures with unknown outcomes need manual review, not automatic retry.</p>
+    <p>Registered, enabled installations refresh about every 48 hours and after metadata changes. Ordinary publication is limited to five attempts in a rolling 24 hours; Remove does not use this local budget. Force is a deliberate server-quota override, never automatic. Failures with unknown outcomes need manual review, not automatic retry.</p>
     <p>Disabling stops future publication but does not remove an existing listing. Remove and disable saves Disable immediately and queues removal; if removal fails, publication stays disabled. Re-enabling never changes the installation identifier.</p>
     <pre id="global-map-preview" class="tw:whitespace-pre-wrap"></pre>
     <pre id="global-map-status" class="tw:whitespace-pre-wrap" role="status"></pre>
