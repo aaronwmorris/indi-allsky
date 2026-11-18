@@ -139,6 +139,240 @@ class GlobalMapTest(unittest.TestCase):
             with self.subTest(website=value), self.assertRaises(G.MapError):
                 G.validate_urls(value, 'https://images.example.org/latest.jpg')
 
+    @staticmethod
+    def _degrees(text):
+        return float(text[:-1]) * (-1 if text[-1] in 'SW' else 1)
+
+    @staticmethod
+    def _places(text):
+        number = text[:-1]
+        return len(number.split('.')[1]) if '.' in number else 0
+
+    def test_accuracy_default_is_legacy_with_identical_payload_hash(self):
+        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=-0.512)
+        before = self.s._payload(self.cfg, True)
+        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'legacy'
+        self.assertEqual(self.s._payload(self.cfg), before)
+        self.assertEqual(G.fingerprint(self.s._payload(self.cfg)), G.fingerprint(before))
+        self.assertEqual(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], 'legacy')
+        self.assertEqual(G.publication_coordinates(51.741, -.512), ('51.74N', '0.51W'))
+
+    def test_accuracy_private_branch_preserves_all_legacy_private_outputs(self):
+        modes = ['legacy', 'exact', '0.5km', '1km', '2km', '5km', 'invalid', '', None, []]
+        for lat, lon in [(51.7, -.5), (-51.5, 0), (0, -0.0), (89.9, 179.9), (-90, -180)]:
+            for mode in modes:
+                with self.subTest(lat=lat, lon=lon, mode=mode):
+                    self.assertEqual(G.publication_coordinates(lat, lon, True, mode),
+                                     (G.coordinate(lat, True, True), G.coordinate(lon, False, True)))
+
+    def test_accuracy_invalid_values_fail_closed_without_weakening_private_mode(self):
+        for mode in ['', None, [], {}, 1, 'Exact', '10km']:
+            with self.subTest(mode=mode), self.assertRaises(G.MapError):
+                G.publication_coordinates(51, 0, False, mode)
+        for lat, lon in [(None, 0), ('bad', 0), (91, 0), (0, -181), (float('nan'), 0), (0, float('inf'))]:
+            for private in [False, True]:
+                with self.subTest(lat=lat, lon=lon, private=private), self.assertRaises(G.MapError):
+                    G.publication_coordinates(lat, lon, private, 'exact')
+
+    def test_accuracy_exact_formats_stored_values_without_adding_precision(self):
+        for lat, lon, expected in [(51.741, -.512, ('51.741N', '0.512W')),
+                (51.7, .5, ('51.7N', '0.5E')), ('51.700', '0.500', ('51.7N', '0.5E')),
+                (10, 100, ('10N', '100E')), (0, -0., ('0N', '0E')),
+                (1e-7, -1e-8, ('0.0000001N', '0.00000001W')),
+                (-90, 180, ('90S', '180E')), (90, -180, ('90N', '180W'))]:
+            with self.subTest(lat=lat, lon=lon):
+                self.assertEqual(G.publication_coordinates(lat, lon, False, 'exact'), expected)
+
+    def test_accuracy_grids_never_promote_axis_source_precision(self):
+        modes = ['0.5km', '1km', '2km', '5km']
+        for lat, lon, places in [(51.7, .5, (1, 1)), (51.741, .5, (3, 1)),
+                                (51.7, .512, (1, 3)), (51, 0, (0, 0)),
+                                (51.741234567, .512345678, (6, 6)), (-1e-7, 1e-8, (6, 6))]:
+            for mode in modes:
+                with self.subTest(lat=lat, lon=lon, mode=mode):
+                    result = G.publication_coordinates(lat, lon, False, mode)
+                    for value, limit in zip(result, places):
+                        self.assertLessEqual(self._places(value), limit)
+        for mode in modes:
+            self.assertEqual(G.publication_coordinates(51.7, .5, False, mode), ('51.7N', '0.5E'))
+
+    def test_accuracy_grids_are_finite_bounded_and_stable_at_edges(self):
+        import random
+        rng = random.Random(18)
+        samples = [(0., 0.), (90., 180.), (-90., -180.), (89.999999, 179.999999),
+                   (-89.999999, -179.999999), (0.000001, -0.000001)]
+        samples += [(round(rng.uniform(-90, 90), 7), round(rng.uniform(-180, 180), 7)) for _ in range(300)]
+        for mode in ['0.5km', '1km', '2km', '5km']:
+            for lat, lon in samples:
+                result = G.publication_coordinates(lat, lon, False, mode)
+                actual = tuple(map(self._degrees, result))
+                self.assertLessEqual(abs(actual[0]), 90)
+                self.assertLessEqual(abs(actual[1]), 180)
+                self.assertNotIn('e', ''.join(result))
+                again = tuple(map(self._degrees, G.publication_coordinates(*actual, False, mode)))
+                # Source-format rounding may shift a centre; re-gridding stays within
+                # each output representation's quantum, not an assumed exact survey.
+                for first, second, text in zip(actual, again, result):
+                    self.assertLessEqual(abs(first - second), 10 ** -self._places(text) + 1e-9)
+            self.assertEqual(G.publication_coordinates(90, 120, False, mode), ('90N', '0E'))
+            self.assertEqual(G.publication_coordinates(-90, -120, False, mode), ('90S', '0E'))
+            self.assertEqual(G.publication_coordinates(51.741234, 180, False, mode),
+                             G.publication_coordinates(51.741234, -180, False, mode))
+
+    def test_accuracy_grid_geographic_displacement_and_longitude_spacing(self):
+        import math
+        def distance(a, b):
+            lat1, lon1, lat2, lon2 = map(math.radians, (*a, *b))
+            h = math.sin((lat2-lat1)/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
+            return 2 * 6371000 * math.asin(min(1, math.sqrt(h)))
+        for mode, spacing in [('0.5km', 500), ('1km', 1000), ('2km', 2000), ('5km', 5000)]:
+            for lat in [0.1234567, 51.7412345, -51.7412345, 80.1234567, 89.99999]:
+                result = tuple(map(self._degrees, G.publication_coordinates(lat, 10.1234567, False, mode)))
+                self.assertLess(distance((lat, 10.1234567), result), 2 * spacing + 1)
+            for lat in [0.1234567, 51.7412345, 80.1234567]:
+                nodes = []
+                for index in range(300):
+                    node = tuple(map(self._degrees, G.publication_coordinates(lat, 10.1234567 + index * .001, False, mode)))
+                    if not nodes or nodes[-1] != node:
+                        nodes.append(node)
+                self.assertGreater(len(nodes), 1)
+                for a, b in zip(nodes, nodes[1:]):
+                    circumference = 2 * math.pi * 6371000 * math.cos(math.radians(a[0]))
+                    # Integer rings use ceil(C/d): spacing is slightly below d.
+                    # Allow that geometric bound and sub-metre display rounding.
+                    self.assertLessEqual(distance(a, b), spacing + .5)
+                    self.assertGreaterEqual(distance(a, b), spacing - spacing**2 / circumference - .5)
+
+    def test_accuracy_longitude_grid_uses_only_the_quantised_latitude_row(self):
+        for mode in ['0.5km', '1km', '2km', '5km']:
+            with patch.object(G.math, 'cos', wraps=G.math.cos) as cos:
+                first = G.publication_coordinates(51.7412341, .5123456, False, mode)
+                second = G.publication_coordinates(51.7412342, .5123456, False, mode)
+            self.assertEqual(first, second)
+            self.assertEqual(cos.call_args_list[0], cos.call_args_list[1])
+
+    def test_accuracy_grid_boundary_ties_and_decimal_source_rounding(self):
+        import math
+        rows = math.ceil(math.pi * 6371000 / 1000)
+        # Select a representable half-cell boundary in the latitude-index domain.
+        boundary = -90 + 10000.5 * 180 / rows
+        low = self._degrees(G.publication_coordinates(boundary - 1e-8, 10.123456, False, '1km')[0])
+        high = self._degrees(G.publication_coordinates(boundary + 1e-8, 10.123456, False, '1km')[0])
+        self.assertGreater(high, low)
+        self.assertEqual(G.publication_coordinates(boundary, 10.123456, False, '1km')[0],
+                         G.publication_coordinates(boundary + 1e-8, 10.123456, False, '1km')[0])
+        # Inject mathematical candidates at decimal half-ties to exercise the final
+        # source cap independently of which grid nodes happen to be representable.
+        from decimal import Decimal
+        decimals = [Decimal('0.1'), Decimal('0.1'), Decimal('51.25'), Decimal(1), Decimal('.45'), Decimal(1)]
+        with patch.object(G, 'Decimal', side_effect=decimals):
+            self.assertEqual(G.publication_coordinates(0.1, 0.1, False, '1km'), ('51.2N', '0.4E'))
+
+    def test_accuracy_uses_saved_source_and_never_promotes_precision_for_gps(self):
+        self.cfg.update(LOCATION_LATITUDE=round(51.7001234, 3), LOCATION_LONGITUDE=round(.5001234, 3))
+        self.camera.latitude = 51.7001234
+        self.camera.longitude = .5001234
+        db.session.commit()
+        for mode in ['exact', '0.5km', '1km', '2km', '5km']:
+            self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = mode
+            before = copy.deepcopy(self.cfg)
+            manual = self.s._payload(self.cfg, True)
+            self.cfg['GPS_ENABLE'] = True
+            gps = self.s._payload(self.cfg)
+            self.assertEqual(manual, gps)
+            self.assertEqual((gps['latitude'], gps['longitude']), ('51.7N', '0.5E'))
+            self.assertEqual(self.cfg['LOCATION_LATITUDE'], before['LOCATION_LATITUDE'])
+            self.assertEqual(self.cfg['LOCATION_LONGITUDE'], before['LOCATION_LONGITUDE'])
+            self.assertEqual(self.cfg['ALLSKYMAP'], before['ALLSKYMAP'])
+            self.cfg['GPS_ENABLE'] = False
+
+    def test_accuracy_effective_changes_use_existing_fingerprints_and_stale_review(self):
+        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512)
+        self.run_job()
+        self.now += 301
+        preview = self.s.preview()
+        task_id = self.s.enqueue('update', preview['preview_token'])
+        self.s._change(lambda state: state.update(needs_review=True))
+        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('update', preview['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.assertEqual(self.s.execute(task, **task.data['kwargs'])['status'], 'STALE')
+        self.assertTrue(self.s.state()['needs_review'])
+        self.assertTrue(self.s.status()['dirty'])
+        self.assertIsNone(self.s.schedule())
+        self.assertEqual(len(self.calls), 1)
+
+    def test_accuracy_dirty_updates_coalesce_and_preview_matches_publication(self):
+        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512)
+        self.run_job()
+        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '1km'
+        self.assertTrue(self.s.status()['dirty'])
+        self.now += 301
+        task_id = self.s.schedule()
+        self.assertIsNotNone(task_id)
+        self.assertIsNone(self.s.schedule())
+        preview = self.s.preview()['metadata']
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
+        sent = json.loads(self.calls[-1][0].data)
+        self.assertEqual((preview['latitude'], preview['longitude']), (sent['latitude'], sent['longitude']))
+        self.assertNotIn('LOCATION_ACCURACY', sent)
+        self.assertFalse(self.s.status()['dirty'])
+
+    def test_accuracy_inactive_or_equivalent_choice_does_not_dirty_payload(self):
+        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512, PRIVACY_MODE=True)
+        self.run_job()
+        before = self.s._payload(self.cfg)
+        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+        self.assertEqual(self.s._payload(self.cfg), before)
+        self.assertFalse(self.s.status()['dirty'])
+        self.now += G.REFRESH_SECONDS - 1
+        self.assertIsNone(self.s.schedule())
+        self.cfg['PRIVACY_MODE'] = False
+        self.assertTrue(self.s.status()['dirty'])
+        self.cfg.update(LOCATION_LATITUDE=51.7, LOCATION_LONGITUDE=.5)
+        first = self.s._payload(self.cfg)
+        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '0.5km'
+        self.assertEqual(self.s._payload(self.cfg), first)
+
+    def test_accuracy_privacy_transitions_stale_queued_payload_and_preserve_review(self):
+        for original in [False, True]:
+            self.now += 301
+            self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512, PRIVACY_MODE=original)
+            self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+            self.run_job()
+            self.now += 301
+            preview = self.s.preview()
+            task_id = self.s.enqueue('update', preview['preview_token'])
+            self.s._change(lambda state: state.update(needs_review=True))
+            calls = len(self.calls)
+            self.cfg['PRIVACY_MODE'] = not original
+            task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+            task.setRunning()
+            self.assertEqual(self.s.execute(task, **task.data['kwargs'])['status'], 'STALE')
+            self.assertEqual(task.state, TaskQueueState.FAILED)
+            self.assertTrue(self.s.state()['needs_review'])
+            self.assertEqual(len(self.calls), calls)
+            self.assertIsNone(self.s.schedule())
+
+    def test_accuracy_saved_gps_changes_dirty_only_the_emitted_coordinates(self):
+        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512, GPS_ENABLE=True)
+        self.run_job()
+        before = self.s._payload(self.cfg)
+        self.cfg['LOCATION_LATITUDE'] = 51.742
+        self.assertEqual(self.s._payload(self.cfg), before)
+        self.assertFalse(self.s.status()['dirty'])
+        self.now += 301
+        self.assertIsNone(self.s.schedule())
+        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+        self.assertTrue(self.s.status()['dirty'])
+        self.assertIsNotNone(self.s.schedule())
+        self.assertIsNone(self.s.schedule())
+        self.assertEqual(len(self.calls), 1)
+
     def test_coordinates_zero_sign_bounds_privacy(self):
         for val,lat,expected in [(51.5,True,'51.5N'),(-.12,False,'0.12W'),(0,True,'0N'),
                                 (0,False,'0E'),(-90,True,'90S'),(180,False,'180E')]:

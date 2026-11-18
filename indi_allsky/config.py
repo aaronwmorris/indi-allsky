@@ -588,6 +588,7 @@ class IndiAllSkyConfigBase(object):
             "PUBLISH_IMAGE"          : True,
         },
         "GLOBAL_ALLSKY_MAP" : {
+            "LOCATION_ACCURACY" : "legacy",
             "ENABLE" : False,
             "IMAGE_URL" : "",
             "EQUIPMENT" : "",

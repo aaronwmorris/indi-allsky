@@ -2,10 +2,15 @@
   <div class="tw:card tw:bg-base-200 tw:my-4"><div class="tw:card-body">
     <h2 class="tw:card-title">Global Allsky Map — AllskyTeam</h2>
     <p>This is the Allsky project's public map, separate from allsky-map.com.</p>
-    <p>Publication shares the coordinates shown in Preview, location, owner, camera, lens, computer, equipment, public URLs and INDI-AllSky version. Coordinates are rounded to two decimals, or whole degrees in Privacy Mode. Public images/text can still identify your location.</p>
+    <p>Publication shares the coordinates shown in Preview, location, owner, camera, lens, computer, equipment, public URLs and INDI-AllSky version. Location accuracy controls public coordinate detail; global Privacy Mode always uses whole degrees. Public images/text can still identify your location.</p>
     <p>No image bytes, host machine ID or INDI-AllSky configuration are uploaded. A random persistent installation identifier is sent as the map record key; it is not authentication or an API key.</p>
     <label>{{ form_config.GLOBAL_ALLSKY_MAP__ENABLE() }} {{ form_config.GLOBAL_ALLSKY_MAP__ENABLE.label }}</label>
     <div id="GLOBAL_ALLSKY_MAP__ENABLE-error" class="tw:text-error" style="display:none"></div>
+    <label>{{ form_config.GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY.label }} {{ form_config.GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY(class='tw:select tw:select-bordered tw:w-full', disabled=form_config.PRIVACY_MODE.data) }}</label>
+    <div id="GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY-error" class="tw:text-error" style="display:none"></div>
+    <p id="global-map-private-location" {% if not form_config.PRIVACY_MODE.data %}style="display:none"{% endif %}>Global Privacy Mode is enabled. Global Map uses whole-degree coordinates; this setting has no effect.</p>
+    <p>Limits public location detail; cannot improve your configured/GPS location accuracy. Exact uses the saved location and can reveal your home/site. Grid output is limited by source precision; approximate grid spacing is not a guaranteed error or anonymity radius. Save, then Preview the coordinates that will be published.</p>
+    <p>Turning Privacy Mode off reactivates the saved accuracy choice, including Exact. Registered metadata changes may publish automatically; coarser settings do not erase previously published locations.</p>
     <label>{{ form_config.WEBSITE__PUBLIC_URL.label }} {{ form_config.WEBSITE__PUBLIC_URL(class='tw:input tw:input-bordered tw:w-full') }}</label>
     <p>Optional shared public website address. Both URLs may be empty; an image alone is valid. A website requires an image URL, but they may use different domains. Public URLs must not require a login.</p>
     <div id="WEBSITE__PUBLIC_URL-error" class="tw:text-error" style="display:none"></div>
@@ -30,6 +35,13 @@
 </div>
 <script>
 $(function () {
+  function updateLocationPrivacy() {
+    const privateMode = $('#PRIVACY_MODE').prop('checked');
+    $('#GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY').prop('disabled', privateMode);
+    $('#global-map-private-location').toggle(privateMode);
+  }
+  $('#PRIVACY_MODE').on('change', updateLocationPrivacy);
+  updateLocationPrivacy();
   let previewToken = null;
   const endpoint = {{ url_for('indi_allsky.global_allsky_map_view') | tojson }};
   const buttons = $('[data-global-map]');

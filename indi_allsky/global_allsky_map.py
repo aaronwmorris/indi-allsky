@@ -11,6 +11,7 @@ import re
 import secrets
 import time
 from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_EVEN
 from pathlib import Path
 from urllib import error, parse, request
 
@@ -102,6 +103,59 @@ def coordinate(value, latitude, private=False):
     return magnitude + direction
 
 
+def _format_coordinate(value, latitude):
+    """Plain decimal magnitude; never pad a source or expose float artefact digits."""
+    text = format(abs(value), 'f')
+    if '.' in text:
+        text = text.rstrip('0').rstrip('.')
+    direction = ('N' if value >= 0 else 'S') if latitude else ('E' if value >= 0 else 'W')
+    return text + direction
+
+
+def publication_coordinates(latitude, longitude, private=False, accuracy='legacy'):
+    """Saved location only; global privacy wins over any map-specific choice."""
+    try:
+        latitude, longitude = float(latitude), float(longitude)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise MapError('Invalid map coordinates') from exc
+    if not (math.isfinite(latitude) and math.isfinite(longitude)) or abs(latitude) > 90 or abs(longitude) > 180:
+        raise MapError('Map coordinates are outside their valid range')
+    if private:
+        return coordinate(latitude, True, True), coordinate(longitude, False, True)
+    distances = {'0.5km': 500, '1km': 1000, '2km': 2000, '5km': 5000}
+    if not isinstance(accuracy, str) or accuracy not in ('legacy', 'exact', *distances):
+        raise MapError('Invalid Global Allsky Map location accuracy')
+    if accuracy == 'legacy':
+        return coordinate(latitude, True), coordinate(longitude, False)
+    source = [Decimal(str(latitude)).normalize(), Decimal(str(longitude)).normalize()]
+    if accuracy == 'exact':
+        return _format_coordinate(source[0], True), _format_coordinate(source[1], False)
+
+    # Finite row/ring grids: longitude spacing depends on the quantised row,
+    # never on a finer, unpublished source latitude. R is an approximate sphere.
+    radius, distance = 6371000, distances[accuracy]
+    rows = math.ceil(math.pi * radius / distance)
+    row = min(rows, max(0, math.floor((latitude + 90) * rows / 180 + 0.5)))
+    lat = -90 + row * 180 / rows
+    if row in (0, rows):
+        lon = 0
+    else:
+        columns = max(1, math.ceil(2 * math.pi * radius * math.cos(math.radians(lat)) / distance))
+        index = math.floor(((longitude + 180) % 360) * columns / 360 + 0.5) % columns
+        lon = -180 + index * 360 / columns if columns > 1 else 0
+    # Stored numeric values have no measurement-accuracy metadata. Conservatively
+    # cap each axis at its own shortest-decimal precision (and at six places).
+    result = []
+    for value, original in zip((lat, lon), source):
+        places = min(6, max(0, -original.as_tuple().exponent))
+        result.append(Decimal(str(value)).quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_EVEN))
+    if abs(result[0]) == 90:
+        result[1] = Decimal(0)
+    elif result[1] == 180:
+        result[1] = Decimal(-180)
+    return _format_coordinate(result[0], True), _format_coordinate(result[1], False)
+
+
 def computer_description():
     try:
         model = Path('/proc/device-tree/model').read_text().strip('\x00\r\n ')
@@ -150,13 +204,14 @@ def payload(config, camera, identifier, computer=None):
     image = options.get('IMAGE_URL', '')
     validate_urls(website, image)
     private = bool(config.get('PRIVACY_MODE'))
+    latitude, longitude = publication_coordinates(config.get('LOCATION_LATITUDE'),
+        config.get('LOCATION_LONGITUDE'), private, options.get('LOCATION_ACCURACY', 'legacy'))
     equipment = str(options.get('EQUIPMENT', '') or '')
     return {
         'force': False, 'machine_id': identifier,
         'location': str(config.get('LOCATION_NAME', '') or ''),
         'owner': str(config.get('OWNER', '') or ''),
-        'latitude': coordinate(config.get('LOCATION_LATITUDE'), True, private),
-        'longitude': coordinate(config.get('LOCATION_LONGITUDE'), False, private),
+        'latitude': latitude, 'longitude': longitude,
         'website_url': website, 'image_url': image, 'camera': str(name),
         'lens': str(config.get('LENS_NAME', '') or ''),
         'computer': computer if computer is not None else computer_description(),

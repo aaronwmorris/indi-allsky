@@ -2998,6 +2998,7 @@ class ConfigView(FormView):
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
             'SYNCAPI__CONNECT_TIMEOUT'       : self.indi_allsky_config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0),
             'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 60.0),
+            'GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY' : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('LOCATION_ACCURACY', 'legacy'),
             'GLOBAL_ALLSKY_MAP__ENABLE'      : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False),
             'GLOBAL_ALLSKY_MAP__IMAGE_URL'   : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('IMAGE_URL', ''),
             'GLOBAL_ALLSKY_MAP__EQUIPMENT'   : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('EQUIPMENT', ''),
@@ -4115,6 +4116,11 @@ class AjaxConfigView(BaseView):
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
         self.indi_allsky_config['SYNCAPI']['CONNECT_TIMEOUT']           = float(request.json['SYNCAPI__CONNECT_TIMEOUT'])
         self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
+        if not self.indi_allsky_config.get('PRIVACY_MODE'):
+            # Old configs can share this default section; never mutate its accuracy.
+            self.indi_allsky_config['GLOBAL_ALLSKY_MAP'] = dict(self.indi_allsky_config['GLOBAL_ALLSKY_MAP'],
+                LOCATION_ACCURACY=request.json.get('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY',
+                    self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('LOCATION_ACCURACY', 'legacy')))
         self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['ENABLE']          = bool(request.json.get('GLOBAL_ALLSKY_MAP__ENABLE', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('ENABLE', False)))
         self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['IMAGE_URL']       = str(request.json.get('GLOBAL_ALLSKY_MAP__IMAGE_URL', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('IMAGE_URL', '')))
         self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['EQUIPMENT']       = str(request.json.get('GLOBAL_ALLSKY_MAP__EQUIPMENT', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('EQUIPMENT', '')))

@@ -124,6 +124,162 @@ class GlobalMapWebTest(unittest.TestCase):
         self.assertEqual(self.sent['website_url'], website)
         self.assertEqual(self.sent['image_url'], image)
 
+    def _accuracy_form_data(self):
+        captured = []
+        def receive(sender, template, context, **kwargs):
+            if 'form_config' in context:
+                captured.append(context['form_config'])
+        with template_rendered.connected_to(receive, APP):
+            response = self.client.get('/indi-allsky/config')
+        self.assertEqual(response.status_code, 200)
+        data = copy.deepcopy(captured[-1].data)
+        data.update(RELOAD_ON_SAVE=False, CONFIG_NOTE='Synthetic accuracy test')
+        return data, response.data
+
+    def test_accuracy_old_config_defaults_to_legacy_without_publication(self):
+        entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+        cfg = copy.deepcopy(entry.data)
+        cfg['GLOBAL_ALLSKY_MAP'].pop('LOCATION_ACCURACY', None)
+        entry.data = cfg
+        db.session.commit()
+        data, page = self._accuracy_form_data()
+        self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
+        self.assertIn(b'Existing rounding (2 decimal places)', page)
+        self.assertIn(b'Exact configured location', page)
+        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 200, response.get_json())
+        saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
+        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], 'legacy')
+        self.assertEqual(saved['LOCATION_LATITUDE'], cfg['LOCATION_LATITUDE'])
+        self.assertEqual(saved['LOCATION_LONGITUDE'], cfg['LOCATION_LONGITUDE'])
+        self.assertIsNone(G.GlobalMapService().identifier())
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_accuracy_saving_pre_feature_config_does_not_change_upgrade_default(self):
+        # The generic config loader shallow-copies base config. Isolate this feature's
+        # default section so this test cannot leak a deliberately mutated template.
+        section = copy.deepcopy(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP'])
+        with patch.dict(IndiAllSkyConfigBase._base_config, GLOBAL_ALLSKY_MAP=section):
+            entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+            old = copy.deepcopy(entry.data)
+            old.pop('GLOBAL_ALLSKY_MAP')
+            entry.data = old
+            db.session.commit()
+            data, _ = self._accuracy_form_data()
+            self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
+            data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = 'exact'
+            response = self.client.post('/indi-allsky/ajax/config', json=data)
+            self.assertEqual(response.status_code, 200, response.get_json())
+            self.assertEqual(section['LOCATION_ACCURACY'], 'legacy')
+            newest = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+            newest.data = copy.deepcopy(old)
+            db.session.commit()
+            data, _ = self._accuracy_form_data()
+            self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
+
+    def test_accuracy_choices_save_and_omitted_choice_is_preserved(self):
+        for mode in ['legacy', 'exact', '0.5km', '1km', '2km', '5km']:
+            data, _ = self._accuracy_form_data()
+            data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = mode
+            response = self.client.post('/indi-allsky/ajax/config', json=data)
+            self.assertEqual(response.status_code, 200, response.get_json())
+            saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
+            self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], mode)
+        data, _ = self._accuracy_form_data()
+        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
+        saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
+        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], '5km')
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_accuracy_invalid_form_choice_is_rejected(self):
+        data, _ = self._accuracy_form_data()
+        data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = 'unknown'
+        count = IndiAllSkyDbConfigTable.query.count()
+        response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY', response.get_json())
+        self.assertEqual(IndiAllSkyDbConfigTable.query.count(), count)
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_accuracy_private_save_ignores_changes_preserves_choice_and_preview(self):
+        entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+        cfg = copy.deepcopy(entry.data)
+        cfg.update(PRIVACY_MODE=True, LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512)
+        cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '1km'
+        entry.data = cfg
+        db.session.commit()
+        data, page = self._accuracy_form_data()
+        select = re.search(rb'<select[^>]*id="GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY"[^>]*>', page).group()
+        self.assertIn(b'disabled', select)
+        self.assertIn(b'this setting has no effect', page)
+        self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], '1km')
+        # A crafted supported finer choice cannot bypass or replace the dormant setting.
+        data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = 'exact'
+        response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 200, response.get_json())
+        saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
+        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], '1km')
+        preview = self.preview()['metadata']
+        self.assertEqual((preview['latitude'], preview['longitude']), ('52N', '1E'))
+        self.assertNotIn('51.741', str(preview))
+        data, _ = self._accuracy_form_data()
+        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
+        data, _ = self._accuracy_form_data()
+        data['PRIVACY_MODE'] = False
+        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
+        saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
+        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], '1km')
+        expected = G.publication_coordinates(saved['LOCATION_LATITUDE'], saved['LOCATION_LONGITUDE'], False, '1km')
+        preview = self.preview()['metadata']
+        self.assertEqual((preview['latitude'], preview['longitude']), expected)
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_accuracy_private_toggle_javascript_disables_and_restores_control(self):
+        import shutil
+        import subprocess
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is needed for the isolated UI-handler test')
+        _, page = self._accuracy_form_data()
+        function = re.search(rb'function updateLocationPrivacy\(\) \{.*?\n  \}', page, re.S).group().decode()
+        harness = r"""
+const assert = require('node:assert/strict');
+let checked = false, disabled = null, visible = null, callback;
+const $ = selector => ({
+  prop(name, value) {
+    if (selector === '#PRIVACY_MODE') return checked;
+    assert.equal(selector, '#GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY');
+    assert.equal(name, 'disabled'); disabled = value;
+  },
+  toggle(value) { assert.equal(selector, '#global-map-private-location'); visible = value; },
+  on(event, handler) { assert.equal(event, 'change'); callback = handler; }
+});
+"""
+        harness += function + "\n$('#PRIVACY_MODE').on('change', updateLocationPrivacy); updateLocationPrivacy();\n"
+        harness += "assert.equal(disabled,false); assert.equal(visible,false); checked=true; callback(); assert.equal(disabled,true); assert.equal(visible,true); checked=false; callback(); assert.equal(disabled,false); assert.equal(visible,false);"
+        result = subprocess.run([node, '-e', harness], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_accuracy_preview_and_worker_use_saved_choice_without_extra_payload_fields(self):
+        data, _ = self._accuracy_form_data()
+        data.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512,
+                    GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY='exact')
+        response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 200, response.get_json())
+        preview = self.preview()
+        self.assertEqual((preview['metadata']['latitude'], preview['metadata']['longitude']), ('51.741N', '0.512E'))
+        response = self.client.post(self.endpoint, json={'operation': 'register', 'preview_token': preview['preview_token']})
+        self.assertEqual(response.status_code, 200, response.get_json())
+        task, call = self.worker(response.get_json()['task_id'])
+        self.assertEqual(task.state, TaskQueueState.SUCCESS)
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual((self.sent['latitude'], self.sent['longitude']), ('51.741N', '0.512E'))
+        self.assertNotIn('LOCATION_ACCURACY', self.sent)
+
     def test_worker_uses_fresh_config_after_disable(self):
         preview=self.preview();r=self.client.post(self.endpoint,json={'operation':'register','preview_token':preview['preview_token']})
         entry=IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()

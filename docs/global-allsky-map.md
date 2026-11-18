@@ -14,8 +14,27 @@ and the canonical INDI-AllSky application version (for example
 machine ID are uploaded. The Image URL points to an independently hosted public
 image; this feature does not host or publish that image itself.
 
-Coordinates use two decimal places, or whole degrees in Privacy Mode. Images,
-URLs and descriptions may still reveal the installation's location. Review all
+Global Privacy Mode is authoritative: Global Map retains whole-degree coordinates
+and disables its location-accuracy control. With Privacy Mode off, choose Exact,
+approximate 0.5/1/2/5 km grids, or Existing rounding (2 decimal places). Existing
+rounding is the compatibility default, including when upgrading an older config;
+upgrading alone does not move the published location. Turning Privacy Mode off
+reactivates the saved choice, including Exact.
+
+Exact uses the saved configured location without further rounding. Normal manual
+and GPS config updates retain up to three decimals; Global Map does not read live
+GPS or infer accuracy from GPS Enable. Grid output never has more fractional
+places than each stored source axis (maximum six for grids). Lost trailing zeros
+are not reconstructed: a source of 51.7 cannot acquire apparent extra precision.
+These digits describe representation, not verified measurement uncertainty.
+
+Grid labels mean approximate geographic spacing, adjusted for longitude at the
+quantised latitude row; poles use a conventional zero longitude. Source precision
+can limit or eliminate the effect of a finer grid. Rounding is deterministic,
+not random anonymisation, a minimum displacement or a guaranteed error radius.
+Exact can disclose your home/site; coarser settings cannot erase previous public
+locations. Preview shows exactly the saved coordinates that will be sent.
+Images, URLs and descriptions may still reveal the installation's location. Review all
 metadata before publishing. Do not use allsky-map.com or its subdomains as the
 Image URL: its image proxy is not third-party image hosting.
 

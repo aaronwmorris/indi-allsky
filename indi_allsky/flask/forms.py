@@ -5080,6 +5080,10 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     GLOBAL_ALLSKY_MAP__ENABLE       = BooleanField('Enable Global Allsky Map publication')
+    GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY = SelectField('Public location accuracy', default='legacy', choices=[
+        ('legacy', 'Existing rounding (2 decimal places)'), ('exact', 'Exact configured location'),
+        ('0.5km', 'Approximate 0.5 km grid'), ('1km', 'Approximate 1 km grid'),
+        ('2km', 'Approximate 2 km grid'), ('5km', 'Approximate 5 km grid')])
     GLOBAL_ALLSKY_MAP__IMAGE_URL    = StringField('Public Image URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
     GLOBAL_ALLSKY_MAP__EQUIPMENT    = StringField('Equipment', validators=[Length(max=512)])
     WEBSITE__PUBLIC_URL            = StringField('Public Website URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
