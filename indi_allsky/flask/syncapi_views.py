@@ -183,7 +183,7 @@ class SyncApiBaseView(BaseView):
 
         date_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), d_dayDate.strftime('%Y%m%d'))
         if not date_folder.exists():
-            date_folder.mkdir(mode=0o755, parents=True)
+            date_folder.mkdir(mode=0o755, parents=True, exist_ok=True)
 
 
         if metadata['night']:
@@ -571,14 +571,14 @@ class SyncApiBaseImageView(SyncApiBaseView):
         )
 
         if not day_folder.exists():
-            day_folder.mkdir(mode=0o755, parents=True)
+            day_folder.mkdir(mode=0o755, parents=True, exist_ok=True)
 
 
         hour_str = exp_date.strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
-            hour_folder.mkdir(mode=0o755)
+            hour_folder.mkdir(mode=0o755, exist_ok=True)
 
         return hour_folder
 
@@ -784,7 +784,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
             thumbnail_dir_p = thumbnail_file_p.parent
             if not thumbnail_dir_p.exists():
-                thumbnail_dir_p.mkdir(mode=0o755, parents=True)
+                thumbnail_dir_p.mkdir(mode=0o755, parents=True, exist_ok=True)
 
             shutil.copy2(str(tmp_file_p), str(thumbnail_file_p))
             thumbnail_file_p.chmod(0o644)
