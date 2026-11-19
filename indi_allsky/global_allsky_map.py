@@ -585,10 +585,10 @@ class GlobalMapService:
                     raise _MetadataChanged('Saved metadata changed; preview/update again')
                 data['force'] = operation == 'force'
             def claim(state):
-                if not removing and state.get('publication_suppressed'):
-                    raise _Disabled('Publication suppressed before queued publication executed')
                 if state.get('pending') != task.id or state.get('attempted_task') == task.id:
                     raise _AlreadyAttempted('Stale/already attempted task; no POST repeated')
+                if not removing and state.get('publication_suppressed'):
+                    raise _Disabled('Publication suppressed before queued publication executed')
                 attempts = self._budget(state, operation == 'force', removing)
                 if not removing:
                     attempts.append({'time': now, 'force': operation == 'force'})

@@ -1061,5 +1061,21 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
 
+
+    def test_suppressed_duplicate_attempt_retains_pending_claim_and_review_evidence(self):
+        task_id = self.s.enqueue('register', self.s.preview()['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.s._change(lambda state: state.update(attempted_task=task_id, last_attempt=self.now))
+        self.s.suppress_publication()
+        before = self.s.state()
+        result = self.s.execute(task, **task.data['kwargs'])
+        self.assertEqual(result['status'], 'NOT_SENT')
+        self.assertEqual(self.s.state(), before)
+        self.assertEqual(self.s.state()['pending'], task_id)
+        self.assertTrue(self.s.status()['needs_review'])
+        self.assertEqual(self.calls, [])
+
+
 if __name__ == '__main__':
     unittest.main()
