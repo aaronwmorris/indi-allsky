@@ -36,7 +36,7 @@ class GlobalMapTest(unittest.TestCase):
         db.create_all()
         self.cfg = copy.deepcopy(IndiAllSkyConfigBase._base_config)
         self.cfg['GLOBAL_ALLSKY_MAP'] = {'ENABLE': True, 'IMAGE_URL': 'https://images.example.org/latest.jpg', 'EQUIPMENT': ''}
-        self.cfg.update(LOCATION_LATITUDE=51.5, LOCATION_LONGITUDE=-.12,
+        self.cfg.update(LOCATION_LATITUDE=35.5, LOCATION_LONGITUDE=-.12,
                         LOCATION_NAME='Synthetic site', OWNER='Synthetic owner')
         self.camera = IndiAllSkyDbCameraTable(name='Test CCD', local=True, data={'detected_name': 'Detected CCD'})
         db.session.add(self.camera); db.session.flush()
@@ -84,7 +84,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(data, {
             'force': False, 'machine_id': self.s.identifier(),
             'location': 'Synthetic site', 'owner': 'Synthetic owner',
-            'latitude': '51.5N', 'longitude': '0.12W',
+            'latitude': '35.5N', 'longitude': '0.12W',
             'website_url': '', 'image_url': 'https://images.example.org/latest.jpg',
             'camera': 'Detected CCD', 'lens': self.cfg['LENS_NAME'],
             'computer': 'Generic PC, 8 GiB', 'equipmentinfo': equipment,
@@ -119,7 +119,7 @@ class GlobalMapTest(unittest.TestCase):
         for website, image in pairs:
             with self.subTest(website=website, image=image):
                 G.validate_urls(website, image)
-                self.cfg['WEBSITE']['PUBLIC_URL'] = website
+                self.cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = website
                 self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = image
                 data = self.s._payload(self.cfg, True)
                 self.assertEqual(data['website_url'], website)
@@ -149,17 +149,17 @@ class GlobalMapTest(unittest.TestCase):
         return len(number.split('.')[1]) if '.' in number else 0
 
     def test_accuracy_default_is_legacy_with_identical_payload_hash(self):
-        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=-0.512)
+        self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=-12.654)
         before = self.s._payload(self.cfg, True)
         self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'legacy'
         self.assertEqual(self.s._payload(self.cfg), before)
         self.assertEqual(G.fingerprint(self.s._payload(self.cfg)), G.fingerprint(before))
         self.assertEqual(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], 'legacy')
-        self.assertEqual(G.publication_coordinates(51.741, -.512), ('51.74N', '0.51W'))
+        self.assertEqual(G.publication_coordinates(35.123, -12.654), ('35.12N', '12.65W'))
 
     def test_accuracy_private_branch_preserves_all_legacy_private_outputs(self):
         modes = ['legacy', 'exact', '0.5km', '1km', '2km', '5km', 'invalid', '', None, []]
-        for lat, lon in [(51.7, -.5), (-51.5, 0), (0, -0.0), (89.9, 179.9), (-90, -180)]:
+        for lat, lon in [(35.1, -.5), (-35.5, 0), (0, -0.0), (89.9, 179.9), (-90, -180)]:
             for mode in modes:
                 with self.subTest(lat=lat, lon=lon, mode=mode):
                     self.assertEqual(G.publication_coordinates(lat, lon, True, mode),
@@ -175,8 +175,8 @@ class GlobalMapTest(unittest.TestCase):
                     G.publication_coordinates(lat, lon, private, 'exact')
 
     def test_accuracy_exact_formats_stored_values_without_adding_precision(self):
-        for lat, lon, expected in [(51.741, -.512, ('51.741N', '0.512W')),
-                (51.7, .5, ('51.7N', '0.5E')), ('51.700', '0.500', ('51.7N', '0.5E')),
+        for lat, lon, expected in [(35.123, -12.654, ('35.123N', '12.654W')),
+                (35.1, 12.6, ('35.1N', '12.6E')), ('35.100', '12.600', ('35.1N', '12.6E')),
                 (10, 100, ('10N', '100E')), (0, -0., ('0N', '0E')),
                 (1e-7, -1e-8, ('0.0000001N', '0.00000001W')),
                 (-90, 180, ('90S', '180E')), (90, -180, ('90N', '180W'))]:
@@ -185,16 +185,16 @@ class GlobalMapTest(unittest.TestCase):
 
     def test_accuracy_grids_never_promote_axis_source_precision(self):
         modes = ['0.5km', '1km', '2km', '5km']
-        for lat, lon, places in [(51.7, .5, (1, 1)), (51.741, .5, (3, 1)),
-                                (51.7, .512, (1, 3)), (51, 0, (0, 0)),
-                                (51.741234567, .512345678, (6, 6)), (-1e-7, 1e-8, (6, 6))]:
+        for lat, lon, places in [(35.1, 12.6, (1, 1)), (35.123, 12.6, (3, 1)),
+                                (35.1, 12.654, (1, 3)), (51, 0, (0, 0)),
+                                (35.123234567, 12.654345678, (6, 6)), (-1e-7, 1e-8, (6, 6))]:
             for mode in modes:
                 with self.subTest(lat=lat, lon=lon, mode=mode):
                     result = G.publication_coordinates(lat, lon, False, mode)
                     for value, limit in zip(result, places):
                         self.assertLessEqual(self._places(value), limit)
         for mode in modes:
-            self.assertEqual(G.publication_coordinates(51.7, .5, False, mode), ('51.7N', '0.5E'))
+            self.assertEqual(G.publication_coordinates(35.1, 12.6, False, mode), ('35.1N', '12.6E'))
 
     def test_accuracy_grids_are_finite_bounded_and_stable_at_edges(self):
         import random
@@ -216,8 +216,8 @@ class GlobalMapTest(unittest.TestCase):
                     self.assertLessEqual(abs(first - second), 10 ** -self._places(text) + 1e-9)
             self.assertEqual(G.publication_coordinates(90, 120, False, mode), ('90N', '0E'))
             self.assertEqual(G.publication_coordinates(-90, -120, False, mode), ('90S', '0E'))
-            self.assertEqual(G.publication_coordinates(51.741234, 180, False, mode),
-                             G.publication_coordinates(51.741234, -180, False, mode))
+            self.assertEqual(G.publication_coordinates(35.123234, 180, False, mode),
+                             G.publication_coordinates(35.123234, -180, False, mode))
 
     def test_accuracy_grid_geographic_displacement_and_longitude_spacing(self):
         import math
@@ -226,10 +226,10 @@ class GlobalMapTest(unittest.TestCase):
             h = math.sin((lat2-lat1)/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
             return 2 * 6371000 * math.asin(min(1, math.sqrt(h)))
         for mode, spacing in [('0.5km', 500), ('1km', 1000), ('2km', 2000), ('5km', 5000)]:
-            for lat in [0.1234567, 51.7412345, -51.7412345, 80.1234567, 89.99999]:
+            for lat in [0.1234567, 35.1232345, -35.1232345, 80.1234567, 89.99999]:
                 result = tuple(map(self._degrees, G.publication_coordinates(lat, 10.1234567, False, mode)))
                 self.assertLess(distance((lat, 10.1234567), result), 2 * spacing + 1)
-            for lat in [0.1234567, 51.7412345, 80.1234567]:
+            for lat in [0.1234567, 35.1232345, 80.1234567]:
                 nodes = []
                 for index in range(300):
                     node = tuple(map(self._degrees, G.publication_coordinates(lat, 10.1234567 + index * .001, False, mode)))
@@ -246,8 +246,8 @@ class GlobalMapTest(unittest.TestCase):
     def test_accuracy_longitude_grid_uses_only_the_quantised_latitude_row(self):
         for mode in ['0.5km', '1km', '2km', '5km']:
             with patch.object(G.math, 'cos', wraps=G.math.cos) as cos:
-                first = G.publication_coordinates(51.7412341, .5123456, False, mode)
-                second = G.publication_coordinates(51.7412342, .5123456, False, mode)
+                first = G.publication_coordinates(35.1232341, 12.6543456, False, mode)
+                second = G.publication_coordinates(35.1232342, 12.6543456, False, mode)
             self.assertEqual(first, second)
             self.assertEqual(cos.call_args_list[0], cos.call_args_list[1])
 
@@ -264,14 +264,14 @@ class GlobalMapTest(unittest.TestCase):
         # Inject mathematical candidates at decimal half-ties to exercise the final
         # source cap independently of which grid nodes happen to be representable.
         from decimal import Decimal
-        decimals = [Decimal('0.1'), Decimal('0.1'), Decimal('51.25'), Decimal(1), Decimal('.45'), Decimal(1)]
+        decimals = [Decimal('0.1'), Decimal('0.1'), Decimal('35.25'), Decimal(1), Decimal('.45'), Decimal(1)]
         with patch.object(G, 'Decimal', side_effect=decimals):
-            self.assertEqual(G.publication_coordinates(0.1, 0.1, False, '1km'), ('51.2N', '0.4E'))
+            self.assertEqual(G.publication_coordinates(0.1, 0.1, False, '1km'), ('35.2N', '0.4E'))
 
     def test_accuracy_uses_saved_source_and_never_promotes_precision_for_gps(self):
-        self.cfg.update(LOCATION_LATITUDE=round(51.7001234, 3), LOCATION_LONGITUDE=round(.5001234, 3))
-        self.camera.latitude = 51.7001234
-        self.camera.longitude = .5001234
+        self.cfg.update(LOCATION_LATITUDE=round(35.1001234, 3), LOCATION_LONGITUDE=round(12.6001234, 3))
+        self.camera.latitude = 35.1001234
+        self.camera.longitude = 12.6001234
         db.session.commit()
         for mode in ['exact', '0.5km', '1km', '2km', '5km']:
             self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = mode
@@ -280,14 +280,14 @@ class GlobalMapTest(unittest.TestCase):
             self.cfg['GPS_ENABLE'] = True
             gps = self.s._payload(self.cfg)
             self.assertEqual(manual, gps)
-            self.assertEqual((gps['latitude'], gps['longitude']), ('51.7N', '0.5E'))
+            self.assertEqual((gps['latitude'], gps['longitude']), ('35.1N', '12.6E'))
             self.assertEqual(self.cfg['LOCATION_LATITUDE'], before['LOCATION_LATITUDE'])
             self.assertEqual(self.cfg['LOCATION_LONGITUDE'], before['LOCATION_LONGITUDE'])
             self.assertEqual(self.cfg['ALLSKYMAP'], before['ALLSKYMAP'])
             self.cfg['GPS_ENABLE'] = False
 
     def test_accuracy_effective_changes_use_existing_fingerprints_and_stale_review(self):
-        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512)
+        self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654)
         self.run_job()
         self.now += 301
         preview = self.s.preview()
@@ -305,7 +305,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(len(self.calls), 1)
 
     def test_accuracy_dirty_updates_coalesce_and_preview_matches_publication(self):
-        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512)
+        self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654)
         self.run_job()
         self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '1km'
         self.assertTrue(self.s.status()['dirty'])
@@ -323,7 +323,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertFalse(self.s.status()['dirty'])
 
     def test_accuracy_inactive_or_equivalent_choice_does_not_dirty_payload(self):
-        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512, PRIVACY_MODE=True)
+        self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654, PRIVACY_MODE=True)
         self.run_job()
         before = self.s._payload(self.cfg)
         self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
@@ -333,7 +333,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertIsNone(self.s.schedule())
         self.cfg['PRIVACY_MODE'] = False
         self.assertTrue(self.s.status()['dirty'])
-        self.cfg.update(LOCATION_LATITUDE=51.7, LOCATION_LONGITUDE=.5)
+        self.cfg.update(LOCATION_LATITUDE=35.1, LOCATION_LONGITUDE=.5)
         first = self.s._payload(self.cfg)
         self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '0.5km'
         self.assertEqual(self.s._payload(self.cfg), first)
@@ -341,7 +341,7 @@ class GlobalMapTest(unittest.TestCase):
     def test_accuracy_privacy_transitions_stale_queued_payload_and_preserve_review(self):
         for original in [False, True]:
             self.now += 301
-            self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512, PRIVACY_MODE=original)
+            self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654, PRIVACY_MODE=original)
             self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
             self.run_job()
             self.now += 301
@@ -359,10 +359,10 @@ class GlobalMapTest(unittest.TestCase):
             self.assertIsNone(self.s.schedule())
 
     def test_accuracy_saved_gps_changes_dirty_only_the_emitted_coordinates(self):
-        self.cfg.update(LOCATION_LATITUDE=51.741, LOCATION_LONGITUDE=.512, GPS_ENABLE=True)
+        self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654, GPS_ENABLE=True)
         self.run_job()
         before = self.s._payload(self.cfg)
-        self.cfg['LOCATION_LATITUDE'] = 51.742
+        self.cfg['LOCATION_LATITUDE'] = 35.124
         self.assertEqual(self.s._payload(self.cfg), before)
         self.assertFalse(self.s.status()['dirty'])
         self.now += 301
@@ -374,10 +374,10 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(len(self.calls), 1)
 
     def test_coordinates_zero_sign_bounds_privacy(self):
-        for val,lat,expected in [(51.5,True,'51.5N'),(-.12,False,'0.12W'),(0,True,'0N'),
+        for val,lat,expected in [(35.5,True,'35.5N'),(-.12,False,'0.12W'),(0,True,'0N'),
                                 (0,False,'0E'),(-90,True,'90S'),(180,False,'180E')]:
             self.assertEqual(G.coordinate(val,lat),expected)
-        self.assertEqual(G.coordinate(51.6,True,True),'52N')
+        self.assertEqual(G.coordinate(35.6,True,True),'36N')
         for val,lat in [(91,True),(181,False),(float('nan'),True),(float('inf'),False),('bad',True)]:
             with self.assertRaises(G.MapError):G.coordinate(val,lat)
 
@@ -686,7 +686,7 @@ class GlobalMapTest(unittest.TestCase):
         before = self.s.state()
         with self.assertRaises(G.MapError):
             self.s.enqueue('remove')
-        self.assertEqual(self.s.state(), before)
+        self.assertEqual(self.s.state(), dict(before, publication_suppressed=True))
         self.assertEqual(task.state, TaskQueueState.RUNNING)
         self.assertEqual(self.calls, [])
 
@@ -856,6 +856,209 @@ class GlobalMapTest(unittest.TestCase):
             rollback.assert_called_once()
             worker._flushOldTasks.assert_called_once()
             worker._systemHealthCheck.assert_called_once()
+
+
+
+    def test_website_url_legacy_fallback_and_explicit_new_key_preserve_fingerprint(self):
+        website = 'https://website.example.org/archive/'
+        self.cfg['WEBSITE']['PUBLIC_URL'] = website
+        before = self.s._payload(self.cfg, True)
+        self.cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = website
+        after = self.s._payload(self.cfg)
+        self.assertEqual(before, after)
+        self.assertEqual(G.fingerprint(before), G.fingerprint(after))
+        self.cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = ''
+        self.assertEqual(self.s._payload(self.cfg)['website_url'], '')
+        self.assertNotIn('PUBLIC_URL', IndiAllSkyConfigBase._base_config['WEBSITE'])
+
+    def test_numeric_ipv4_forms_and_terminal_dot_do_not_bypass_url_validation(self):
+        for host in ['3232235777', '0x7f000001', '127.1', '127.0.1',
+                     '0177.0.0.1', '0x7f.0.0.1', '2130706433',
+                     '192.168.1.1.', '127.0.0.1.', '0X7F000001.']:
+            for website in [False, True]:
+                url = 'https://' + host + '/latest.jpg'
+                with self.subTest(host=host, website=website), self.assertRaises(G.MapError):
+                    G.validate_urls(url if website else '',
+                                    'https://images.example.org/latest.jpg' if website else url)
+        for host in ['8.8.8.8', '8.8.8.8.', '[2606:4700:4700::1111]',
+                     '123.example.org', '0x7f.example.org', 'example.org']:
+            G.validate_urls('', 'https://' + host + '/latest.jpg')
+
+    def test_expected_preclaim_failure_preserves_prior_review_and_makes_no_attempt(self):
+        for prior in [False, True]:
+            self.camera.local = True
+            db.session.commit()
+            task_id = self.s.enqueue('register', self.s.preview()['preview_token'])
+            self.s._change(lambda state: state.update(needs_review=prior))
+            self.camera.local = False
+            db.session.commit()
+            task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+            task.setRunning()
+            result = self.s.execute(task, **task.data['kwargs'])
+            self.assertEqual(result['status'], 'FAILED')
+            self.assertEqual(task.state, TaskQueueState.FAILED)
+            self.assertEqual(self.s.state()['needs_review'], prior)
+            self.assertNotIn('last_attempt', self.s.state())
+            self.assertEqual(self.calls, [])
+
+    def test_postclaim_diagnostic_failure_requires_review(self):
+        task_id = self.s.enqueue('register', self.s.preview()['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        original = self.s._ensure
+        def ensure(key, value):
+            if key == G.RESPONSE_KEY:
+                raise G.MapError('diagnostic store unavailable')
+            return original(key, value)
+        with patch.object(self.s, '_ensure', side_effect=ensure):
+            result = self.s.execute(task, **task.data['kwargs'])
+        self.assertFalse(result['ok'])
+        self.assertEqual(len(self.calls), 1)
+        self.assertTrue(self.s.state()['needs_review'])
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+
+    def test_suppression_survives_stale_config_and_blocks_all_ordinary_paths(self):
+        self.run_job()
+        self.now += G.REFRESH_SECONDS + 1
+        self.s.suppress_publication()
+        # Simulate stale parent whole-config write-back setting ENABLE true again.
+        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'] = True
+        restarted = G.GlobalMapService(lambda: self.cfg, lambda: self.now, self.open)
+        self.assertIsNone(restarted.schedule())
+        self.assertIsNone(restarted.enqueue('update', automatic=True))
+        preview = restarted.preview()
+        for operation in ['update', 'force']:
+            with self.subTest(operation=operation), self.assertRaises(G.MapError):
+                restarted.enqueue(operation, preview['preview_token'])
+        self.assertTrue(restarted.status()['publication_suppressed'])
+        self.assertIn('explicitly Register', restarted.status()['publication_notice'])
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 1)
+
+    def test_queued_publication_claim_rechecks_suppression_after_payload_construction(self):
+        task_id = self.s.enqueue('register', self.s.preview()['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        self.s._change(lambda state: state.update(needs_review=True))
+        original = self.s._payload
+        def disable_after_read(config):
+            data = original(config)
+            self.s.suppress_publication()
+            return data
+        with patch.object(self.s, '_payload', side_effect=disable_after_read):
+            result = self.s.execute(task, **task.data['kwargs'])
+        self.assertEqual(result['status'], 'DISABLED')
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.assertTrue(self.s.state()['needs_review'])
+        self.assertNotIn('last_attempt', self.s.state())
+        self.assertEqual(self.calls, [])
+        self.assertEqual(task.state, TaskQueueState.FAILED)
+
+    def test_inflight_success_cannot_clear_new_suppression_or_resume_automation(self):
+        task_id = self.s.enqueue('register', self.s.preview()['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        def sent_then_disable(data, opener=None, record=None):
+            self.s.suppress_publication()
+            return {'ok': True, 'status': 'UPDATED', 'message': ''}
+        with patch.object(G, 'post', side_effect=sent_then_disable):
+            self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
+        self.assertTrue(self.s.state()['registered'])
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.now += G.REFRESH_SECONDS + 1
+        self.assertIsNone(self.s.schedule())
+
+    def test_refused_remove_latches_suppression_before_inflight_request_finishes(self):
+        task_id = self.s.enqueue('register', self.s.preview()['preview_token'])
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        def remove_during_post(data, opener=None, record=None):
+            with self.assertRaises(G.MapError):
+                self.s.enqueue('remove')
+            return {'ok': True, 'status': 'UPDATED', 'message': ''}
+        with patch.object(G, 'post', side_effect=remove_during_post):
+            self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.assertTrue(self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'])
+        self.now += G.REFRESH_SECONDS + 1
+        self.assertIsNone(self.s.schedule())
+
+    def test_remove_failure_remains_suppressed_despite_stale_enabled_config(self):
+        self.run_job()
+        task_id = self.s.enqueue('remove')
+        task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+        task.setRunning()
+        with patch.object(G, 'post', return_value={'ok': False, 'status': 'ALREADY_UPDATED', 'message': '5'}):
+            self.s.execute(task, **task.data['kwargs'])
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.assertTrue(self.s.state()['registered'])
+        self.now += G.REFRESH_SECONDS + 1
+        self.assertIsNone(self.s.schedule())
+
+    def test_only_valid_register_enqueue_clears_suppression_and_budget_failure_retains_it(self):
+        self.run_job()
+        self.s.suppress_publication()
+        token = self.s.preview()['preview_token']
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('register', 'wrong')
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('register', token)  # Minimum interval has not elapsed.
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.now += 301
+        self.s._change(lambda state: state.update(attempts=[{'force':False,'time':self.now}]*5))
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('register', token)
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.now += G.QUOTA_SECONDS + 1
+        self.s.enqueue('register', token)
+        self.assertFalse(self.s.state()['publication_suppressed'])
+
+    def test_register_enqueue_integrity_failure_rolls_back_suppression_release(self):
+        self.s.preview()
+        self.s.suppress_publication()
+        with patch.object(db.session, 'flush', side_effect=RuntimeError('synthetic flush failure')):
+            with self.assertRaises(RuntimeError):
+                self.s.enqueue('register', self.s.preview()['preview_token'])
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+
+
+    def test_neutral_synthetic_grid_expectations_from_independent_calculation(self):
+        # R=6371000: row/ring calculations independently evaluated for 35.123/12.654.
+        # These values are synthetic and unrelated to an installation.
+        expected = {'0.5km': ('35.125N', '12.656E'), '1km': ('35.126N', '12.65E'),
+                    '2km': ('35.126N', '12.655E'), '5km': ('35.11N', '12.641E')}
+        for mode, pair in expected.items():
+            with self.subTest(mode=mode):
+                self.assertEqual(G.publication_coordinates(35.123, 12.654, False, mode), pair)
+
+    def test_register_cas_contention_does_not_release_suppression_or_leave_job(self):
+        self.s.preview()
+        self.s.suppress_publication()
+        with patch('sqlalchemy.orm.Query.update', return_value=0):
+            with self.assertRaises(G.MapError):
+                self.s.enqueue('register', self.s.preview()['preview_token'])
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_suppressed_active_register_cannot_release_guard_but_expired_job_can_be_replaced(self):
+        token = self.s.preview()['preview_token']
+        first = self.s.enqueue('register', token)
+        self.s.suppress_publication()
+        with self.assertRaises(G.MapError):
+            self.s.enqueue('register', token)
+        self.assertTrue(self.s.state()['publication_suppressed'])
+        old = db.session.get(IndiAllSkyDbTaskQueueTable, first)
+        old.state = TaskQueueState.EXPIRED
+        db.session.commit()
+        second = self.s.enqueue('register', token)
+        self.assertNotEqual(first, second)
+        self.assertFalse(self.s.state()['publication_suppressed'])
+        old.setRunning()
+        self.assertEqual(self.s.execute(old, **old.data['kwargs'])['status'], 'NOT_SENT')
+        self.assertEqual(self.s.state()['pending'], second)
+        self.assertEqual(self.calls, [])
 
 
 if __name__ == '__main__':

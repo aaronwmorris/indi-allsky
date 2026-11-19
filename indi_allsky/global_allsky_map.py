@@ -79,9 +79,12 @@ def validate_urls(website, image):
         if policy_host == 'localhost' or policy_host.endswith('.local'):
             raise MapError('Public URLs must be reachable outside the local network')
         try:
-            address = ipaddress.ip_address(host)
+            address = ipaddress.ip_address(policy_host)
         except ValueError:
-            pass
+            # Reject legacy numeric IPv4 spellings without DNS or platform parsing.
+            # Canonical public IPv4/IPv6 literals remain handled by ipaddress.
+            if re.fullmatch(r'(?:[0-9]+|0x[0-9a-f]+)(?:\.(?:[0-9]+|0x[0-9a-f]+))*', policy_host):
+                raise MapError('Use canonical public IP addresses in map URLs')
         else:
             if not address.is_global:
                 raise MapError('Public URLs must not contain private/local IP addresses')
@@ -189,6 +192,12 @@ def _redact_response(text, identifier):
     return text
 
 
+def website_url(config):
+    """Read the integration-owned URL, retaining pre-PR saved-config compatibility."""
+    return config.get('GLOBAL_ALLSKY_MAP', {}).get('WEBSITE_URL',
+        config.get('WEBSITE', {}).get('PUBLIC_URL', ''))
+
+
 def payload(config, camera, identifier, computer=None):
     """Build an explicit metadata allowlist; never serialize config/camera objects."""
     if not re.fullmatch('[0-9a-f]{32}', identifier):
@@ -200,7 +209,7 @@ def payload(config, camera, identifier, computer=None):
     if not name:
         raise MapError('Detected camera name is unavailable')
     options = config.get('GLOBAL_ALLSKY_MAP', {})
-    website = config.get('WEBSITE', {}).get('PUBLIC_URL', '')
+    website = website_url(config)
     image = options.get('IMAGE_URL', '')
     validate_urls(website, image)
     private = bool(config.get('PRIVACY_MODE'))
@@ -397,6 +406,10 @@ class GlobalMapService:
             db.session.rollback()
         raise MapError('Map state is busy; try again')
 
+    def suppress_publication(self):
+        """Explicit withdrawal survives unrelated stale whole-config write-backs."""
+        self._change(lambda state: state.update(publication_suppressed=True))
+
     def _payload(self, config, create=False):
         from .flask.models import IndiAllSkyDbCameraTable
         identifier = self.identifier(create)
@@ -418,7 +431,9 @@ class GlobalMapService:
     def status(self):
         state = self.state()
         # Do not expose the identifier, task claim internals or full server messages.
-        public = {k: state.get(k) for k in ('registered', 'pending', 'last_status', 'last_success', 'last_attempt', 'needs_review', 'quota')}
+        public = {k: state.get(k) for k in ('registered', 'pending', 'last_status', 'last_success', 'last_attempt', 'needs_review', 'quota', 'publication_suppressed')}
+        if state.get('publication_suppressed'):
+            public['publication_notice'] = 'Publication suppressed; enable, Preview and explicitly Register to resume'
         pending = state.get('pending')
         if pending and state.get('attempted_task') == pending:
             from .flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueState
@@ -458,6 +473,8 @@ class GlobalMapService:
         from .flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueState, TaskQueueQueue
         if operation not in ('register', 'update', 'force', 'remove') or (automatic and operation != 'update'):
             raise MapError('Invalid map operation')
+        if operation == 'remove':
+            self.suppress_publication()
         config = self.config()
         if operation != 'remove' and not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
             raise MapError('Global Allsky Map is disabled')
@@ -470,6 +487,11 @@ class GlobalMapService:
             if not automatic and preview_token != digest:
                 raise MapError('Preview the saved metadata before publication')
         def queue(state):
+            if state.get('publication_suppressed') and operation != 'remove':
+                if automatic:
+                    return None
+                if operation != 'register':
+                    raise MapError('Publication suppressed; Preview and explicitly Register to resume')
             if automatic and (not state.get('registered') or state.get('needs_review')):
                 return None
             if operation == 'remove' and not state.get('registered') and str(state.get('last_status', '')).startswith('DELETED'):
@@ -478,6 +500,8 @@ class GlobalMapService:
             if pending:
                 task = db.session.get(IndiAllSkyDbTaskQueueTable, pending)
                 if task and task.state in (TaskQueueState.MANUAL, TaskQueueState.QUEUED, TaskQueueState.RUNNING):
+                    if state.get('publication_suppressed') and operation == 'register':
+                        raise MapError('Publication suppressed; wait for the pending request to finish')
                     if operation == 'remove' and task.data['kwargs']['operation'] != 'remove':
                         if state.get('attempted_task') == pending:
                             raise MapError('Disabled; publication is in progress. Retry removal after it finishes.')
@@ -497,6 +521,8 @@ class GlobalMapService:
             db.session.add(job)
             db.session.flush()
             state['pending'] = job.id
+            if operation == 'register' and not automatic:
+                state['publication_suppressed'] = False
             state['last_status'] = 'Queued ' + operation
             return job.id
         return self._change(queue)
@@ -506,7 +532,7 @@ class GlobalMapService:
         if not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
             return None
         state = self.state()
-        if not state.get('registered') or state.get('needs_review'):
+        if state.get('publication_suppressed') or not state.get('registered') or state.get('needs_review'):
             return None
         pending = state.get('pending')
         if pending:
@@ -541,7 +567,6 @@ class GlobalMapService:
         from .flask import db
         now = self.clock()
         identifier = None
-        unexpected = False
         try:
             if operation not in ('register', 'update', 'force', 'remove'):
                 raise MapError('Invalid queued operation')
@@ -560,6 +585,8 @@ class GlobalMapService:
                     raise _MetadataChanged('Saved metadata changed; preview/update again')
                 data['force'] = operation == 'force'
             def claim(state):
+                if not removing and state.get('publication_suppressed'):
+                    raise _Disabled('Publication suppressed before queued publication executed')
                 if state.get('pending') != task.id or state.get('attempted_task') == task.id:
                     raise _AlreadyAttempted('Stale/already attempted task; no POST repeated')
                 attempts = self._budget(state, operation == 'force', removing)
@@ -601,7 +628,6 @@ class GlobalMapService:
         except Exception as exc:
             db.session.rollback()
             logger.error('Global Allsky Map execution failed (%s)', type(exc).__name__)
-            unexpected = True
             result = {'ok': False, 'status': 'FAILED', 'message': 'Unexpected map failure; inspect task status before retrying'}
         message = str(result.get('message') or result['status']).replace(identifier or '<none>', '[installation-id]')[:200]
         result['message'] = message
@@ -623,7 +649,7 @@ class GlobalMapService:
                 state['auto_not_before'] = now + QUOTA_SECONDS
             else:
                 # Before a durable claim no POST was made; retain any earlier review.
-                state['needs_review'] = (not unexpected or state.get('attempted_task') == task.id
+                state['needs_review'] = (state.get('attempted_task') == task.id
                                          or bool(state.get('needs_review')))
         self._change(finish)
         if result['ok']:

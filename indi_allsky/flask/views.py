@@ -3002,7 +3002,7 @@ class ConfigView(FormView):
             'GLOBAL_ALLSKY_MAP__ENABLE'      : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False),
             'GLOBAL_ALLSKY_MAP__IMAGE_URL'   : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('IMAGE_URL', ''),
             'GLOBAL_ALLSKY_MAP__EQUIPMENT'   : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('EQUIPMENT', ''),
-            'WEBSITE__PUBLIC_URL'           : self.indi_allsky_config.get('WEBSITE', {}).get('PUBLIC_URL', ''),
+            'GLOBAL_ALLSKY_MAP__WEBSITE_URL' : self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}).get('WEBSITE_URL', self.indi_allsky_config.get('WEBSITE', {}).get('PUBLIC_URL', '')),
             'ALLSKYMAP__ENABLE'              : self.indi_allsky_config.get('ALLSKYMAP', {}).get('ENABLE', False),
             'ALLSKYMAP__API_URL'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com'),
             'ALLSKYMAP__API_KEY'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_KEY', ''),
@@ -3547,8 +3547,9 @@ class GlobalAllskyMapView(BaseView):
             if operation == 'remove':
                 # Disable first, even if removal subsequently fails. No capture reload.
                 from ..config import IndiAllSkyConfig
+                service.suppress_publication()
                 config_obj = IndiAllSkyConfig()
-                config_obj.config.setdefault('GLOBAL_ALLSKY_MAP', {})['ENABLE'] = False
+                config_obj.config['GLOBAL_ALLSKY_MAP'] = dict(config_obj.config.get('GLOBAL_ALLSKY_MAP', {}), ENABLE=False)
                 config_obj.save(current_user.username, 'Disable Global Allsky Map and remove listing')
             task_id = service.enqueue(operation, data.get('preview_token'))
             return jsonify(task_id=task_id, status=service.status(), enabled=bool(service.config().get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE')))
@@ -4116,15 +4117,17 @@ class AjaxConfigView(BaseView):
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
         self.indi_allsky_config['SYNCAPI']['CONNECT_TIMEOUT']           = float(request.json['SYNCAPI__CONNECT_TIMEOUT'])
         self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
+        # Both private and non-private saves must detach shared shallow defaults.
+        self.indi_allsky_config['GLOBAL_ALLSKY_MAP'] = dict(self.indi_allsky_config.get('GLOBAL_ALLSKY_MAP', {}))
         if not self.indi_allsky_config.get('PRIVACY_MODE'):
-            # Old configs can share this default section; never mutate its accuracy.
-            self.indi_allsky_config['GLOBAL_ALLSKY_MAP'] = dict(self.indi_allsky_config['GLOBAL_ALLSKY_MAP'],
-                LOCATION_ACCURACY=request.json.get('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY',
-                    self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('LOCATION_ACCURACY', 'legacy')))
+            self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = request.json.get(
+                'GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('LOCATION_ACCURACY', 'legacy'))
         self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['ENABLE']          = bool(request.json.get('GLOBAL_ALLSKY_MAP__ENABLE', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('ENABLE', False)))
         self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['IMAGE_URL']       = str(request.json.get('GLOBAL_ALLSKY_MAP__IMAGE_URL', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('IMAGE_URL', '')))
         self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['EQUIPMENT']       = str(request.json.get('GLOBAL_ALLSKY_MAP__EQUIPMENT', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get('EQUIPMENT', '')))
-        self.indi_allsky_config['WEBSITE']['PUBLIC_URL']               = str(request.json.get('WEBSITE__PUBLIC_URL', self.indi_allsky_config['WEBSITE'].get('PUBLIC_URL', '')))
+        self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = str(request.json.get(
+            'GLOBAL_ALLSKY_MAP__WEBSITE_URL', self.indi_allsky_config['GLOBAL_ALLSKY_MAP'].get(
+                'WEBSITE_URL', self.indi_allsky_config.get('WEBSITE', {}).get('PUBLIC_URL', ''))))
         self.indi_allsky_config['ALLSKYMAP']['ENABLE']                  = bool(request.json['ALLSKYMAP__ENABLE'])
         self.indi_allsky_config['ALLSKYMAP']['API_URL']                 = str(request.json['ALLSKYMAP__API_URL'])
         self.indi_allsky_config['ALLSKYMAP']['API_KEY']                 = str(request.json['ALLSKYMAP__API_KEY'])
@@ -4529,10 +4532,14 @@ class AjaxConfigView(BaseView):
             username = 'system'
 
 
+        from ..global_allsky_map import MapError
         try:
+            if 'GLOBAL_ALLSKY_MAP__ENABLE' in request.json and not self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['ENABLE']:
+                from ..global_allsky_map import GlobalMapService
+                GlobalMapService().suppress_publication()
             self._indi_allsky_config_obj.save(username, config_note)
             app.logger.info('Saved new config')
-        except ConfigSaveException as e:
+        except (ConfigSaveException, MapError) as e:
             error_data = {
                 'form_global' : [str(e)],
             }

@@ -11,9 +11,9 @@
     <p id="global-map-private-location" {% if not form_config.PRIVACY_MODE.data %}style="display:none"{% endif %}>Global Privacy Mode is enabled. Global Map uses whole-degree coordinates; this setting has no effect.</p>
     <p>Limits public location detail; cannot improve your configured/GPS location accuracy. Exact uses the saved location and can reveal your home/site. Grid output is limited by source precision; approximate grid spacing is not a guaranteed error or anonymity radius. Save, then Preview the coordinates that will be published.</p>
     <p>Turning Privacy Mode off reactivates the saved accuracy choice, including Exact. Registered metadata changes may publish automatically; coarser settings do not erase previously published locations.</p>
-    <label>{{ form_config.WEBSITE__PUBLIC_URL.label }} {{ form_config.WEBSITE__PUBLIC_URL(class='tw:input tw:input-bordered tw:w-full') }}</label>
+    <label>{{ form_config.GLOBAL_ALLSKY_MAP__WEBSITE_URL.label }} {{ form_config.GLOBAL_ALLSKY_MAP__WEBSITE_URL(class='tw:input tw:input-bordered tw:w-full') }}</label>
     <p>Optional shared public website address. Both URLs may be empty; an image alone is valid. A website requires an image URL, but they may use different domains. Public URLs must not require a login.</p>
-    <div id="WEBSITE__PUBLIC_URL-error" class="tw:text-error" style="display:none"></div>
+    <div id="GLOBAL_ALLSKY_MAP__WEBSITE_URL-error" class="tw:text-error" style="display:none"></div>
     <label>{{ form_config.GLOBAL_ALLSKY_MAP__IMAGE_URL.label }} {{ form_config.GLOBAL_ALLSKY_MAP__IMAGE_URL(class='tw:input tw:input-bordered tw:w-full') }}</label>
     <div id="GLOBAL_ALLSKY_MAP__IMAGE_URL-error" class="tw:text-error" style="display:none"></div>
     <label>{{ form_config.GLOBAL_ALLSKY_MAP__EQUIPMENT.label }} {{ form_config.GLOBAL_ALLSKY_MAP__EQUIPMENT(class='tw:input tw:input-bordered tw:w-full') }}</label>

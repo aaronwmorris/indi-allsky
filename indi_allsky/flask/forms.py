@@ -2906,7 +2906,7 @@ def SYNCAPI__BASEURL_validator(form, field):
 def GLOBAL_ALLSKY_MAP_urls_validator(form, field):
     from ..global_allsky_map import validate_urls, MapError
     try:
-        validate_urls(form.WEBSITE__PUBLIC_URL.data or '', form.GLOBAL_ALLSKY_MAP__IMAGE_URL.data or '')
+        validate_urls(form.GLOBAL_ALLSKY_MAP__WEBSITE_URL.data or '', form.GLOBAL_ALLSKY_MAP__IMAGE_URL.data or '')
     except MapError as exc:
         # The shared public site URL can be saved before this integration is enabled.
         if form.GLOBAL_ALLSKY_MAP__ENABLE.data:
@@ -5086,7 +5086,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('2km', 'Approximate 2 km grid'), ('5km', 'Approximate 5 km grid')])
     GLOBAL_ALLSKY_MAP__IMAGE_URL    = StringField('Public Image URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
     GLOBAL_ALLSKY_MAP__EQUIPMENT    = StringField('Equipment', validators=[Length(max=512)])
-    WEBSITE__PUBLIC_URL            = StringField('Public Website URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
+    GLOBAL_ALLSKY_MAP__WEBSITE_URL            = StringField('Public Website URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
     ALLSKYMAP__ENABLE                = BooleanField('Enable Allsky Map Ping')
     ALLSKYMAP__API_URL               = StringField('API URL', validators=[ALLSKYMAP__API_URL_validator])
     ALLSKYMAP__API_KEY               = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[ALLSKYMAP__API_KEY_validator], render_kw={'autocomplete' : 'new-password'})
