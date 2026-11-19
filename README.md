@@ -19,6 +19,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Allow Home Assistant to work with your observatory data. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=indi_allsky) 
 * OIDC (OpenID Connect) Authentication (beta)
     * Support for external identity providers (Keycloak, Authentik, Google, GitHub, etc.) for Single Sign-On (SSO).
+* Allsky Map Integration
+    * Share your live camera status, location, and latest captures with the global community on [allsky-map.com](https://allsky-map.com).
 * Auto-Gain Support
     * Auto-Gain with Exposure Priority automatically tries to scale the exposure to the maximum setting and adjusts gain to maintain consistent image brightness.  Exposure is maximized to ensure you do not miss any events in the sky.
 * Real-Time Keogram
@@ -528,6 +530,19 @@ The indi-allsky web interface is designed to be directly exposed to the Internet
 https://github.com/aaronwmorris/indi-allsky/wiki/Security-considerations
 
 It is also possible to use cloud security offerings like [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/) to further protect your indi-allsky site.
+
+
+## Allsky Map Integration
+
+[allsky-map.com](https://allsky-map.com) is an interactive global community map showcasing live Allsky cameras from around the world.
+
+INDI Allsky features native integration with Allsky Map:
+* **Live Status Reporting**: Periodically pings the central map service with your camera's availability and day/night state.
+* **Latest Thumbnail Upload**: Optionally uploads your latest sky view thumbnail so viewers can inspect live sky conditions worldwide directly from the map.
+* **Privacy Controls**: Customize public display coordinates (fuzzing your exact location) and configure public links back to your camera's website.
+* **One-Click API Key Provisioning**: Request an API key directly from the camera's web configuration dashboard under **Allsky Map**.
+
+![](./content/allsky_map.png)
 
 
 ## Sensor support
