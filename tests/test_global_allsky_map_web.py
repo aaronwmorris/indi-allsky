@@ -67,9 +67,35 @@ class GlobalMapWebTest(unittest.TestCase):
         self.assertIn(b'Global Allsky Map',r.data)
         self.assertIn(b'GLOBAL_ALLSKY_MAP__IMAGE_URL',r.data)
         self.assertIn(b'GLOBAL_ALLSKY_MAP__WEBSITE_URL',r.data)
-        self.assertEqual(self.client.get(self.endpoint).status_code,200)
+        with patch.object(G, 'post', side_effect=AssertionError('Status must not POST')) as post, \
+                patch.object(G.GlobalMapService, 'enqueue', side_effect=AssertionError('Status must not enqueue')) as enqueue:
+            for _ in range(3):
+                self.assertEqual(self.client.get(self.endpoint).status_code,200)
+            post.assert_not_called(); enqueue.assert_not_called()
+        self.assertIsNone(G.GlobalMapService()._read(G.STATE_KEY))
         self.assertIsNone(G.GlobalMapService().identifier())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(),0)
+
+    def test_status_refresh_preserves_established_state_and_request_ownership(self):
+        service = G.GlobalMapService()
+        preview = service.preview()
+        service._change(lambda state: state.update(registered=True, publication_suppressed=True,
+            needs_review=True, pending=987654, attempted_task=987654, payload_hash=preview['preview_token']))
+        before = {row.key: row.value for row in IndiAllSkyDbStateTable.query.all()}
+        configs = IndiAllSkyDbConfigTable.query.count()
+        with patch.object(G, 'post', side_effect=AssertionError('Status must not POST')) as post, \
+                patch.object(G.GlobalMapService, 'enqueue', side_effect=AssertionError('Status must not enqueue')) as enqueue:
+            for _ in range(3):
+                response = self.client.get(self.endpoint)
+                self.assertEqual(response.status_code, 200)
+                status = response.get_json()['status']
+                self.assertTrue(status['needs_review'])
+                self.assertTrue(status['publication_suppressed'])
+                self.assertEqual(status['pending'], 987654)
+            post.assert_not_called(); enqueue.assert_not_called()
+        self.assertEqual({row.key: row.value for row in IndiAllSkyDbStateTable.query.all()}, before)
+        self.assertEqual(IndiAllSkyDbConfigTable.query.count(), configs)
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
 
     def test_real_form_save_is_not_registration(self):
         captured=[]
@@ -342,7 +368,7 @@ const $ = selector => ({
         self.assertIn('Also published', text)
         self.assertIn('Technical details', text)
         self.assertIn('How publishing works', text)
-        self.assertIn('First publication requires Register', text)
+        self.assertIn('First listings are normally created with Register / Update', text)
         self.assertIn('one-minute guard', text)
         self.assertIn('Publication preview', text)
         self.assertNotIn('Preview — not yet sent', text)
@@ -360,6 +386,10 @@ const $ = selector => ({
             self.assertEqual(text.count('id="' + element + '"'), 1)
         self.assertIn('tw:sm:grid-cols-2', text)
         self.assertIn('overflow-wrap:anywhere', text)
+        self.assertIn('width:min(10rem, 40%)', text)
+        self.assertIn('Keep it private. Anyone with it could change or remove your listing.', text)
+        self.assertIn('is not used to log in to indi-allsky', text)
+        self.assertIn('new MutationObserver(loadGlobalMapStatusOnOpen)', text)
         self.assertNotIn('.html(', text[text.index('function renderGlobalMapStatus'):text.index('function show(data)')])
         self.assertIsNone(service.identifier())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
@@ -371,10 +401,33 @@ const $ = selector => ({
         self.assertFalse((root / 'docs/global-allsky-map.md').exists())
         self.assertIn('[Global Allsky Map (AllskyTeam)](Global-Allsky-Map)',
                       (root / 'docs/wiki/Home.md').read_text())
-        for phrase in ['rolling 24 hours', 'one-minute guard', 'Server counts',
-                       'limited by the precision of your saved location', 'must never contact the production',
-                       'database** backups', 'different domains']:
+        for phrase in ['5 ordinary attempts in any 24 hours', 'a rolling window', 'one-minute gap',
+                       'Effect on marker position', 'not guaranteed for every location',
+                       'database** backups', 'different domains', 'Keep it private.',
+                       'at least 24 hours', "won't necessarily clear the pending or review status",
+                       "the rebuild itself doesn't register anything"]:
             self.assertIn(phrase, page)
+        self.assertNotIn('For developers:', page)
+        self.assertNotIn('near the poles', page)
+        intro = page.split('## Quick start')[0]
+        self.assertNotIn('Force and Remove also send requests', intro)
+        self.assertIn('Once registered, changes can be published automatically while publication is enabled and active.', page)
+        self.assertIn('saved changes can be published before you Preview them', page)
+        for lat, lon in [(35.123, 12.654), (35.1, 12.6)]:
+            cells = [', '.join(G.publication_coordinates(lat, lon, False, mode))
+                     for mode in ['legacy', '1km', '5km']]
+            self.assertIn('| ' + str(lat) + ', ' + str(lon) + ' | ' + ' | '.join(cells) + ' |', page)
+        for message in ['Preview the saved metadata before publication',
+                        'Publication suppressed; Preview and explicitly Register to resume',
+                        'Five ordinary attempts in the last 24 hours; wait for quota or explicitly force an update',
+                        'Wait one minute between map requests',
+                        'A different map request is pending; wait for it to finish',
+                        'No active local camera metadata is available']:
+            self.assertIn(message, page)
+        headings = {re.sub(r'[^\w -]', '', line.lstrip('# ').lower()).replace(' ', '-')
+                    for line in page.splitlines() if line.startswith('#')}
+        for anchor in re.findall(r'\]\(#([^)]*)\)', page):
+            self.assertIn(anchor, headings)
 
     def test_status_and_preview_renderers_use_literal_text(self):
         import shutil
@@ -386,6 +439,9 @@ const $ = selector => ({
         source = page.decode()
         status_fn = re.search(r'  function renderGlobalMapStatus\(data\) \{.*?\n  \}', source, re.S).group()
         preview_fn = re.search(r'  function renderGlobalMapPreview\(metadata\) \{.*?\n  \}', source, re.S).group()
+        result_fn = re.search(r'  function globalMapLastResult\(value\) \{.*?\n  \}', source, re.S).group()
+        load_fn = re.search(r'  function loadGlobalMapStatus\(\) \{.*?\n  \}', source, re.S).group()
+        activation = re.search(r"  \$\('#global-map-refresh'\).on\('click', loadGlobalMapStatus\);.*?  loadGlobalMapStatusOnOpen\(\);", source, re.S).group()
         harness = r"""
 const assert = require('node:assert/strict');
 let savedEnabled = true;
@@ -397,6 +453,7 @@ class Element {
   addClass(value) { this.classes += value; return this; }
   appendTo(parent) { parent.children.push(this); return this; }
   show() { this.visible = true; return this; }
+  on(event, handler) { this.handlers = this.handlers || {}; this.handlers[event] = handler; return this; }
   html() { throw new Error('HTML insertion forbidden'); }
 }
 const $ = selector => {
@@ -406,7 +463,7 @@ const $ = selector => {
 };
 const labels = () => $('#global-map-badges').children.map(x => x.value);
 """
-        harness += status_fn + '\n' + preview_fn + r"""
+        harness += result_fn + '\n' + status_fn + '\n' + preview_fn + r"""
 renderGlobalMapStatus({enabled:true,status:{registered:true,publication_suppressed:true,needs_review:true,pending:42,dirty:true,last_success:1800000000,quota:{updates:2,maximum:5},last_status:'<b>unsafe</b>'}});
 assert.deepEqual(labels(), ['Registered','Publishing paused','Needs review','Request pending','Changes not yet published']);
 assert.ok($('#global-map-summary').children.some(x => x.value === 'Last result: <b>unsafe</b>'));
@@ -430,6 +487,44 @@ assert.equal(rows[8].children[1].value, '—');
 assert.ok(!rows.some(row => row.children[0].value === 'machine_id'));
 assert.equal($('#global-map-preview-panel').visible, true);
 assert.equal($('#global-map-preview-heading').value, 'Publication preview');
+const known = {INSERTED:'Registered', UPDATED:'Updated', DELETED:'Removed', ALREADY_UPDATED:'Server update limit reached', ERROR:'Server error', FAILED:'Failed', STALE:'Not sent — saved details changed', DISABLED:'Not sent — publication disabled or paused', NOT_SENT:'Not sent'};
+for (const [code,label] of Object.entries(known)) assert.equal(globalMapLastResult(code + ': detail'), label);
+assert.equal(globalMapLastResult('Queued register'), 'Request queued');
+assert.equal(globalMapLastResult('Sending update'), 'Sending request');
+assert.equal(globalMapLastResult('Interrupted request; manual review required, not retried'), 'Interrupted request — review required');
+assert.equal(globalMapLastResult('UPDATEDNESS: unexpected'), 'UPDATEDNESS: unexpected');
+assert.equal(globalMapLastResult('Unknown <b>message</b>'), 'Unknown <b>message</b>');
+const raw = {enabled:true,status:{registered:true,last_status:'UPDATED: 1 5',response_evidence:{body:'RETURN UPDATED 1 5\n',http_status:200}}};
+renderGlobalMapStatus(raw);
+assert.ok($('#global-map-summary').children.some(x => x.value === 'Last result: Updated'));
+assert.deepEqual(JSON.parse($('#global-map-status').value), raw);
+let localGets = 0, tabActive = false, observerCallback, lastDone, lastFail;
+const endpoint = '/indi-allsky/ajax/global_allsky_map';
+const panel = {style:{display:'none'},classList:{contains(name) { assert.equal(name,'active'); return tabActive; }}};
+const document = {getElementById(id) { assert.equal(id,'nav-global-allsky-map'); return panel; }};
+class MutationObserver {
+  constructor(callback) { observerCallback = callback; }
+  observe(target, options) { assert.equal(target,panel); assert.deepEqual(options,{attributes:true,attributeFilter:['class','style']}); }
+}
+$.getJSON = url => {
+  assert.equal(url,endpoint); localGets++;
+  return {done(fn) { lastDone = fn; return this; }, fail(fn) { lastFail = fn; return this; }};
+};
+const show = renderGlobalMapStatus;
+"""
+        harness += load_fn + '\n' + activation + r"""
+assert.equal(localGets,0);
+tabActive = true; panel.style.display = 'block'; observerCallback();
+assert.equal(localGets,1);
+observerCallback(); assert.equal(localGets,1);
+lastDone(raw); assert.deepEqual(JSON.parse($('#global-map-status').value),raw);
+tabActive = false; panel.style.display = 'none'; observerCallback(); assert.equal(localGets,1);
+tabActive = true; panel.style.display = 'block'; observerCallback(); assert.equal(localGets,2);
+$('#global-map-refresh').handlers.click(); assert.equal(localGets,3);
+lastFail({responseJSON:{error:'Synthetic status failure'}});
+assert.equal($('#global-map-error').value,'Synthetic status failure');
+// If a tab was already active when this script initialized, its initial check loads too.
+statusPanelWasVisible = false; loadGlobalMapStatusOnOpen(); assert.equal(localGets,4);
 """
         result = subprocess.run([node, '-e', harness], capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)

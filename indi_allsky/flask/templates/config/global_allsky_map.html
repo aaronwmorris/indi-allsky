@@ -10,7 +10,7 @@
 <div  class="tw:alert tw:alert-info tw:py-2.5 tw:text-xs">
 <span class="tw:icon-[lucide--info] tw:w-4 tw:h-4" aria-hidden="true">
 </span>
-<span>Listings are public. First publication requires Register. Preview shows exactly what will be published; an existing active listing can update automatically.</span>
+<span>Listings are public. First listings are normally created with Register / Update. Preview shows exactly what will be published; an existing active listing can update automatically.</span>
 </div>
 <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
 <div>
@@ -94,6 +94,7 @@
 <div id="global-map-preview-panel" style="display:none">
 <h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50" id="global-map-preview-heading">Publication preview</h3>
 <table class="tw:table tw:table-xs" style="table-layout:fixed; width:100%; overflow-wrap:anywhere">
+<colgroup><col style="width:min(10rem, 40%)"><col></colgroup>
 <tbody id="global-map-preview-rows">
 </tbody>
 </table>
@@ -138,7 +139,7 @@
 <p>
 <strong>Location precision</strong> — Published coordinates are limited by the precision of your saved location. Rounding can change or eliminate the intended grid spacing. Choosing a coarser setting later does not remove locations that were already public.</p>
 <p>
-<strong>Installation identifier</strong> — A random ID, created at first Preview, identifies this listing to the map. It is not a password and is not your machine ID. It survives disable, re-enable and upgrades; it is kept in the database backup. No image bytes or full configuration are sent.</p>
+<strong>Installation identifier</strong> — A random ID, created at first Preview, identifies this listing to the map. Keep it private. Anyone with it could change or remove your listing. It is not your host machine ID and is not used to log in to indi-allsky. It survives disable, re-enable and upgrades; it is kept in the database backup. No image bytes or full configuration are sent.</p>
 <p>More detail in the <a class="tw:link tw:link-info" href="https://github.com/aaronwmorris/indi-allsky/wiki/Global-Allsky-Map" target="_blank" rel="noopener">Global Allsky Map wiki page</a>.</p>
 </div>
 </section>
@@ -157,6 +158,21 @@ $(function () {
   const endpoint = {{ url_for('indi_allsky.global_allsky_map_view') | tojson }};
   const buttons = $('[data-global-map]');
   let savedEnabled = {{ form_config.GLOBAL_ALLSKY_MAP__ENABLE.data | tojson }};
+  function globalMapLastResult(value) {
+    const text = String(value);
+    const match = /^([A-Z_]+)(?::|$)/.exec(text);
+    const labels = {
+      INSERTED: 'Registered', UPDATED: 'Updated', DELETED: 'Removed',
+      ALREADY_UPDATED: 'Server update limit reached', ERROR: 'Server error',
+      FAILED: 'Failed', STALE: 'Not sent — saved details changed',
+      DISABLED: 'Not sent — publication disabled or paused', NOT_SENT: 'Not sent'
+    };
+    if (match && Object.prototype.hasOwnProperty.call(labels, match[1])) return labels[match[1]];
+    if (/^Queued (register|update|force|remove)$/.test(text)) return 'Request queued';
+    if (/^Sending (register|update|force|remove)$/.test(text)) return 'Sending request';
+    if (text === 'Interrupted request; manual review required, not retried') return 'Interrupted request — review required';
+    return text;
+  }
   function renderGlobalMapStatus(data) {
     if (typeof data.enabled === 'boolean') savedEnabled = data.enabled;
     $('#global-map-status').text(JSON.stringify(data, null, 2));
@@ -179,7 +195,7 @@ $(function () {
       if (status[key] != null) line(label + ': ' + new Date(status[key] * 1000).toLocaleString());
     }
     if (status.quota && status.quota.updates != null && status.quota.maximum != null) line('Server updates used: ' + status.quota.updates + ' of ' + status.quota.maximum + ' (at last response)');
-    if (status.last_status) line('Last result: ' + status.last_status);
+    if (status.last_status) line('Last result: ' + globalMapLastResult(status.last_status));
     if (status.publication_notice) line(status.publication_notice, 'tw:alert tw:alert-info tw:py-2.5');
     if (status.metadata_error) line('Cannot build listing: ' + status.metadata_error, 'tw:text-error');
     if (status.needs_review) line('The last request needs review. Check its result and the public map, then Preview and Register to continue. Automatic updates are paused.');
@@ -202,9 +218,22 @@ $(function () {
   function show(data) {
     renderGlobalMapStatus(data);
   }
-  $('#global-map-refresh').on('click', function () {
+  function loadGlobalMapStatus() {
     $.getJSON(endpoint).done(show).fail(function (xhr) { show(xhr.responseJSON || {error: 'Unable to read status'}); });
+  }
+  $('#global-map-refresh').on('click', loadGlobalMapStatus);
+  // Native config tabs change this panel's class/style, including programmatic opens.
+  const statusPanel = document.getElementById('nav-global-allsky-map');
+  let statusPanelWasVisible = false;
+  function loadGlobalMapStatusOnOpen() {
+    const visible = statusPanel.classList.contains('active') && statusPanel.style.display !== 'none';
+    if (visible && !statusPanelWasVisible) loadGlobalMapStatus();
+    statusPanelWasVisible = visible;
+  }
+  new MutationObserver(loadGlobalMapStatusOnOpen).observe(statusPanel, {
+    attributes: true, attributeFilter: ['class', 'style']
   });
+  loadGlobalMapStatusOnOpen();
   buttons.on('click', function () {
     const operation = $(this).data('global-map');
     if (operation === 'force' && !window.confirm('Send an update now using the explicit quota override?\n\nUse only after reviewing a normal refusal. The one-minute guard still applies.')) return;
