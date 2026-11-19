@@ -1,4 +1,3 @@
-# Global Allsky Map (AllskyTeam)
 
 indi-allsky can list your camera on the [AllskyTeam Global Allsky Map](https://www.thomasjacquin.com/allsky-map/), the public map run by the Allsky project.
 
