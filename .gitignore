@@ -27,6 +27,8 @@ gunicorn-indi-allsky.sock
 env.*
 ssl.crt
 ssl.key
+docker/nginx.conf
+docker/passwd_file
 de421.bsp
 *.h5
 node_modules/
