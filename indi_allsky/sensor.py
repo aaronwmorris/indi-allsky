@@ -698,9 +698,19 @@ class SensorWorker(Process):
 
 
                     for i, v in enumerate(sensor_data['data']):
-                        self.sensors_user_av[sensor.slot + i] = float(v)
+                        if v is None:
+                            self.sensors_user_av[sensor.slot + i] = float('nan')
+                        else:
+                            try:
+                                self.sensors_user_av[sensor.slot + i] = float(v)
+                            except (TypeError, ValueError):
+                                self.sensors_user_av[sensor.slot + i] = float('nan')
             except SensorReadException as e:
                 logger.error('SensorReadException: {0:s}'.format(str(e)))
+                with self.sensors_user_av.get_lock():
+                    slot_count = sensor.METADATA.get('count', 1)
+                    for i in range(slot_count):
+                        self.sensors_user_av[sensor.slot + i] = float('nan')
             except OSError as e:
                 logger.error('Sensor OSError: {0:s}'.format(str(e)))
             except IOError as e:
