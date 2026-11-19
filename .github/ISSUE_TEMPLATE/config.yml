@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 Questions & Community Discussions"
+    url: https://github.com/aaronwmorris/indi-allsky/discussions
+    about: "Need help setting up, wiring hardware, or have general questions about INDI Allsky? Ask here!"
+  - name: "📖 Documentation Wiki"
+    url: https://github.com/aaronwmorris/indi-allsky/wiki
+    about: "Check INDI Allsky guides, hardware references, and troubleshooting steps."

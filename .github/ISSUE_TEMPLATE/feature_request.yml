@@ -1,0 +1,63 @@
+name: "✨ Feature Request"
+description: "Suggest an idea or new feature for INDI Allsky"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for suggesting an improvement!
+        
+        Please explain your idea clearly and simply.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: "What part of INDI Allsky does this feature relate to?"
+      options:
+        - "Camera / Image Capture"
+        - "Image Processing / Stacking / Overlays"
+        - "Timelapses, Keograms, or Star Trails"
+        - "Web Interface / Dashboard"
+        - "Hardware (Dew Heater, Fan, Focuser)"
+        - "Sensors (Temperature, Weather, Light)"
+        - "File Uploads / SyncAPI / Cloud Storage"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this feature solve?
+      description: Describe what you are trying to do and why it is difficult or not possible right now.
+      placeholder: "I want to ... but right now INDI Allsky only allows ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What is your suggested solution?
+      description: "Describe how you would like INDI Allsky to work or what option should be added."
+      placeholder: "I would like INDI Allsky to add a button / setting that ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Any workarounds or alternatives you have tried?
+      description: Have you found any temporary ways to do this?
+      placeholder: "Currently I use a custom script that ..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional Context, Links, or Examples
+      description: Add any other information, links to hardware specifications, or diagrams here.
+    validations:
+      required: false

@@ -1,0 +1,77 @@
+name: "🔭 New Hardware / Sensor Request"
+description: "Request support for a new sensor, camera, focuser, or hardware device in INDI Allsky"
+title: "[Hardware]: "
+labels: ["enhancement", "hardware"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Request Support for a New Device
+        
+        INDI Allsky supports 30+ environmental sensors, fans, dew heaters, focusers, and cameras.
+        If you have a device that is not currently supported, please provide the details below so we can investigate adding support.
+
+  - type: dropdown
+    id: device_type
+    attributes:
+      label: Device Type
+      description: What kind of hardware is this?
+      options:
+        - "Sensor (Temperature, Humidity, Pressure, Light, Air Quality, Rain, Lightning)"
+        - "Focuser (Stepper motor, servo)"
+        - "Dew Heater / Fan / Relay Controller"
+        - "Camera (INDI, libcamera, USB, IP)"
+        - "Other Peripheral"
+    validations:
+      required: true
+
+  - type: input
+    id: device_name
+    attributes:
+      label: Device Name & Model
+      description: The manufacturer and exact model or part number.
+      placeholder: "e.g. Bosch BME688, Sensirion SHT45, Waveshare Stepper Motor HAT"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Connection Interface
+      description: How does the device connect to your computer?
+      options:
+        - "I2C (specify address if known, e.g. 0x76, 0x48)"
+        - "SPI"
+        - "GPIO Pin (1-Wire, PWM, Digital ON/OFF)"
+        - "USB"
+        - "Network / Ethernet / Wi-Fi"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: product_url
+    attributes:
+      label: Product Page or Datasheet Link
+      description: Where can we view specifications or purchase the device?
+      placeholder: "https://www.adafruit.com/product/... or datasheet URL"
+    validations:
+      required: true
+
+  - type: input
+    id: python_library
+    attributes:
+      label: Existing Python Library or Driver (if known)
+      description: Is there an existing Linux driver or Python module (e.g. Adafruit CircuitPython)?
+      placeholder: "e.g. adafruit-circuitpython-bme680 or https://github.com/..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional Notes or Use Case
+      description: Any extra details on how this device will be used with your INDI Allsky camera.
+      placeholder: "This sensor is useful because it provides high humidity accuracy in sub-zero weather..."
+    validations:
+      required: false

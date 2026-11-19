@@ -1,0 +1,134 @@
+name: "🐛 Bug Report"
+description: "Report an error, bug, or unexpected behavior in INDI Allsky"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for reporting a problem!
+        
+        Please fill out this form to help us understand and solve your issue.
+        
+        * Need help setting up, wiring sensors, or choosing hardware? Please ask in [Discussions](https://github.com/aaronwmorris/indi-allsky/discussions) instead of opening a bug report.
+        * Please check the [Documentation Wiki](https://github.com/aaronwmorris/indi-allsky/wiki) first.
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How did you install INDI Allsky?
+      description: Select how INDI Allsky was installed on your system.
+      options:
+        - "Debian Package (.deb via apt install indi-allsky)"
+        - "Source / Git checkout (setup.sh)"
+        - "Docker"
+        - "Other / Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Computer / Hardware
+      description: Select the computer running INDI Allsky.
+      options:
+        - "Raspberry Pi 5"
+        - "Raspberry Pi 4"
+        - "Raspberry Pi 3"
+        - "PC / Mini PC / Server (Intel or AMD x86_64)"
+        - "Other Single Board Computer (Orange Pi, Le Potato, RockPi, etc.)"
+        - "Virtual Machine"
+    validations:
+      required: true
+
+  - type: input
+    id: camera
+    attributes:
+      label: Camera Model
+      description: What camera are you using?
+      placeholder: "e.g. ZWO ASI290MC, Raspberry Pi HQ Camera (IMX477), Altair 290C, QHY5III485C"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: INDI Allsky Version
+      description: The version shown at the bottom of the web page or System page.
+      placeholder: "e.g. indi_v2026.09.01"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is the problem?
+      description: Describe what happened in simple words. What did you expect to happen, and what happened instead?
+      placeholder: "When I started night mode, the camera stopped capturing and the web page showed an error..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What steps cause the problem to happen?
+      placeholder: |
+        1. Open the web interface
+        2. Go to Configuration -> Camera
+        3. Change exposure setting to ...
+        4. Click Save
+    validations:
+      required: false
+
+  - type: textarea
+    id: support_info
+    attributes:
+      label: Support Information
+      description: |
+        Please generate your system support information (all passwords are automatically removed).
+        
+        Run this single command in your terminal:
+        ```bash
+        sudo indi-allsky-ctl support-info
+        ```
+        *(For source/git installs, run `./misc/support_info.sh`, or go to the Web UI -> System page -> click "Support Info")*
+        
+        Copy the entire output and paste it below:
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Recent Service Logs
+      description: |
+        Run this exact command in your terminal and paste the output below:
+        ```bash
+        sudo journalctl -u indi-allsky.service -n 50 --no-pager
+        ```
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-Submission Checklist
+      description: "Please check these items before submitting:"
+      options:
+        - label: "I checked open and closed issues and did not find an existing report for this problem."
+          required: false
+        - label: "I verified that the camera USB/ribbon cable connection is physically secure."
+          required: false
+        - label: "I confirmed that passwords or private keys are not exposed in any pasted text."
+          required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or Extra Details
+      description: Drag and drop screenshots or error images here, or add any extra details that might help.
+    validations:
+      required: false
