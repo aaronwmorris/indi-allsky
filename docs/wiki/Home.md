@@ -83,6 +83,7 @@ Welcome to the indi-allsky wiki!
 * [Satellite Tracking](Satellite-Tracking)
 * [Sky Quality Meter (SQM)](SQM-Sky-Brightness-Measurement)
 * [MQTT Broker Publishing](MQTT-Broker-Publishing)
+* [Global Allsky Map (AllskyTeam)](Global-Allsky-Map)
 * [Grafana, Telegraf & InfluxDB](Grafana-Telegraf-Influx-Integration)
 * [Web Status Configuration](Web-Status-Configuration)
 

@@ -111,7 +111,7 @@ class GlobalMapWebTest(unittest.TestCase):
         db.session.commit()
         page = self.client.get('/indi-allsky/config')
         self.assertEqual(page.status_code, 200)
-        self.assertIn(b'they may use different domains', page.data)
+        self.assertIn(b'May be on a different domain from the website', page.data)
         preview = self.preview()
         self.assertEqual(preview['metadata']['website_url'], website)
         self.assertEqual(preview['metadata']['image_url'], image)
@@ -144,8 +144,8 @@ class GlobalMapWebTest(unittest.TestCase):
         db.session.commit()
         data, page = self._accuracy_form_data()
         self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
-        self.assertIn(b'Existing rounding (2 decimal places)', page)
-        self.assertIn(b'Exact configured location', page)
+        self.assertIn(b'Round to 2 decimal places (default)', page)
+        self.assertIn(b'Exact saved location', page)
         data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
@@ -328,8 +328,111 @@ const $ = selector => ({
     def test_shared_metadata_consent_notice_is_rendered(self):
         page = self.client.get('/indi-allsky/config')
         self.assertEqual(page.status_code, 200)
-        self.assertIn(b'changes to the shared Owner, Location, coordinates, Lens or Privacy Mode', page.data)
-        self.assertIn(b'are published automatically', page.data)
+        self.assertIn(b'Listings are public', page.data)
+        self.assertIn(b'soon after any published detail changes', page.data)
+        self.assertIn(b'an INDI-AllSky upgrade', page.data)
+
+    def test_presentation_documentation_hooks_and_no_render_side_effects(self):
+        service = G.GlobalMapService()
+        self.assertIsNone(service.identifier())
+        page = self.client.get('/indi-allsky/config')
+        self.assertEqual(page.status_code, 200)
+        text = page.get_data(as_text=True)
+        self.assertIn('https://github.com/aaronwmorris/indi-allsky/wiki/Global-Allsky-Map', text)
+        self.assertIn('Also published', text)
+        self.assertIn('Technical details', text)
+        self.assertIn('How publishing works', text)
+        self.assertIn('First publication requires Register', text)
+        self.assertIn('one-minute guard', text)
+        self.assertIn('Publication preview', text)
+        self.assertNotIn('Preview — not yet sent', text)
+        self.assertIn('limited by the precision of your saved location', text)
+        self.assertNotIn('then respect source precision', text)
+        for name in ['ENABLE', 'LOCATION_ACCURACY', 'WEBSITE_URL', 'IMAGE_URL', 'EQUIPMENT']:
+            self.assertEqual(text.count('id="GLOBAL_ALLSKY_MAP__' + name + '"'), 1)
+            self.assertEqual(text.count('id="GLOBAL_ALLSKY_MAP__' + name + '-error"'), 1)
+        for op in ['preview', 'register', 'force', 'remove']:
+            self.assertIn('data-global-map="' + op + '"', text)
+        for op in ['register', 'force']:
+            self.assertRegex(text, r'<button[^>]*data-global-map="' + op + r'"[^>]*disabled')
+        self.assertNotRegex(text, r'<button[^>]*data-global-map="remove"[^>]*disabled')
+        for element in ['global-map-private-location', 'global-map-preview', 'global-map-status', 'global-map-refresh']:
+            self.assertEqual(text.count('id="' + element + '"'), 1)
+        self.assertIn('tw:sm:grid-cols-2', text)
+        self.assertIn('overflow-wrap:anywhere', text)
+        self.assertNotIn('.html(', text[text.index('function renderGlobalMapStatus'):text.index('function show(data)')])
+        self.assertIsNone(service.identifier())
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_presentation_wiki_single_source_and_policy_wording(self):
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        page = (root / 'docs/wiki/Global-Allsky-Map.md').read_text()
+        self.assertFalse((root / 'docs/global-allsky-map.md').exists())
+        self.assertIn('[Global Allsky Map (AllskyTeam)](Global-Allsky-Map)',
+                      (root / 'docs/wiki/Home.md').read_text())
+        for phrase in ['rolling 24 hours', 'one-minute guard', 'Server counts',
+                       'limited by the precision of your saved location', 'must never contact the production',
+                       'database** backups', 'different domains']:
+            self.assertIn(phrase, page)
+
+    def test_status_and_preview_renderers_use_literal_text(self):
+        import shutil
+        import subprocess
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is needed for the isolated summary-renderer test')
+        _, page = self._accuracy_form_data()
+        source = page.decode()
+        status_fn = re.search(r'  function renderGlobalMapStatus\(data\) \{.*?\n  \}', source, re.S).group()
+        preview_fn = re.search(r'  function renderGlobalMapPreview\(metadata\) \{.*?\n  \}', source, re.S).group()
+        harness = r"""
+const assert = require('node:assert/strict');
+let savedEnabled = true;
+const elements = new Map();
+class Element {
+  constructor() { this.children = []; this.value = ''; this.classes = ''; }
+  empty() { this.children = []; return this; }
+  text(value) { this.value = String(value); return this; }
+  addClass(value) { this.classes += value; return this; }
+  appendTo(parent) { parent.children.push(this); return this; }
+  show() { this.visible = true; return this; }
+  html() { throw new Error('HTML insertion forbidden'); }
+}
+const $ = selector => {
+  if (selector.startsWith('<')) return new Element();
+  if (!elements.has(selector)) elements.set(selector, new Element());
+  return elements.get(selector);
+};
+const labels = () => $('#global-map-badges').children.map(x => x.value);
+"""
+        harness += status_fn + '\n' + preview_fn + r"""
+renderGlobalMapStatus({enabled:true,status:{registered:true,publication_suppressed:true,needs_review:true,pending:42,dirty:true,last_success:1800000000,quota:{updates:2,maximum:5},last_status:'<b>unsafe</b>'}});
+assert.deepEqual(labels(), ['Registered','Publishing paused','Needs review','Request pending','Changes not yet published']);
+assert.ok($('#global-map-summary').children.some(x => x.value === 'Last result: <b>unsafe</b>'));
+assert.ok($('#global-map-summary').children.some(x => x.value.includes('2 of 5 (at last response)')));
+renderGlobalMapStatus({enabled:false,status:{registered:null}});
+assert.deepEqual(labels(), ['Not registered','Publishing off']);
+renderGlobalMapStatus({enabled:true,status:{registered:true,needs_review:true}});
+assert.deepEqual(labels(), ['Registered','Needs review']);
+renderGlobalMapStatus({enabled:true,status:{registered:true}});
+assert.deepEqual(labels(), ['Registered','Publishing active']);
+renderGlobalMapStatus({enabled:false,status:{registered:false,last_status:'DELETED'}});
+assert.deepEqual(labels(), ['Removed','Publishing off']);
+renderGlobalMapStatus({error:'<b>failed</b>'});
+assert.equal($('#global-map-error').value, '<b>failed</b>');
+renderGlobalMapPreview({latitude:'35.12N',longitude:'12.65E',owner:'<b>owner</b>',equipmentinfo:'',machine_id:'hidden'});
+const rows = $('#global-map-preview-rows').children;
+assert.equal(rows.length, 10);
+assert.deepEqual(rows[0].children.map(x => x.value), ['Coordinates','35.12N, 12.65E']);
+assert.equal(rows[2].children[1].value, '<b>owner</b>');
+assert.equal(rows[8].children[1].value, '—');
+assert.ok(!rows.some(row => row.children[0].value === 'machine_id'));
+assert.equal($('#global-map-preview-panel').visible, true);
+assert.equal($('#global-map-preview-heading').value, 'Publication preview');
+"""
+        result = subprocess.run([node, '-e', harness], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_common_form_validator_rejects_proxy_only_when_enabled(self):
         from types import SimpleNamespace
