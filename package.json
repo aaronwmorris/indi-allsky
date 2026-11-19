@@ -10,7 +10,10 @@
     "build:min": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && chmod 644 ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css --minify",
     "version:show": "python3 misc/bump_version.py --show",
     "version:bump": "python3 misc/bump_version.py",
-    "prepare": "git config core.hooksPath githooks && git config merge.build_css.driver \"npm run build -- && cp indi_allsky/flask/static/css/dist.css %A\" && git config merge.build_css.name \"Rebuild Tailwind dist.css on merge conflict\" || true"
+    "prepare": "git config core.hooksPath githooks && git config merge.build_css.driver \"npm run build -- && cp indi_allsky/flask/static/css/dist.css %A\" && git config merge.build_css.name \"Rebuild Tailwind dist.css on merge conflict\" || true",
+    "postinstall": "python3 -m playwright install chromium || true",
+    "download-seeds": "python3 misc/download_seed_images.py",
+    "screenshots": "python3 misc/generate_screenshots.py"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.137",
