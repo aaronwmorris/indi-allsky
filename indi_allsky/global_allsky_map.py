@@ -387,7 +387,13 @@ class GlobalMapService:
         self._ensure(STATE_KEY, '{}')
         for _ in range(4):
             old = self._read(STATE_KEY)
-            state = json.loads(old)
+            try:
+                state = json.loads(old)
+                if not isinstance(state, dict):
+                    raise ValueError('not an object')
+            except (TypeError, ValueError) as exc:
+                db.session.rollback()
+                raise MapError('Stored map state is invalid; refusing to replace it') from exc
             try:
                 result = change(state)
             except Exception:

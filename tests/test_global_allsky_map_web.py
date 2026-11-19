@@ -565,6 +565,7 @@ const $ = selector => ({
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 1)
 
     def test_disabled_form_save_failure_retains_safe_suppression(self):
+        self.preview()
         from indi_allsky.config import IndiAllSkyConfig, ConfigSaveException
         data, _ = self._accuracy_form_data()
         data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
@@ -575,6 +576,7 @@ const $ = selector => ({
         self.assertTrue(G.GlobalMapService().config()['GLOBAL_ALLSKY_MAP']['ENABLE'])
 
     def test_suppression_failure_prevents_config_save_or_false_success(self):
+        self.preview()
         data, _ = self._accuracy_form_data()
         data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
         count = IndiAllSkyDbConfigTable.query.count()
@@ -640,6 +642,74 @@ const $ = selector => ({
         self.assertTrue(service.state()['publication_suppressed'])
         self.assertIsNone(service.schedule())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+
+
+    def test_never_used_disabled_saves_create_no_map_state_or_identifier(self):
+        for _ in range(2):
+            data, _ = self._accuracy_form_data()
+            data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+            with patch.object(G.GlobalMapService, 'suppress_publication',
+                              side_effect=AssertionError('Unused feature must not write state')):
+                response = self.client.post('/indi-allsky/ajax/config', json=data)
+            self.assertEqual(response.status_code, 200, response.get_json())
+            self.assertIsNone(G.GlobalMapService().identifier())
+            self.assertIsNone(db.session.get(IndiAllSkyDbStateTable, G.STATE_KEY))
+            self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_never_used_disabled_save_ignores_and_preserves_corrupt_map_state(self):
+        row = IndiAllSkyDbStateTable(key=G.STATE_KEY, value='{synthetic-corrupt-state')
+        db.session.add(row)
+        db.session.commit()
+        data, _ = self._accuracy_form_data()
+        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        with patch.object(G.GlobalMapService, '_change',
+                          side_effect=AssertionError('Unused feature must not depend on state')):
+            response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 200, response.get_json())
+        self.assertIsNone(G.GlobalMapService().identifier())
+        self.assertEqual(db.session.get(IndiAllSkyDbStateTable, G.STATE_KEY).value, '{synthetic-corrupt-state')
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_preview_only_installation_disable_still_establishes_durable_suppression(self):
+        self.preview()
+        identifier = G.GlobalMapService().identifier()
+        data, _ = self._accuracy_form_data()
+        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 200, response.get_json())
+        service = G.GlobalMapService()
+        self.assertEqual(service.identifier(), identifier)
+        self.assertTrue(service.state()['publication_suppressed'])
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_established_corrupt_state_disable_and_remove_fail_cleanly_without_overwrite(self):
+        self.preview()
+        service = G.GlobalMapService()
+        identifier = service.identifier()
+        for raw in ['{synthetic-corrupt-state', '[]', 'null', '"text"', '1', '']:
+            row = db.session.get(IndiAllSkyDbStateTable, G.STATE_KEY)
+            if row is None:
+                row = IndiAllSkyDbStateTable(key=G.STATE_KEY, value=raw)
+                db.session.add(row)
+            else:
+                row.value = raw
+            db.session.commit()
+            data, _ = self._accuracy_form_data()
+            data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+            count = IndiAllSkyDbConfigTable.query.count()
+            with self.subTest(raw=raw, action='disable'):
+                response = self.client.post('/indi-allsky/ajax/config', json=data)
+                self.assertEqual(response.status_code, 400, response.get_json())
+                self.assertEqual(response.get_json()['form_global'], ['Stored map state is invalid; refusing to replace it'])
+            with self.subTest(raw=raw, action='remove'):
+                response = self.client.post(self.endpoint, json={'operation':'remove','confirm':True})
+                self.assertEqual(response.status_code, 400, response.get_json())
+                self.assertEqual(response.get_json()['error'], 'Stored map state is invalid; refusing to replace it')
+            self.assertEqual(IndiAllSkyDbConfigTable.query.count(), count)
+            self.assertEqual(service._read(G.STATE_KEY), raw)
+            self.assertEqual(service.identifier(), identifier)
+            self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
 
 
 if __name__=='__main__':unittest.main()

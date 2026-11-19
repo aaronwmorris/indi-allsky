@@ -4536,7 +4536,9 @@ class AjaxConfigView(BaseView):
         try:
             if 'GLOBAL_ALLSKY_MAP__ENABLE' in request.json and not self.indi_allsky_config['GLOBAL_ALLSKY_MAP']['ENABLE']:
                 from ..global_allsky_map import GlobalMapService
-                GlobalMapService().suppress_publication()
+                service = GlobalMapService()
+                if service.identifier() is not None:
+                    service.suppress_publication()
             self._indi_allsky_config_obj.save(username, config_note)
             app.logger.info('Saved new config')
         except (ConfigSaveException, MapError) as e:
