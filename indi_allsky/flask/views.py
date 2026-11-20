@@ -3550,7 +3550,7 @@ class GlobalAllskyMapView(BaseView):
                 service.suppress_publication()
                 config_obj = IndiAllSkyConfig()
                 config_obj.config['GLOBAL_ALLSKY_MAP'] = dict(config_obj.config.get('GLOBAL_ALLSKY_MAP', {}), ENABLE=False)
-                config_obj.save(current_user.username, 'Disable Global Allsky Map and remove listing')
+                config_obj.save(current_user.username, 'Disable Allsky Map and remove listing')
             task_id = service.enqueue(operation, data.get('preview_token'))
             return jsonify(task_id=task_id, status=service.status(), enabled=bool(service.config().get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE')))
         except (MapError, ConfigSaveException) as exc:

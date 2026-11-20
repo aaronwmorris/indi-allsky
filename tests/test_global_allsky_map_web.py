@@ -64,7 +64,7 @@ class GlobalMapWebTest(unittest.TestCase):
 
     def test_config_and_status_get_render_without_id_generation_or_network(self):
         r=self.client.get('/indi-allsky/config');self.assertEqual(r.status_code,200)
-        self.assertIn(b'Global Allsky Map',r.data)
+        self.assertIn(b'Allsky Map (Allsky project)',r.data)
         self.assertIn(b'GLOBAL_ALLSKY_MAP__IMAGE_URL',r.data)
         self.assertIn(b'GLOBAL_ALLSKY_MAP__WEBSITE_URL',r.data)
         with patch.object(G, 'post', side_effect=AssertionError('Status must not POST')) as post, \
@@ -125,6 +125,27 @@ class GlobalMapWebTest(unittest.TestCase):
         self.assertEqual(task.state,TaskQueueState.SUCCESS);self.assertEqual(call.call_count,1)
         self.assertFalse(self.sent['force']);self.assertEqual(self.sent['image_url'],self.IMAGE_URL)
         self.assertTrue(G.GlobalMapService().state()['registered'])
+
+    def test_unconfigured_location_owner_preview_and_worker_preserve_saved_config(self):
+        entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+        config = copy.deepcopy(entry.data)
+        config.pop('LOCATION_NAME', None)
+        config['OWNER'] = None
+        entry.data = config
+        db.session.commit()
+        original = copy.deepcopy(entry.data)
+        preview = self.preview()
+        self.assertEqual(preview['metadata']['location'], 'Unknown')
+        self.assertEqual(preview['metadata']['owner'], 'Unknown')
+        response = self.client.post(self.endpoint, json={'operation': 'register',
+            'preview_token': preview['preview_token']})
+        self.assertEqual(response.status_code, 200)
+        task, call = self.worker(response.get_json()['task_id'])
+        self.assertEqual(task.state, TaskQueueState.SUCCESS)
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual(self.sent['location'], preview['metadata']['location'])
+        self.assertEqual(self.sent['owner'], preview['metadata']['owner'])
+        self.assertEqual(db.session.get(IndiAllSkyDbConfigTable, entry.id).data, original)
 
     def test_different_domain_preview_and_worker_preserve_both_urls(self):
         website = 'https://website.other.example:8443/Archive/?view=sky'
@@ -365,7 +386,7 @@ const $ = selector => ({
         self.assertEqual(page.status_code, 200)
         text = page.get_data(as_text=True)
         self.assertIn('https://github.com/aaronwmorris/indi-allsky/wiki/Global-Allsky-Map', text)
-        map_link = re.search(r'<a [^>]*href="https://www\.thomasjacquin\.com/allsky-map/"[^>]*>View Global Allsky Map</a>', text)
+        map_link = re.search(r'<a [^>]*href="https://www\.thomasjacquin\.com/allsky-map/"[^>]*>View Allsky Map</a>', text)
         self.assertIsNotNone(map_link)
         self.assertIn('target="_blank"', map_link.group())
         self.assertIn('rel="noopener"', map_link.group())
@@ -405,7 +426,7 @@ const $ = selector => ({
         root = Path(__file__).resolve().parents[1]
         page = (root / 'docs/wiki/Global-Allsky-Map.md').read_text()
         self.assertFalse((root / 'docs/global-allsky-map.md').exists())
-        self.assertIn('[Global Allsky Map (AllskyTeam)](Global-Allsky-Map)',
+        self.assertIn('[Allsky Map (Allsky project)](Global-Allsky-Map)',
                       (root / 'docs/wiki/Home.md').read_text())
         for phrase in ['5 ordinary attempts in any 24 hours', 'a rolling window', 'one-minute gap',
                        'Effect on marker position', 'not guaranteed for every location',
@@ -415,6 +436,7 @@ const $ = selector => ({
             self.assertIn(phrase, page)
         self.assertNotIn('For developers:', page)
         self.assertNotIn('near the poles', page)
+        self.assertIn('Location name and Owner are published as `Unknown`', page)
         intro = page.split('## Quick start')[0]
         self.assertNotIn('Force and Remove also send requests', intro)
         self.assertIn('Once registered, changes can be published automatically while publication is enabled and active.', page)

@@ -1,5 +1,5 @@
 
-indi-allsky can list your camera on the [AllskyTeam Global Allsky Map](https://www.thomasjacquin.com/allsky-map/), the public map run by the Allsky project.
+indi-allsky can list your camera on the [Allsky Map](https://www.thomasjacquin.com/allsky-map/), the public map run by the Allsky project.
 
 This is a separate, optional integration. It is not the **Allsky Map** integration (allsky-map.com) on the neighboring settings tab, and enabling one does not enable the other.
 
@@ -7,7 +7,7 @@ This is a separate, optional integration. It is not the **Allsky Map** integrati
 
 ## Quick start
 
-1. Open **Config → Global Allsky Map**.
+1. Open **Config → Allsky Map (Allsky project)**.
 2. Turn on **Enable publication**.
 3. Choose **Location accuracy** (see [Location accuracy and Privacy Mode](#location-accuracy-and-privacy-mode)).
 4. Optionally add an **Image URL** (a public image anyone can open without logging in), a **Website URL** and **Equipment**.
@@ -30,8 +30,10 @@ Everything below is sent to the map. **Preview** shows exactly what will be sent
 | Camera | Detected camera name |
 | Computer | Board model (or "Generic PC") and RAM |
 | Version | indi-allsky release version, e.g. `indi_v2026.11.01` |
-| Website URL, Image URL, Equipment | The Global Allsky Map settings |
+| Website URL, Image URL, Equipment | The Allsky Map settings |
 | Installation identifier | A random ID that tells the map which listing is yours (see [Installation identifier and backups](#installation-identifier-and-backups)) |
+
+Location name and Owner are published as `Unknown` when not configured or blank. Your saved settings are not changed.
 
 Not sent: image files, your configuration, passwords or credentials, or your computer's machine ID. The Image URL is only a link. indi-allsky does not upload or host the image.
 

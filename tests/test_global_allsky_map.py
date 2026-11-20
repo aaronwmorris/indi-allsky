@@ -400,10 +400,72 @@ class GlobalMapTest(unittest.TestCase):
         self.cfg.update(OWNER='',LOCATION_NAME='',LENS_NAME='')
         self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT']='quotes " and apostrophe \' / Unicode ☁'
         data=self.s._payload(self.cfg,True)
-        self.assertEqual(data['owner'],'');self.assertEqual(data['location'],'')
+        self.assertEqual(data['owner'],'Unknown');self.assertEqual(data['location'],'Unknown')
+        self.assertEqual(data['lens'], '')
         self.assertEqual(json.loads(json.dumps(data))['equipmentinfo'],self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'])
         with patch.object(G,'__version__','indi_v2026.11.01+development.test'):
             self.assertEqual(self.s._payload(self.cfg)['allsky_version'],'indi_v2026.11.01')
+
+    def test_location_owner_fallback_including_independently_missing_fields(self):
+        missing = object()
+        values = (missing, None, '', '   ', '\t\r\n')
+        for field, output, other_output in [('LOCATION_NAME', 'location', 'owner'),
+                                             ('OWNER', 'owner', 'location')]:
+            for value in values:
+                with self.subTest(field=field, value='missing' if value is missing else repr(value)):
+                    config = copy.deepcopy(self.cfg)
+                    if value is missing:
+                        config.pop(field, None)
+                    else:
+                        config[field] = value
+                    original = copy.deepcopy(config)
+                    data = G.payload(config, self.camera, '0' * 32, computer='Synthetic computer')
+                    self.assertEqual(data[output], 'Unknown')
+                    self.assertEqual(data[other_output],
+                                     'Synthetic owner' if other_output == 'owner' else 'Synthetic site')
+                    self.assertEqual(config, original)
+
+    def test_configured_location_owner_text_is_preserved_exactly(self):
+        self.cfg.update(LOCATION_NAME='  Synthetic observatory ☁  ', OWNER='  Synthetic group  ',
+                        LENS_NAME='')
+        self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'] = ''
+        original = copy.deepcopy(self.cfg)
+        data = self.s._payload(self.cfg, True)
+        self.assertEqual(data['location'], original['LOCATION_NAME'])
+        self.assertEqual(data['owner'], original['OWNER'])
+        self.assertEqual(data['lens'], '')
+        self.assertEqual(data['equipmentinfo'], '')
+        self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
+        self.assertEqual(self.cfg, original)
+
+    def test_unknown_text_preview_matches_register_update_and_force_requests(self):
+        self.cfg.pop('OWNER')
+        self.cfg['LOCATION_NAME'] = ' \t '
+        original = copy.deepcopy(self.cfg)
+        for operation in ['register', 'update', 'force']:
+            with self.subTest(operation=operation):
+                preview = self.s.preview()
+                self.assertEqual(preview['metadata']['location'], 'Unknown')
+                self.assertEqual(preview['metadata']['owner'], 'Unknown')
+                task_id = self.s.enqueue(operation, preview['preview_token'])
+                task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
+                task.setRunning()
+                result = self.s.execute(task, **task.data['kwargs'])
+                self.assertTrue(result['ok'])
+                expected = dict(preview['metadata'], machine_id=self.s.identifier(),
+                                force=operation == 'force')
+                self.assertEqual(json.loads(self.calls[-1][0].data), expected)
+                self.assertEqual(self.cfg, original)
+                self.now += 61
+
+    def test_equivalent_missing_text_has_the_same_preview_fingerprint(self):
+        self.cfg.pop('LOCATION_NAME')
+        self.cfg.pop('OWNER')
+        token = self.s.preview()['preview_token']
+        for value in [None, '', '  ', '\t\r\n']:
+            with self.subTest(value=value):
+                self.cfg.update(LOCATION_NAME=value, OWNER=value)
+                self.assertEqual(self.s.preview()['preview_token'], token)
 
     def test_remote_or_missing_camera_does_not_publish(self):
         self.camera.local=False;db.session.commit()

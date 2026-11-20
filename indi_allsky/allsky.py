@@ -1494,11 +1494,11 @@ class IndiAllSky(object):
             try:
                 db.session.rollback()
             except Exception as rollback_exc:
-                logger.error('Global Allsky Map scheduling rollback failed (%s)', type(rollback_exc).__name__)
+                logger.error('Allsky Map scheduling rollback failed (%s)', type(rollback_exc).__name__)
             if global_map is not None and isinstance(exc, global_map.MapError):
-                logger.warning('Global Allsky Map scheduling: %s', str(exc))
+                logger.warning('Allsky Map scheduling: %s', str(exc))
             else:
-                logger.error('Global Allsky Map scheduling failed (%s)', type(exc).__name__)
+                logger.error('Allsky Map scheduling failed (%s)', type(exc).__name__)
 
 
 

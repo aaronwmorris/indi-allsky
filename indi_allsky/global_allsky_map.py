@@ -1,4 +1,4 @@
-"""Optional AllskyTeam map client. No capture code, image upload or host ID access."""
+"""Optional Allsky Map (Allsky project) client. No capture code, image upload or host ID access."""
 import hashlib
 import html
 import http.client
@@ -75,7 +75,7 @@ def validate_urls(website, image):
             raise MapError('Use public HTTP(S) URLs without credentials or fragments')
         policy_host = host.lower().rstrip('.')
         if index == 1 and (policy_host == 'allsky-map.com' or policy_host.endswith('.allsky-map.com')):
-            raise MapError('allsky-map.com must not be used to host images for the Global Allsky Map')
+            raise MapError('allsky-map.com must not be used to host images for the Allsky Map')
         if policy_host == 'localhost' or policy_host.endswith('.local'):
             raise MapError('Public URLs must be reachable outside the local network')
         try:
@@ -127,7 +127,7 @@ def publication_coordinates(latitude, longitude, private=False, accuracy='legacy
         return coordinate(latitude, True, True), coordinate(longitude, False, True)
     distances = {'0.5km': 500, '1km': 1000, '2km': 2000, '5km': 5000}
     if not isinstance(accuracy, str) or accuracy not in ('legacy', 'exact', *distances):
-        raise MapError('Invalid Global Allsky Map location accuracy')
+        raise MapError('Invalid Allsky Map location accuracy')
     if accuracy == 'legacy':
         return coordinate(latitude, True), coordinate(longitude, False)
     source = [Decimal(str(latitude)).normalize(), Decimal(str(longitude)).normalize()]
@@ -216,10 +216,12 @@ def payload(config, camera, identifier, computer=None):
     latitude, longitude = publication_coordinates(config.get('LOCATION_LATITUDE'),
         config.get('LOCATION_LONGITUDE'), private, options.get('LOCATION_ACCURACY', 'legacy'))
     equipment = str(options.get('EQUIPMENT', '') or '')
+    location = str(config.get('LOCATION_NAME') or '')
+    owner = str(config.get('OWNER') or '')
     return {
         'force': False, 'machine_id': identifier,
-        'location': str(config.get('LOCATION_NAME', '') or ''),
-        'owner': str(config.get('OWNER', '') or ''),
+        'location': location if location.strip() else 'Unknown',
+        'owner': owner if owner.strip() else 'Unknown',
         'latitude': latitude, 'longitude': longitude,
         'website_url': website, 'image_url': image, 'camera': str(name),
         'lens': str(config.get('LENS_NAME', '') or ''),
@@ -483,7 +485,7 @@ class GlobalMapService:
             self.suppress_publication()
         config = self.config()
         if operation != 'remove' and not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
-            raise MapError('Global Allsky Map is disabled')
+            raise MapError('Allsky Map is disabled')
         if operation == 'remove':
             if self.identifier() is None:
                 raise MapError('No installation registration identifier exists')
@@ -633,7 +635,7 @@ class GlobalMapService:
             result = {'ok': False, 'status': 'FAILED', 'message': str(exc)}
         except Exception as exc:
             db.session.rollback()
-            logger.error('Global Allsky Map execution failed (%s)', type(exc).__name__)
+            logger.error('Allsky Map execution failed (%s)', type(exc).__name__)
             result = {'ok': False, 'status': 'FAILED', 'message': 'Unexpected map failure; inspect task status before retrying'}
         message = str(result.get('message') or result['status']).replace(identifier or '<none>', '[installation-id]')[:200]
         result['message'] = message
