@@ -393,7 +393,7 @@ const $ = selector => ({
         page = self.client.get('/indi-allsky/config')
         self.assertEqual(page.status_code, 200)
         text = page.get_data(as_text=True)
-        self.assertIn('https://github.com/aaronwmorris/indi-allsky/wiki/Global-Allsky-Map', text)
+        self.assertIn('https://github.com/aaronwmorris/indi-allsky/wiki/AllskyTeam-Map', text)
         map_link = re.search(r'<a [^>]*href="https://www\.thomasjacquin\.com/allsky-map/"[^>]*>View Allsky Map</a>', text)
         self.assertIsNotNone(map_link)
         self.assertIn('target="_blank"', map_link.group())
@@ -448,9 +448,13 @@ const $ = selector => ({
     def test_presentation_wiki_single_source_and_policy_wording(self):
         from pathlib import Path
         root = Path(__file__).resolve().parents[1]
-        page = (root / 'docs/wiki/Global-Allsky-Map.md').read_text()
+        page = (root / 'docs/wiki/AllskyTeam-Map.md').read_text()
+        self.assertFalse((root / 'docs/wiki/Global-Allsky-Map.md').exists())
+        template = (root / 'indi_allsky/flask/templates/config/global_allsky_map.html').read_text()
+        self.assertEqual(template.count('https://github.com/aaronwmorris/indi-allsky/wiki/AllskyTeam-Map'), 2)
+        self.assertNotIn('/wiki/Global-Allsky-Map', template)
         self.assertFalse((root / 'docs/global-allsky-map.md').exists())
-        self.assertIn('[Allsky Map (Allsky project)](Global-Allsky-Map)',
+        self.assertIn('[Allsky Map (Allsky project)](AllskyTeam-Map)',
                       (root / 'docs/wiki/Home.md').read_text())
         for phrase in ['5 ordinary attempts in any 24 hours', 'a rolling window', 'one-minute gap',
                        'Effect on marker position', 'not guaranteed for every location',
