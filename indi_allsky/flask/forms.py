@@ -5078,6 +5078,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ALLSKYMAP__MAP_LATITUDE          = StringField('Map Latitude', validators=[ALLSKYMAP__MAP_LATITUDE_validator])
     ALLSKYMAP__MAP_LONGITUDE         = StringField('Map Longitude', validators=[ALLSKYMAP__MAP_LONGITUDE_validator])
     ALLSKYMAP__UPLOAD_IMAGE          = BooleanField('Upload Latest Image')
+    ALLSKYMAP__ALLOW_RESEARCH        = BooleanField('Share Images for Research')
     ALLSKYMAP__INTERVAL              = IntegerField('Interval (Minutes)', validators=[ALLSKYMAP__INTERVAL_validator])
     YOUTUBE__ENABLE                  = BooleanField('Enable')
     YOUTUBE__SECRETS_FILE            = StringField('Client Secrets File', validators=[YOUTUBE__SECRETS_FILE_validator])

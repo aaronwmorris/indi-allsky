@@ -597,6 +597,7 @@ class IndiAllSkyConfigBase(object):
             "MAP_LATITUDE"           : "",
             "MAP_LONGITUDE"          : "",
             "UPLOAD_IMAGE"           : True,
+            "ALLOW_RESEARCH"         : True,
             "INTERVAL"               : 10,
         },
         "SYNCAPI" : {

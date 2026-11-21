@@ -96,7 +96,7 @@
                 </div>
 
                 <!-- Upload Image Toggle -->
-                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:pt-2">
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__UPLOAD_IMAGE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/50">Upload the latest captured image thumbnail along with the ping (highly recommended, works behind NAT/firewalls)</span>
@@ -104,6 +104,18 @@
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.ALLSKYMAP__UPLOAD_IMAGE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ALLSKYMAP__UPLOAD_IMAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Research Sharing Toggle (opt-out) -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__ALLOW_RESEARCH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Allow Allsky Map to include this camera's compressed images and approximate location (2 decimal places) in bulk datasets for authorized non-commercial research projects. Turn off to opt out. See the <a href="https://allsky-map.com/terms.html" class="tw:link tw:link-info" target="_blank">Allsky Map terms</a>.</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.ALLSKYMAP__ALLOW_RESEARCH(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="ALLSKYMAP__ALLOW_RESEARCH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
