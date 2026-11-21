@@ -65,6 +65,14 @@ class GlobalMapWebTest(unittest.TestCase):
     def test_config_and_status_get_render_without_id_generation_or_network(self):
         r=self.client.get('/indi-allsky/config');self.assertEqual(r.status_code,200)
         self.assertIn(b'Allsky Map (Allsky project)',r.data)
+        text = r.get_data(as_text=True)
+        for tab_id, label in (('nav-global-allsky-map-tab', 'Global Allsky Map'),
+                              ('nav-allskymap-tab', 'Allsky Map')):
+            tab = re.search(r'<button [^>]*id="' + tab_id + r'"[^>]*>(.*?)</button>',
+                            text, re.S)
+            self.assertIsNotNone(tab)
+            self.assertEqual(re.sub(r'<[^>]+>', '', tab.group(1)).strip(), label)
+            self.assertIn('tw:uppercase', tab.group(0))
         self.assertIn(b'GLOBAL_ALLSKY_MAP__IMAGE_URL',r.data)
         self.assertIn(b'GLOBAL_ALLSKY_MAP__WEBSITE_URL',r.data)
         with patch.object(G, 'post', side_effect=AssertionError('Status must not POST')) as post, \
