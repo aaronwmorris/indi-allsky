@@ -402,7 +402,7 @@ const $ = selector => ({
         self.assertNotIn('data-global-map', map_link.group())
         introduction = re.search(r'<section id="global-map-introduction"[^>]*>(.*?)</section>', text, re.S)
         self.assertIsNotNone(introduction)
-        self.assertIn('<strong>Allsky Map</strong> is the global camera map created by Thomas Jacquin for the Allsky project.', introduction.group())
+        self.assertIn('<strong>AllskyTeam Map</strong> is the global camera map created by Thomas Jacquin for the Allsky project.', introduction.group())
         self.assertIn('This integration allows your indi-allsky camera to publish its location and details to the map.', introduction.group())
         self.assertIn('<strong>You can optionally provide a publicly accessible URL for your latest image.</strong>', introduction.group())
         self.assertIn('tw:card tw:bg-base-200 tw:border tw:border-base-300', introduction.group())
