@@ -121,7 +121,7 @@ A request that was already in progress when you disabled can still finish. It ca
 
 **Technical details** shows the raw status and the map's last reply, with the identifier hidden.
 
-**A request that stays pending.** Don't keep resubmitting. Restarting indi-allsky expires stuck local tasks, but it won't necessarily clear the pending or review status, and it doesn't tell you whether the map received the request. Check the public map before deciding what to do next.
+**A request that stays pending.** Don't keep resubmitting. Map requests share indi-allsky's background queue with timelapse and keogram generation, so a request can wait while one of those is being built. If it stays pending well beyond that, restart the indi-allsky service (a configuration reload is not enough). Restarting expires stuck local tasks, but it won't necessarily clear the pending or review status, and it doesn't tell you whether the map received the request. Check the public map, then use **Preview** and **Register / Update**, or **Remove and disable…**. After a restart the old request no longer blocks these actions, and the new request replaces it.
 
 ### Messages
 
@@ -132,7 +132,7 @@ A request that was already in progress when you disabled can still finish. It ca
 | "Publication suppressed; Preview and explicitly Register to resume" | Publication is paused. Enable, Preview and Register. |
 | "Five ordinary attempts in the last 24 hours; wait for quota or explicitly force an update" | Wait for the 24-hour window, or use Force only after checking why updates were refused |
 | "Wait one minute between map requests" | Try again after a minute. This applies to Force too. |
-| "A different map request is pending; wait for it to finish" | Wait, then press Refresh status |
+| "A different map request is pending; wait for it to finish" | Wait, then press Refresh status. If it persists, see *A request that stays pending* above. |
 | Image or website URL rejected | Check the [URL rules](#url-rules) |
 | "No active local camera metadata is available" | The active camera isn't a local camera, or no camera has connected yet |
 
