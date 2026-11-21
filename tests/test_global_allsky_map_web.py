@@ -453,8 +453,9 @@ const $ = selector => ({
         template = (root / 'indi_allsky/flask/templates/config/global_allsky_map.html').read_text()
         self.assertEqual(template.count('https://github.com/aaronwmorris/indi-allsky/wiki/AllskyTeam-Map'), 2)
         self.assertNotIn('/wiki/Global-Allsky-Map', template)
+        self.assertIn('>AllskyTeam Map wiki page</a>', template)
         self.assertFalse((root / 'docs/global-allsky-map.md').exists())
-        self.assertIn('[Allsky Map (Allsky project)](AllskyTeam-Map)',
+        self.assertIn('[AllskyTeam Map](AllskyTeam-Map)',
                       (root / 'docs/wiki/Home.md').read_text())
         for phrase in ['5 ordinary attempts in any 24 hours', 'a rolling window', 'one-minute gap',
                        'Effect on marker position', 'not guaranteed for every location',
