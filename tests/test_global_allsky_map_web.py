@@ -66,7 +66,7 @@ class GlobalMapWebTest(unittest.TestCase):
         r=self.client.get('/indi-allsky/config');self.assertEqual(r.status_code,200)
         self.assertIn(b'Allsky Map (Allsky project)',r.data)
         text = r.get_data(as_text=True)
-        for tab_id, label in (('nav-global-allsky-map-tab', 'Global Allsky Map'),
+        for tab_id, label in (('nav-global-allsky-map-tab', 'AllskyTeam Map'),
                               ('nav-allskymap-tab', 'Allsky Map')):
             tab = re.search(r'<button [^>]*id="' + tab_id + r'"[^>]*>(.*?)</button>',
                             text, re.S)
@@ -491,6 +491,7 @@ const $ = selector => ({
         preview_fn = re.search(r'  function renderGlobalMapPreview\(metadata\) \{.*?\n  \}', source, re.S).group()
         result_fn = re.search(r'  function globalMapLastResult\(value\) \{.*?\n  \}', source, re.S).group()
         load_fn = re.search(r'  function loadGlobalMapStatus\(\) \{.*?\n  \}', source, re.S).group()
+        action_handler = re.search(r"  buttons\.on\('click', function \(\) \{.*?\n  \}\);", source, re.S).group()
         activation = re.search(r"  \$\('#global-map-refresh'\).on\('click', loadGlobalMapStatus\);.*?  loadGlobalMapStatusOnOpen\(\);", source, re.S).group()
         harness = r"""
 const assert = require('node:assert/strict');
@@ -504,9 +505,11 @@ class Element {
   appendTo(parent) { parent.children.push(this); return this; }
   show() { this.visible = true; return this; }
   on(event, handler) { this.handlers = this.handlers || {}; this.handlers[event] = handler; return this; }
+  prop(name, value) { this.props = this.props || {}; if (arguments.length === 1) return this.props[name]; this.props[name] = value; return this; }
   html() { throw new Error('HTML insertion forbidden'); }
 }
 const $ = selector => {
+  if (typeof selector !== 'string') return selector;
   if (selector.startsWith('<')) return new Element();
   if (!elements.has(selector)) elements.set(selector, new Element());
   return elements.get(selector);
@@ -548,6 +551,17 @@ const raw = {enabled:true,status:{registered:true,last_status:'UPDATED: 1 5',res
 renderGlobalMapStatus(raw);
 assert.ok($('#global-map-summary').children.some(x => x.value === 'Last result: Updated'));
 assert.deepEqual(JSON.parse($('#global-map-status').value), raw);
+const fingerprint = 'ab'.repeat(32);
+const previewResponse = {metadata:{latitude:'35.12N',longitude:'12.65E',machine_id:'(installation identifier hidden)'},preview_token:fingerprint,status:raw.status};
+const originalResponse = JSON.stringify(previewResponse);
+renderGlobalMapStatus(previewResponse);
+const displayed = JSON.parse($('#global-map-status').value);
+assert.equal(displayed.preview_token,'(preview fingerprint hidden)');
+assert.ok(!$('#global-map-status').value.includes(fingerprint));
+assert.deepEqual(displayed.metadata,previewResponse.metadata);
+assert.deepEqual(displayed.status,raw.status);
+assert.equal(JSON.stringify(previewResponse),originalResponse);
+
 let localGets = 0, tabActive = false, observerCallback, lastDone, lastFail;
 const endpoint = '/indi-allsky/ajax/global_allsky_map';
 const panel = {style:{display:'none'},classList:{contains(name) { assert.equal(name,'active'); return tabActive; }}};
@@ -575,6 +589,29 @@ lastFail({responseJSON:{error:'Synthetic status failure'}});
 assert.equal($('#global-map-error').value,'Synthetic status failure');
 // If a tab was already active when this script initialized, its initial check loads too.
 statusPanelWasVisible = false; loadGlobalMapStatusOnOpen(); assert.equal(localGets,4);
+"""
+        harness += r"""
+let previewToken = null;
+const buttons = new Element();
+const requests = [];
+let response = previewResponse;
+$.ajax = options => {
+  assert.equal(options.url,endpoint);
+  assert.equal(options.method,'POST');
+  requests.push(JSON.parse(options.data));
+  return {done(fn) { fn(response); return this; },fail(fn) { return this; },always(fn) { fn(); return this; }};
+};
+""" + action_handler + r"""
+buttons.handlers.click.call({data(name) { assert.equal(name,'global-map'); return 'preview'; }});
+assert.equal(previewToken,fingerprint);
+assert.equal(JSON.parse($('#global-map-status').value).preview_token,'(preview fingerprint hidden)');
+assert.ok(!$('#global-map-status').value.includes(fingerprint));
+response = {task_id:42,status:raw.status};
+buttons.handlers.click.call({data(name) { assert.equal(name,'global-map'); return 'register'; }});
+assert.equal(requests[1].preview_token,fingerprint);
+assert.equal(requests[1].operation,'register');
+assert.equal(previewResponse.preview_token,fingerprint);
+assert.deepEqual(JSON.parse($('#global-map-status').value),response);
 """
         result = subprocess.run([node, '-e', harness], capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)

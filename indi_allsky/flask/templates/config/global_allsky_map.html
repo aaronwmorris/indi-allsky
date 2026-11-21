@@ -183,7 +183,8 @@ $(function () {
   }
   function renderGlobalMapStatus(data) {
     if (typeof data.enabled === 'boolean') savedEnabled = data.enabled;
-    $('#global-map-status').text(JSON.stringify(data, null, 2));
+    $('#global-map-status').text(JSON.stringify(data, (key, value) =>
+      key === 'preview_token' ? '(preview fingerprint hidden)' : value, 2));
     $('#global-map-error').text(data.error || '');
     if (!data.status) return;
     const status = data.status;
