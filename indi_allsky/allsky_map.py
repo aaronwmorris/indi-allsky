@@ -120,6 +120,7 @@ def send_allsky_map_ping(config, logger, db_notification_helper=None):
         "lng": float(lng) if lng else 0.0,
         "siteUrl": site_url,
         "imageBase64": image_base64,
+        "allowResearch": bool(allskymap_conf.get('ALLOW_RESEARCH', True)),
     }
 
     data = json.dumps(payload).encode('utf-8')
