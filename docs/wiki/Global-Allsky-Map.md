@@ -1,13 +1,13 @@
 
 indi-allsky can list your camera on the [Allsky Map](https://www.thomasjacquin.com/allsky-map/), the public map run by the Allsky project.
 
-This is a separate, optional integration. It is not the **Allsky Map** integration (allsky-map.com) on the neighboring settings tab, and enabling one does not enable the other.
+This is a separate, optional integration, found on the **AllskyTeam Map** settings tab. It is not indi-allsky's **Allsky Map** tab, which connects to a different service (allsky-map.com); enabling one does not enable the other.
 
 > **Your listing is public.** Treat everything you publish as visible to anyone, including your coordinates, owner and location name, website and image. Even with reduced coordinates, a picture or description can reveal where a camera is. Publication is off by default, and enabling it does not register you automatically. Your first listing is normally created when you press Register / Update.
 
 ## Quick start
 
-1. Open **Config → Allsky Map (Allsky project)**.
+1. Open **Config → AllskyTeam Map**.
 2. Turn on **Enable publication**.
 3. Choose **Location accuracy** (see [Location accuracy and Privacy Mode](#location-accuracy-and-privacy-mode)).
 4. Optionally add an **Image URL** (a public image anyone can open without logging in), a **Website URL** and **Equipment**.
@@ -30,7 +30,7 @@ Everything below is sent to the map. **Preview** shows exactly what will be sent
 | Camera | Detected camera name |
 | Computer | Board model (or "Generic PC") and RAM |
 | Version | indi-allsky release version, e.g. `indi_v2026.11.01` |
-| Website URL, Image URL, Equipment | The Allsky Map settings |
+| Website URL, Image URL, Equipment | The AllskyTeam Map settings |
 | Installation identifier | A random ID that tells the map which listing is yours (see [Installation identifier and backups](#installation-identifier-and-backups)) |
 
 Location name and Owner are published as `Unknown` when not configured or blank. Your saved settings are not changed.
@@ -150,7 +150,9 @@ A request that was already in progress when you disabled can still finish. It ca
 
 ### URL rules
 
-- Both URLs are optional. An Image URL on its own is fine; a Website URL needs an Image URL.
+- **Website URL** (optional) is a link to your own site, shown on the map.
+- **Image URL** (optional) is the address of your latest image. The image must already be published somewhere anyone can open it, for example by your website or another upload tool. indi-allsky only sends the address; it does not upload, host or check the image.
+- Both can be left blank, and an Image URL on its own is fine. A Website URL on its own is not accepted: it needs an Image URL too.
 - They can be on different domains.
 - They must be public `http` or `https` addresses:
   - no login
@@ -158,6 +160,7 @@ A request that was already in progress when you disabled can still finish. It ca
   - no `#fragment`
   - no private or local addresses (e.g. `192.168.x.x`, `localhost`, `*.local`)
 - allsky-map.com image links cannot be used as the Image URL.
+- indi-allsky checks the address format only. It can't tell whether an address is reachable from the internet or needs a login, so open it in a private browser window first.
 
 ### Installation identifier and backups
 
