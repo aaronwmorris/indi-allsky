@@ -1,2 +1,2 @@
 # commands necessary for unattended upgrade
-%ALLSKY_USER% ALL=(root) NOPASSWD: /usr/bin/apt-get update,/usr/bin/apt-get -y install *,/usr/bin/apt update,/usr/bin/apt -y install *
+%ALLSKY_USER% ALL=(root) NOPASSWD: /usr/bin/apt-get update,/usr/bin/apt-get -y install indi-allsky*,/usr/bin/apt-get -y install libindi*,/usr/bin/apt-get -y install indi-*,/usr/bin/apt update,/usr/bin/apt -y install indi-allsky*,/usr/bin/apt -y install libindi*,/usr/bin/apt -y install indi-*

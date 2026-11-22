@@ -64,16 +64,28 @@ polkit.addRule(function(action, subject) {
     }
 
 
-    // Allow indi-allsky user to manage systemd services and timers
+    // Allow indi-allsky user to manage indi-allsky systemd services and timers
     const systemd_actions = [
         "org.freedesktop.systemd1.manage-units",
-        "org.freedesktop.systemd1.manage-unit-files",
         "org.freedesktop.systemd1.reload-daemon",
+    ];
+
+    const allowed_units = [
+        "indi-allsky.service",
+        "indiserver.service",
+        "gunicorn-indi-allsky.service",
+        "gunicorn-indi-allsky.socket",
+        "upgrade-indi-allsky.service",
     ];
 
     if (systemd_actions.indexOf(action.id) > -1) {
         if (subject.user == "%ALLSKY_USER%") {
-            return polkit.Result.YES;
+            if (action.id == "org.freedesktop.systemd1.reload-daemon") {
+                return polkit.Result.YES;
+            }
+            if (allowed_units.indexOf(action.lookup("unit")) > -1) {
+                return polkit.Result.YES;
+            }
         }
     }
 });
