@@ -120,6 +120,25 @@ Depending on your receiver software and network configuration:
 | altitude_mi    | float        | Nov 2025   | Alias of elevation_mi |
 
 
+## Aircraft Reticle Overlay
+indi-allsky can project each detected aircraft's calculated `(alt, az)` position onto the allsky image view as a circle, crosshair, or both, with an optional callsign label (`id`).
+
+### 1. Burned-In Image Overlay
+Configured under the **ADS-B** tab in the Web UI (or `ADSB` in `config.json`):
+* **Enable Image Reticle Overlay (`OVERLAY_ENABLE`)**: Draws reticles onto saved images during image labeling.
+* **Reticle Style (`OVERLAY_STYLE`)**: `circle`, `cross`, or `both`.
+* **Reticle Size (`OVERLAY_RADIUS`)**: Radius / half-size in pixels (default `15`).
+* **Show Callsign on Reticle (`OVERLAY_LABEL_ENABLE`)**: Renders the aircraft `id` next to each reticle.
+* Advanced JSON defaults: `OVERLAY_THICKNESS` (`2`) and `OVERLAY_COLOR` (`[0, 255, 255]`).
+
+### 2. VirtualSky Web UI Overlay
+In **Tools → VirtualSky**, use the **Aircraft (ADS-B)** toggle and reticle style selector (`Circle`, `Crosshair`, `Both`) under **Display only** to render aircraft reticles dynamically on the browser canvas without modifying archived images.
+
+### Alignment & Timing Notes
+* **Lens Geometry & Calibration:** Reticle placement relies on your configured lens parameters (`LENS_IMAGE_CIRCLE`, `LENS_OFFSET_X`, `LENS_OFFSET_Y`, `LENS_AZIMUTH`, `LENS_ALTITUDE`). If a solved **VirtualSky** lens calibration is enabled and valid for the current image pipeline, its distortion model is applied automatically.
+* **Exposure Timing:** ADS-B positions are fetched when image processing begins (after exposure completion), so on long night exposures the reticle reflects the aircraft's position near the end of the exposure rather than the midpoint of its trail.
+
+
 ## Legacy
 ### V4 RTL-SDR
 ```

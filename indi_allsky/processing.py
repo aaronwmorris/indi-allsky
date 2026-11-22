@@ -38,6 +38,7 @@ from .utils import IndiAllSkyDateCalcs
 from .overlay.moonOverlay import IndiAllSkyMoonOverlay
 from .overlay.lightgraphOverlay import IndiAllSkyLightgraphOverlay
 from .overlay.imageOverlay import IndiAllSkyImageOverlay
+from .overlay.adsbOverlay import draw_adsb_overlay_opencv, draw_adsb_overlay_pillow
 
 from .flask.miscDb import miscDb
 from .flask.models import IndiAllSkyDbBadPixelMapTable
@@ -3556,6 +3557,9 @@ class ImageProcessor(object):
 
             self._text_next_line()
 
+        if self.config.get('ADSB', {}).get('ENABLE') and self.config.get('ADSB', {}).get('OVERLAY_ENABLE') and adsb_aircraft_list:
+            draw_adsb_overlay_opencv(self.image, adsb_aircraft_list, self.config, binning=i_ref.binmode)
+
 
     def drawText_opencv(self, data, text, pt, color_bgr):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
@@ -3650,6 +3654,10 @@ class ImageProcessor(object):
             )
 
             self._text_next_line()
+
+        if self.config.get('ADSB', {}).get('ENABLE') and self.config.get('ADSB', {}).get('OVERLAY_ENABLE') and adsb_aircraft_list:
+            adsb_font = ImageFont.truetype(str(pillow_font_file_p), max(12, int(self.text_size_pillow * 0.6)))
+            draw_adsb_overlay_pillow(draw, (image_width, image_height), adsb_aircraft_list, self.config, font=adsb_font, binning=i_ref.binmode)
 
 
         # convert back to numpy array

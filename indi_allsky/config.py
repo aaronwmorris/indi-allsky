@@ -921,6 +921,12 @@ class IndiAllSkyConfigBase(object):
             "LABEL_LIMIT"            : 10,
             "AIRCRAFT_LABEL_TEMPLATE"      : "{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}",
             "IMAGE_LABEL_TEMPLATE_PREFIX"  : "# xy:15,300 (Left)\n# anchor:la (Left Justified)\n# color:200,200,200\nAircraft",
+            "OVERLAY_ENABLE"         : False,
+            "OVERLAY_STYLE"          : "circle",
+            "OVERLAY_RADIUS"         : 15,
+            "OVERLAY_THICKNESS"      : 2,
+            "OVERLAY_COLOR"          : [0, 255, 255],
+            "OVERLAY_LABEL_ENABLE"   : True,
         },
         "SATELLITE_TRACK" : {
             "ENABLE"                 : False,

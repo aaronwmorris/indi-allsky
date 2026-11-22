@@ -542,6 +542,7 @@ class VirtualSkyView(TemplateView):
         context['camera_altitude'] = self.camera.alt if self.camera.alt is not None else 90.0
         context['lens_calibration'] = self.camera.data.get('vs_calibration')
         context['lens_calibration_enabled'] = self.camera.data.get('vs_calibration_enabled', False)
+        context['adsb_enable'] = bool(self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False))
         context['calibration_camera_uuid'] = getattr(self.camera, 'uuid', '')
         mask = self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {})
         context['overlay_image_mask'] = None
@@ -1362,6 +1363,7 @@ class JsonImageLoopView(JsonView):
                 data['id'] = i.id
             if request.args.get('virtualsky') == '1':
                 data['binmode'] = getattr(i, 'binmode', None)
+                data['aircraft'] = (i.data or {}).get('aircraft', []) if hasattr(i, 'data') else []
 
 
             try:
@@ -3265,6 +3267,10 @@ class ConfigView(FormView):
             'ADSB__LABEL_LIMIT'              : self.indi_allsky_config.get('ADSB', {}).get('LABEL_LIMIT', 10),
             'ADSB__AIRCRAFT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}'),
             'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:15,300 (Left)\n# anchor:la (Left Justified)\n# color:200,200,200\nAircraft'),
+            'ADSB__OVERLAY_ENABLE'           : self.indi_allsky_config.get('ADSB', {}).get('OVERLAY_ENABLE', False),
+            'ADSB__OVERLAY_STYLE'            : self.indi_allsky_config.get('ADSB', {}).get('OVERLAY_STYLE', 'circle'),
+            'ADSB__OVERLAY_RADIUS'           : self.indi_allsky_config.get('ADSB', {}).get('OVERLAY_RADIUS', 15),
+            'ADSB__OVERLAY_LABEL_ENABLE'     : self.indi_allsky_config.get('ADSB', {}).get('OVERLAY_LABEL_ENABLE', True),
             'SATELLITE_TRACK__ENABLE'              : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('ENABLE', False),
             'SATELLITE_TRACK__DAYTIME_TRACK'       : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK', False),
             'SATELLITE_TRACK__ALT_DEG_MIN'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20.0),
@@ -4356,6 +4362,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ADSB']['LABEL_LIMIT']                  = int(request.json['ADSB__LABEL_LIMIT'])
         self.indi_allsky_config['ADSB']['AIRCRAFT_LABEL_TEMPLATE']      = str(request.json['ADSB__AIRCRAFT_LABEL_TEMPLATE'])
         self.indi_allsky_config['ADSB']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['ADSB__IMAGE_LABEL_TEMPLATE_PREFIX'])
+        self.indi_allsky_config['ADSB']['OVERLAY_ENABLE']               = bool(request.json.get('ADSB__OVERLAY_ENABLE', False))
+        self.indi_allsky_config['ADSB']['OVERLAY_STYLE']                = str(request.json.get('ADSB__OVERLAY_STYLE', 'circle'))
+        self.indi_allsky_config['ADSB']['OVERLAY_RADIUS']               = max(4, min(100, int(request.json.get('ADSB__OVERLAY_RADIUS', 15))))
+        self.indi_allsky_config['ADSB']['OVERLAY_LABEL_ENABLE']         = bool(request.json.get('ADSB__OVERLAY_LABEL_ENABLE', True))
         self.indi_allsky_config['SATELLITE_TRACK']['ENABLE']            = bool(request.json['SATELLITE_TRACK__ENABLE'])
         self.indi_allsky_config['SATELLITE_TRACK']['DAYTIME_TRACK']     = bool(request.json['SATELLITE_TRACK__DAYTIME_TRACK'])
         self.indi_allsky_config['SATELLITE_TRACK']['ALT_DEG_MIN']       = float(request.json['SATELLITE_TRACK__ALT_DEG_MIN'])
