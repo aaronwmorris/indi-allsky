@@ -4163,6 +4163,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
+        ('blinka_dew_heater_open_drain', 'Dew Heater - Open-Drain'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
         ('rpigpio_dew_heater_software_pwm', 'Dew Heater - Software PWM [RPi.GPIO] (BETA)'),
         ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
@@ -4176,6 +4177,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
+        ('blinka_fan_open_drain', 'Fan - Open-Drain'),
         ('blinka_fan_pwm', 'Fan - PWM'),
         ('rpigpio_fan_software_pwm', 'Fan - Software PWM [RPi.GPIO] (BETA)'),
         ('gpiozero_fan_software_pwm', 'Fan - Software PWM [gpiozero] (BETA)'),
@@ -4189,6 +4191,7 @@ class IndiAllskyConfigForm(FlaskForm):
     GENERIC_GPIO__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_gpio_standard', 'GPIO - Standard'),
+        ('blinka_gpio_open_drain', 'GPIO - Open-Drain'),
         ('gpio_dockerpi_4channel_relay', 'GPIO - DockerPi 4 Channel Relay (BETA)'),
     )
 
