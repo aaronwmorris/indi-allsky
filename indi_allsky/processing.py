@@ -425,7 +425,6 @@ class ImageProcessor(object):
                 if not self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
                     # Reset these values when not in astronomical darkness
                     self._camera_sqm_raw_mag = 0.0
-        self.last_satellites = []
 
                     with self.sensors_user_av.get_lock():
                         self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = 0.0
