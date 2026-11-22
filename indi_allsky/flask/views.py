@@ -8116,6 +8116,10 @@ class AjaxLensSolverView(BaseView):
 
 
     def solve(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'success': False, 'message': 'You do not have permission to run the lens solver'}), 403
+
         values, error = parseSolverRequestValues(request.json)
         if error:
             return jsonify({'success': False, 'message': error}), 400
