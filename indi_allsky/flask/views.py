@@ -4539,6 +4539,19 @@ class AjaxAllskyMapRequestKeyView(BaseView):
         if not api_url:
             api_url = self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com')
 
+        import ipaddress
+        import socket
+        from urllib.parse import urlsplit
+        parsed_url = urlsplit(str(api_url))
+        if parsed_url.scheme != 'https' or not parsed_url.hostname:
+            return jsonify({'error': 'Invalid API_URL'}), 400
+        try:
+            for info in socket.getaddrinfo(parsed_url.hostname, None):
+                if not ipaddress.ip_address(info[4][0]).is_global:
+                    return jsonify({'error': 'Invalid API_URL target'}), 400
+        except (OSError, ValueError):
+            return jsonify({'error': 'Unable to resolve API_URL'}), 400
+
         from ..allsky_map import request_allsky_map_api_key
         success, res = request_allsky_map_api_key(api_url, app.logger)
 
@@ -8105,6 +8118,10 @@ class AjaxLensSolverView(BaseView):
 
 
     def solve(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'success': False, 'message': 'You do not have permission to run the lens solver'}), 403
+
         values, error = parseSolverRequestValues(request.json)
         if error:
             return jsonify({'success': False, 'message': error}), 400
@@ -10642,8 +10659,11 @@ class AjaxCustomCssView(BaseView):
     decorators = [login_required]
 
     def dispatch_request(self):
+        import re
         data = request.get_json(force=True, silent=True) or {}
         custom_css_new = str(data.get('custom_css', ''))
+        if re.search(r'@(plugin|import|source|config)\b', custom_css_new, re.IGNORECASE):
+            return jsonify({'success': False, 'error': 'Disallowed CSS directive'}), 400
         custom_css_path = os.path.join(app.static_folder, 'css', 'custom.css')
 
         try:
@@ -14222,6 +14242,10 @@ class WsShellView(BaseView):
         import threading
         import select
         import simple_websocket
+        from .misc import is_valid_ws_origin
+
+        if not is_valid_ws_origin(request):
+            return 'Forbidden', 403
 
         if not current_user.is_authenticated:
             return 'Unauthorized', 401
@@ -14332,6 +14356,10 @@ class WsEventsView(BaseView):
     def dispatch_request(self):
         import simple_websocket
         from ..events import event_manager
+        from .misc import is_valid_ws_origin
+
+        if not is_valid_ws_origin(request):
+            return 'Forbidden', 403
 
         api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
         if not api_key and request.headers.get('Authorization'):
@@ -14457,6 +14485,10 @@ class WsControlView(BaseView):
     def dispatch_request(self):
         import simple_websocket
         from ..events import event_manager
+        from .misc import is_valid_ws_origin
+
+        if not is_valid_ws_origin(request):
+            return 'Forbidden', 403
 
         api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
         if not api_key and request.headers.get('Authorization'):

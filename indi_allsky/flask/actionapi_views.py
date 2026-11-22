@@ -68,6 +68,8 @@ class ActionApiBaseView(BaseView):
         if not argon2.verify(password, user.password):
             raise AuthenticationFailure('User failed authentication: {0:s}'.format(username))
 
+        if not user.is_active:
+            raise PermissionDenied('User is disabled: {0:s}'.format(username))
 
         if not user.is_admin:
             raise PermissionDenied('Permission Denied for user: {0:s}'.format(username))

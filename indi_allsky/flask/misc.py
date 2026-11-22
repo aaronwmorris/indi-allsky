@@ -44,3 +44,29 @@ def login_optional_media(func):
 
     return decorated_view
 
+
+
+def encrypt_json_secret(obj, password_key):
+    import json
+    from cryptography.fernet import Fernet
+    f_key = Fernet(password_key.encode())
+    return f_key.encrypt(json.dumps(obj).encode('utf-8')).decode('utf-8')
+
+
+def decrypt_json_secret(token_val, password_key):
+    import json
+    from cryptography.fernet import Fernet
+    if isinstance(token_val, dict):
+        return token_val
+    f_key = Fernet(password_key.encode())
+    return json.loads(f_key.decrypt(token_val.encode('utf-8')).decode('utf-8'))
+
+
+def is_valid_ws_origin(req):
+    """Validate browser WebSocket Origin header against request.host when present."""
+    from urllib.parse import urlsplit
+    origin = req.headers.get('Origin')
+    if not origin:
+        return True
+    parsed = urlsplit(origin)
+    return parsed.netloc == req.host

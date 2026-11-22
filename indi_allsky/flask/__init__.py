@@ -194,7 +194,12 @@ def create_app():
 
 
         if current_user.is_authenticated and current_user_data.get('oidc_token'):
-            token = current_user_data['oidc_token']
+            from .misc import decrypt_json_secret, encrypt_json_secret
+            password_key = app.config.get('PASSWORD_KEY', '')
+            try:
+                token = decrypt_json_secret(current_user_data['oidc_token'], password_key)
+            except Exception:
+                token = {}
             # check expiration (with 60s buffer)
             expires_at = token.get('expires_at')
             if expires_at and expires_at < (time.time() + 60):
@@ -219,7 +224,10 @@ def create_app():
                         token.update(new_token)
 
                         # Use a copy to ensure SQLAlchemy detects the change
-                        current_user_data['oidc_token'] = dict(token)
+                        if password_key and password_key != 'CHANGEME':
+                            current_user_data['oidc_token'] = encrypt_json_secret(dict(token), password_key)
+                        else:
+                            current_user_data['oidc_token'] = dict(token)
                         current_user.data = current_user_data
                         db.session.commit()
 

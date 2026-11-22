@@ -1147,6 +1147,8 @@ def WEB_EXTRA_TEXT_validator(form, field):
 
 
     web_extra_text_p = Path(field.data)
+    if web_extra_text_p.name in ('flask.json', 'flask.json_old', 'password_key_backup.json'):
+        raise ValidationError('Invalid file name')
 
     try:
         if not web_extra_text_p.exists():

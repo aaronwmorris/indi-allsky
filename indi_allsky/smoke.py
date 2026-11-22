@@ -127,7 +127,8 @@ class IndiAllskySmokeUpdate(object):
 
 
         try:
-            xml_root = etree.fromstring(self.hms_kml_data)
+            parser = etree.XMLParser(resolve_entities=False, no_network=True, dtd_validation=False)
+            xml_root = etree.fromstring(self.hms_kml_data, parser=parser)
         except etree.XMLSyntaxError as e:
             self.hms_kml_data = None  # force redownload
             raise NoSmokeData('Unable to parse XML: {0:s}'.format(str(e)))

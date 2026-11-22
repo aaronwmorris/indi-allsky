@@ -373,7 +373,7 @@ function loadJS(url, data, onDone, onError) {
         data: {...data, virtualsky: 1},
         success: function(rdata){
             json_data = rdata
-            $('#message').html(json_data['message']);
+            $('#message').text(json_data['message']);
 
         },
         error: function(rdata){
