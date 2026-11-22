@@ -83,14 +83,6 @@ class AdsbAircraftHttpWorker(Thread):
             logger.error('Connect timeout: %s', str(e))
             self.adsb_aircraft_q.put([])
             return
-        except requests.exceptions.ConnectionError as e:
-            logger.error('Connect error: %s', str(e))
-            self.adsb_aircraft_q.put([])
-            return
-        except requests.exceptions.ReadTimeout as e:
-            logger.error('Read timeout: %s', str(e))
-            self.adsb_aircraft_q.put([])
-            return
         except ssl.SSLCertVerificationError as e:
             logger.error('SSL Certificate Validation failed: %s', str(e))
             self.adsb_aircraft_q.put([])
@@ -99,6 +91,15 @@ class AdsbAircraftHttpWorker(Thread):
             logger.error('SSL Error: %s', str(e))
             self.adsb_aircraft_q.put([])
             return
+        except requests.exceptions.ConnectionError as e:
+            logger.error('Connect error: %s', str(e))
+            self.adsb_aircraft_q.put([])
+            return
+        except requests.exceptions.ReadTimeout as e:
+            logger.error('Read timeout: %s', str(e))
+            self.adsb_aircraft_q.put([])
+            return
+
 
 
 
@@ -155,8 +156,7 @@ class AdsbAircraftHttpWorker(Thread):
                 # value might be 'ground' if landed
                 #logger.warning('Aircraft altitude: %s', aircraft_altitude)
                 continue
-            elif isinstance(aircraft_altitude, type(None)):
-                continue
+
 
 
             try:

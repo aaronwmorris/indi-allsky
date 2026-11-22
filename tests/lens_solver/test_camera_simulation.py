@@ -12,6 +12,8 @@ from functools import lru_cache
 import cv2
 import numpy as np
 import pytest
+
+pytestmark = pytest.mark.slow
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.time import Time
 import astropy.units as u

@@ -541,23 +541,6 @@ class FakeIndiCcd(FakeIndiDevice):
         self._max_exposure = float(new_max_exposure)
 
 
-    @property
-    def min_gain(self):
-        return self._min_gain
-
-    @min_gain.setter
-    def min_gain(self, new_min_gain):
-        self._min_gain = float(new_min_gain)
-
-
-    @property
-    def max_gain(self):
-        return self._max_gain
-
-    @max_gain.setter
-    def max_gain(self, new_max_gain):
-        self._max_gain = float(new_max_gain)
-
 
     @property
     def cfa(self):
@@ -649,6 +632,7 @@ class FakeIndiVectorGeneric(object):
     def __next__(self):
         try:
             x = self.options[self.index]
+            self.index += 1
             return x
         except IndexError:
             raise StopIteration

@@ -281,7 +281,7 @@ class IndiAllSkyLensSolver(object):
                     fit, lens_altitude, pointing_azimuth = refined, altitude, heading
                     break
             else:
-                if fit.get('reason') != 'chirality_mismatch':
+                if fit.get('reason') != 'chirality_mismatch' and not fit.get('partial'):
                     fit = dict(success=False, reason='lens_model_unconstrained',
                         message='Camera pointing is not reliable for this frame or lens model. Try a clearer image with stars spread across the field.',
                         stars_matched=fit['stars_matched'])

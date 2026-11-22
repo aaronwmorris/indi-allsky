@@ -73,7 +73,7 @@ class IndiAllSkyMoonOverlay(object):
 
             ellipse_area = (moon_area * ((1 - (moon_phase / 100)) - 0.5)) * 2
             #logger.info('Ellipse area: %0.2f', ellipse_area)
-            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
+            ellipse_b = abs(int(ellipse_area / (math.pi * moon_radius)))
         elif moon_cycle_percent <= 50:
             start_scale = self.dark
             half_start = self.right_start
@@ -83,7 +83,7 @@ class IndiAllSkyMoonOverlay(object):
 
             ellipse_area = (moon_area * ((moon_phase / 100) - 0.5)) * 2
             #logger.info('Ellipse area: %0.2f', ellipse_area)
-            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
+            ellipse_b = abs(int(ellipse_area / (math.pi * moon_radius)))
         elif moon_cycle_percent <= 75:
             start_scale = self.dark
             half_start = self.left_start
@@ -93,7 +93,7 @@ class IndiAllSkyMoonOverlay(object):
 
             ellipse_area = (moon_area * ((moon_phase / 100) - 0.5)) * 2
             #logger.info('Ellipse area: %0.2f', ellipse_area)
-            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
+            ellipse_b = abs(int(ellipse_area / (math.pi * moon_radius)))
         else:
             start_scale = self.full
             half_start = self.right_start
@@ -103,7 +103,8 @@ class IndiAllSkyMoonOverlay(object):
 
             ellipse_area = (moon_area * ((1 - (moon_phase / 100)) - 0.5)) * 2
             #logger.info('Ellipse area: %0.2f', ellipse_area)
-            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
+            ellipse_b = abs(int(ellipse_area / (math.pi * moon_radius)))
+
 
 
         #logger.info('Ellipse B: %d', ellipse_b)
@@ -173,6 +174,8 @@ class IndiAllSkyMoonOverlay(object):
 
 
         image_height, image_width = image_data.shape[:2]
+        if image_width < new_moon_width or image_height < new_moon_height:
+            return
 
         # calculate coordinates
         if self.x < 0:
@@ -194,6 +197,11 @@ class IndiAllSkyMoonOverlay(object):
         if y > image_height - new_moon_height:
             #logger.error('Moon overlay Y offset places moon outside image boundary')
             y = image_height - new_moon_height
+
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
 
 
 

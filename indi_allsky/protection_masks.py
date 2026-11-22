@@ -99,11 +99,36 @@ def _apply_star_dilation(mask: np.ndarray, expand_radius: int | None) -> np.ndar
     return mask
 
 
+def _extract_centroids(tbl):
+    """Extract x and y centroid columns from an Astropy Table, dict, or mapping.
+
+    Prefers modern photutils column names ('x_centroid', 'y_centroid') and falls
+    back to legacy column names ('xcentroid', 'ycentroid') without triggering
+    deprecated column access warnings or Table row membership comparison errors.
+    """
+    colnames = getattr(tbl, 'colnames', None)
+    if colnames is not None:
+        if 'x_centroid' in colnames:
+            return tbl['x_centroid'], tbl['y_centroid']
+        if 'xcentroid' in colnames:
+            return tbl['xcentroid'], tbl['ycentroid']
+    if isinstance(tbl, dict):
+        if 'x_centroid' in tbl:
+            return tbl['x_centroid'], tbl['y_centroid']
+        if 'xcentroid' in tbl:
+            return tbl['xcentroid'], tbl['ycentroid']
+        return tbl.get('x_centroid', []), tbl.get('y_centroid', [])
+    try:
+        return tbl['x_centroid'], tbl['y_centroid']
+    except (KeyError, IndexError, TypeError):
+        return tbl['xcentroid'], tbl['ycentroid']
+
+
 def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
     """Paint detected stars as convolved impulses.
 
     Args:
-        tbl: Astropy table with x_centroid, y_centroid columns
+        tbl: Astropy table with xcentroid / x_centroid, ycentroid / y_centroid columns
         shape: (height, width) of output mask
         fwhm: full-width half-max of stars for stamp generation
 
@@ -114,8 +139,9 @@ def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
     if tbl is None or len(tbl) == 0:
         return impulses
 
-    xs = np.rint(tbl['x_centroid']).astype(int)
-    ys = np.rint(tbl['y_centroid']).astype(int)
+    x_col, y_col = _extract_centroids(tbl)
+    xs = np.rint(x_col).astype(int)
+    ys = np.rint(y_col).astype(int)
     xs = np.clip(xs, 0, shape[1] - 1)
     ys = np.clip(ys, 0, shape[0] - 1)
     impulses[ys, xs] = 1.0
@@ -309,10 +335,11 @@ def fast_star_mask(img: np.ndarray, downsample: int = 4, patch_size: int = 32,
             tbl = daofind(patch)
         except Exception:
             tbl = None
-        if tbl is None:
+        if tbl is None or len(tbl) == 0:
             continue
+        x_col, y_col = _extract_centroids(tbl)
         # stamp each detection, translating coords to image space
-        for xcent, ycent in zip(tbl['x_centroid'], tbl['y_centroid']):
+        for xcent, ycent in zip(x_col, y_col):
             gx = int(round(x0 + xcent))
             gy = int(round(y0 + ycent))
             y0s = max(gy - hh, 0)

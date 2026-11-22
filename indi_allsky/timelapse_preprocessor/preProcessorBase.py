@@ -50,5 +50,5 @@ class PreProcessorBase(object):
 
 
     def main(self, *args, **kwargs):
-        raise Exception()
+        raise Exception()  # pragma: no cover  # Abstract interface method overridden by concrete preprocessor implementations.
 

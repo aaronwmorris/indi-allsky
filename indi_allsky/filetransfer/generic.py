@@ -9,7 +9,7 @@ logger = logging.getLogger('indi_allsky')
 class GenericFileTransfer(object):
     def __init__(self, *args, **kwargs):
         self.config = args[0]
-        self.delete = kwargs.get('delete', False)
+        self.delete_mode = kwargs.get('delete', False)
 
         self._port = 0
         self._connect_timeout = 10.0
@@ -71,9 +71,9 @@ class GenericFileTransfer(object):
 
 
     def put(self, *args, **kwargs):
-        if self.delete:
+        if self.delete_mode:
             # perform delete instead of upload
-            return self.delete()
+            return self.delete(*args, **kwargs)
 
 
         local_file = kwargs['local_file']

@@ -139,7 +139,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
         if self.exposure_remain < self.ccd_min_exp:
             logger.warning('Last sub-exposure is below the minimum exposure (%0.6fs), increasing to minimum', self.exposure_remain)
-            #sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
+            sub_exposure = self.ccd_min_exp
             self.exposure_remain = 0.0
         elif exp_count == 1:
             if self.even_exposures:

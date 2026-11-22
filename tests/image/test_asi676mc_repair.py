@@ -1062,6 +1062,86 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
                 })
             )
 
+    def test_asi676mc_coverage_extensions(self):
+        # 0. direct call to frame_signature
+        sig = asi676mc.frame_signature(numpy.full((8, 8), 1000, dtype=numpy.uint16))
+        self.assertFalse(sig['is_bad'])
+
+        # 1. feature_enabled with non-dict
+        self.assertFalse(asi676mc.feature_enabled(None))
+        self.assertFalse(asi676mc.feature_enabled("not a dict"))
+
+        # 2. camera_record_identity_name with detected_name in camera.data
+        cam = SimpleNamespace(data={'detected_name': 'ASI676MC_Detected'}, name='Fallback')
+        self.assertEqual(asi676mc.camera_record_identity_name(cam), 'ASI676MC_Detected')
+
+        # 3. diagnostic_pending_capture_id with non-dict pending_state and None context
+        self.assertEqual(asi676mc.diagnostic_pending_capture_id('reload_id', {}), 'reload_id')
+        self.assertEqual(
+            asi676mc.diagnostic_pending_capture_id({'capture_id': 'c1', 'context': None}, {}),
+            'c1',
+        )
+
+        # 4. normalize_settings bounds and non-finite ratios
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'PURPLE_RATIO_THRESHOLD': 105.0})
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'HIGHLIGHT_BLEND_START_RATIO': float('nan')})
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'HIGHLIGHT_BLEND_END_RATIO': float('inf')})
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'SOURCE_SATURATION_THRESHOLD': 0})
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'SOURCE_SATURATION_THRESHOLD': 70000})
+
+        # 5. audit_metadata reason
+        meta = asi676mc.audit_metadata('failed', reason='test error')
+        self.assertEqual(meta.get('reason'), 'test error')
+
+        # 6. saved_fits_signature_metadata edge cases
+        self.assertIsNone(asi676mc.saved_fits_signature_metadata(None))
+        self.assertIsNone(asi676mc.saved_fits_signature_metadata({'signature_before': None}))
+        self.assertIsNone(asi676mc.saved_fits_signature_metadata({'signature_before': {'purple_ratio': 'invalid'}}))
+        self.assertIsNone(asi676mc.saved_fits_signature_metadata({'signature_before': {'purple_ratio': -1.0, 'red_side_ratio': 1.0, 'blue_side_ratio': 1.0}}))
+
+        # 7. validate_raw_mosaic edge cases
+        with self.assertRaises(ValueError):
+            asi676mc.validate_raw_mosaic([1, 2, 3])
+        with self.assertRaises(ValueError):
+            asi676mc.validate_raw_mosaic(numpy.zeros((4, 4, 2), dtype=numpy.uint16))
+        with self.assertRaises(ValueError):
+            asi676mc.validate_raw_mosaic(numpy.zeros((4, 4), dtype=numpy.float32))
+        ro = numpy.zeros((4, 4), dtype=numpy.uint16)
+        ro.flags.writeable = False
+        with self.assertRaises(ValueError):
+            asi676mc.validate_raw_mosaic(ro)
+        with self.assertRaises(ValueError):
+            asi676mc.validate_raw_mosaic(numpy.zeros((2, 4), dtype=numpy.uint16))
+        with self.assertRaises(ValueError):
+            asi676mc.validate_raw_mosaic(numpy.zeros((5, 4), dtype=numpy.uint16))
+
+        # 8. _frame_signature non-finite ratio check
+        with mock.patch('numpy.median', side_effect=[1000.0, 1000.0, float('nan'), 1000.0]):
+            with self.assertRaisesRegex(ValueError, 'non-finite detector ratio'):
+                asi676mc._frame_signature(numpy.full((8, 8), 1000, dtype=numpy.uint16), asi676mc.DEFAULT_SETTINGS)
+
+        # 9. repair_if_needed sanity check failure when post-repair is not bad
+        bad_frame = numpy.empty((64, 64), dtype=numpy.uint16)
+        bad_frame[0::2, 0::2] = 4000
+        bad_frame[0::2, 1::2] = 1000
+        bad_frame[1::2, 0::2] = 1000
+        bad_frame[1::2, 1::2] = 4000
+
+        def collapse_signal(target, settings):
+            target[:] = 1
+            return target
+
+        with mock.patch.object(asi676mc, 'repair_in_place', side_effect=collapse_signal):
+            result = asi676mc.repair_if_needed(bad_frame)
+            self.assertTrue(result['validation_failed'])
+            self.assertIn('post-repair signal sanity check failed', result['validation_reason'])
+
 
 if __name__ == '__main__':
     unittest.main()
+

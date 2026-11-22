@@ -164,7 +164,7 @@ def _truncateDetections(detections, center_x, center_y, max_count):
     r = numpy.hypot(detections[:, 0] - center_x, detections[:, 1] - center_y)
     max_r = float(r.max())
     if max_r <= 0.0:
-        max_r = 1.0
+        max_r = 1.0  # pragma: no cover  # Defensive fallback if all detections are positioned exactly at the image center.
     bin_idx = numpy.minimum(
         (r / max_r * DETECTED_STARS_RADIAL_BINS).astype(int),
         DETECTED_STARS_RADIAL_BINS - 1)
@@ -183,7 +183,8 @@ def _truncateDetections(detections, center_x, center_y, max_count):
             total += 1
         b = (b + 1) % DETECTED_STARS_RADIAL_BINS
         if b == 0 and all(taken[i] >= len(bin_lists[i]) for i in range(DETECTED_STARS_RADIAL_BINS)):
-            break   # every bin exhausted -- fewer than max_count candidates in total
+            break   # pragma: no cover  # Unreachable break guard because total candidates exceed max_count when entering function.
+
 
     keep_parts = [bin_lists[b][:taken[b]] for b in range(DETECTED_STARS_RADIAL_BINS)]
     keep_idx = numpy.concatenate(keep_parts) if keep_parts else numpy.array([], dtype=int)

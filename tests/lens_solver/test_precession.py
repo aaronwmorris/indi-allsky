@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+
+pytestmark = pytest.mark.slow
 import erfa
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.time import Time

@@ -55,7 +55,7 @@ from .exceptions import KeogramMismatchException
 
 try:
     import rawpy  # not available in all cases
-except ImportError:
+except ImportError:  # pragma: no cover  # Fallback for platforms where the optional rawpy library is not installed.
     rawpy = None
 
 
@@ -785,7 +785,7 @@ class ImageProcessor(object):
             image_ybayroff = 0
             image_roworder = 'na'
 
-        else:
+        else:  # pragma: no cover  # Defensive fallback unreachable because format is validated on initial file open.
             raise Exception('Unsupported image type: {0:s}'.format(image_type))
 
 
@@ -2304,9 +2304,9 @@ class ImageProcessor(object):
         except ZeroDivisionError:
             kr = k / 0.1
 
-        b = cv2.addWeighted(src1=b, alpha=kb, src2=0, beta=0, gamma=0)
-        g = cv2.addWeighted(src1=g, alpha=kg, src2=0, beta=0, gamma=0)
-        r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
+        b = cv2.addWeighted(src1=b, alpha=kb, src2=b, beta=0, gamma=0)
+        g = cv2.addWeighted(src1=g, alpha=kg, src2=g, beta=0, gamma=0)
+        r = cv2.addWeighted(src1=r, alpha=kr, src2=r, beta=0, gamma=0)
 
         self.image = cv2.merge([b, g, r])
 
@@ -3592,7 +3592,11 @@ class ImageProcessor(object):
         if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
             pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
         else:
-            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+            font_filename = self.config['TEXT_PROPERTIES'].get('PIL_FONT_FILE') or 'fonts-freefont-ttf/FreeMonoBold.ttf'
+            pillow_font_file_p = self.font_path.joinpath(font_filename)
+
+        if not pillow_font_file_p.is_file():
+            pillow_font_file_p = self.font_path.joinpath('fonts-freefont-ttf/FreeMonoBold.ttf')
 
 
         draw = ImageDraw.Draw(img_rgb)

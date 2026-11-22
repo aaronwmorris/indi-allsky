@@ -1,3 +1,52 @@
+from pathlib import Path
+from datetime import datetime, timezone
+import numpy as np
+import pytest
+
+from indi_allsky.asi676mc_calibration_engine import (
+    is_recoverable_fits_error,
+    _parse_timestamp,
+    _header_float,
+    RepairedFitsError,
+    CALIBRATION_OPTIONS,
+    DEFAULT_SETTINGS,
+)
+
+
+def test_calibration_options_constants():
+    assert 'MIN_BAD_PAIRS' in CALIBRATION_OPTIONS
+    assert 'SAMPLE_STEP' in CALIBRATION_OPTIONS
+    assert CALIBRATION_OPTIONS['MIN_BAD_PAIRS'] == 7
+    assert DEFAULT_SETTINGS is not None
+
+
+def test_is_recoverable_fits_error():
+    assert is_recoverable_fits_error(ValueError('bad data')) is True
+    assert is_recoverable_fits_error(TypeError('type mismatch')) is True
+    assert is_recoverable_fits_error(OSError('file missing')) is True
+    assert is_recoverable_fits_error(RuntimeError('fatal')) is False
+
+
+def test_parse_timestamp():
+    header = {'DATE-OBS': '2026-09-01T12:00:00Z'}
+    path = Path('image_20260901_120000.fits')
+    ts = _parse_timestamp(header, path)
+    assert ts > 0
+
+    empty_header = {}
+    ts_file = _parse_timestamp(empty_header, path)
+    assert ts_file > 0
+
+
+def test_header_float():
+    header = {'EXPOSURE': '15.5', 'EXPTIME': '15.5'}
+    val = _header_float(header, 'EXPOSURE', 'EXPTIME')
+    assert val == 15.5
+
+    missing_val = _header_float(header, 'NONEXISTENT', default=1.0)
+    assert missing_val == 1.0
+
+
 import tempfile
 from pathlib import Path
 import unittest
@@ -1361,6 +1410,578 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertEqual(payload['quality']['likely_purple_count'], 7)
         self.assertEqual(payload['quality']['likely_normal_count'], 14)
 
+    def test_engine_additional_coverage(self):
+        # 1. _fits_module import failure
+        orig_import = __import__
+
+        def fake_import(name, *args, **kwargs):
+            if 'astropy' in name:
+                raise ModuleNotFoundError('No module named astropy')
+            return orig_import(name, *args, **kwargs)
+
+        with mock.patch('builtins.__import__', side_effect=fake_import):
+            with self.assertRaises(RuntimeError):
+                calibration_engine._fits_module()
+            self.assertFalse(calibration_engine.is_recoverable_fits_error(RuntimeError('error')))
+
+        # 2. _read_fits with data exceeding limit or no data
+        fake_hdu = mock.Mock()
+        fake_hdu.data = numpy.zeros((10, 10), dtype=numpy.uint16)
+        fake_hdulist = mock.MagicMock()
+        fake_hdulist.__enter__.return_value = [fake_hdu]
+        with mock.patch.object(calibration_engine, '_fits_module') as mock_fits, \
+             mock.patch('numpy.squeeze', return_value=mock.Mock(nbytes=calibration_engine.MAX_DECODED_FITS_BYTES + 1)):
+            mock_fits.return_value.open.return_value = fake_hdulist
+            with self.assertRaisesRegex(ValueError, 'exceeds the'):
+                calibration_engine._read_fits(Path('big.fit'))
+
+        empty_hdulist = mock.MagicMock()
+        empty_hdulist.__enter__.return_value = [mock.Mock(data=None)]
+        with mock.patch.object(calibration_engine, '_fits_module') as mock_fits:
+            mock_fits.return_value.open.return_value = empty_hdulist
+            with self.assertRaisesRegex(ValueError, 'contains no image data'):
+                calibration_engine._read_fits(Path('empty.fit'))
+
+        # 4. _parse_timestamp with bad DATE-OBS but filename timestamp, and no timestamp
+        header_bad_date = {'DATE-OBS': 'invalid-date'}
+        ts = calibration_engine._parse_timestamp(header_bad_date, Path('capture_20260701_120000.fit'))
+        self.assertGreater(ts, 0)
+        with self.assertRaises(ValueError):
+            calibration_engine._parse_timestamp(header_bad_date, Path('capture.fit'))
+
+        # 5. _header_float with exception
+        self.assertEqual(calibration_engine._header_float({'K': 'not-a-float'}, 'K', default=99.0), 99.0)
+
+        # 6. _header_boolean with strings
+        self.assertTrue(calibration_engine._header_boolean('yes'))
+        self.assertTrue(calibration_engine._header_boolean('1'))
+        self.assertTrue(calibration_engine._header_boolean('on'))
+        self.assertFalse(calibration_engine._header_boolean('no'))
+
+        # 7. inspect_fits with non-matching trusted camera name
+        with tempfile.TemporaryDirectory() as temp_dir:
+            p = Path(temp_dir) / 'test.fit'
+            hdr = fits.Header()
+            hdr['DATE-OBS'] = '2026-07-01T00:00:00'
+            hdr['EXPTIME'] = 0.001
+            hdr['GAIN'] = 0.0
+            hdr['BAYERPAT'] = 'RGGB'
+            hdr['XBINNING'] = 1
+            hdr['YBINNING'] = 1
+            hdr['XBAYROFF'] = 0
+            hdr['YBAYROFF'] = 0
+            fits.PrimaryHDU(data=self._normal_frame(64, 64), header=hdr).writeto(p)
+
+            with self.assertRaisesRegex(ValueError, 'not positively identified as ASI676MC'):
+                calibration_engine.inspect_fits(p, calibration_engine.DEFAULT_SETTINGS, trusted_camera_name='QHY5')
+
+        # 8. inspect_fits_metadata edge cases
+        meta_bad = {
+            'signature': {'purple_ratio': 1.0, 'red_side_ratio': 1.0, 'blue_side_ratio': 1.0},
+            'timestamp': 1000.0,
+            'exposure': 0.001,
+            'gain': 0.0,
+            'binmode': 1,
+            'width': 64,
+            'height': 64,
+            'camera_name': 'ZWO CCD ASI676MC',
+        }
+        with self.assertRaises(calibration_engine.RepairedFitsError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'repair_status': 'repaired'}, calibration_engine.DEFAULT_SETTINGS)
+        with self.assertRaises(ValueError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'binmode': 2}, calibration_engine.DEFAULT_SETTINGS)
+        with self.assertRaises(ValueError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'exposure': 0}, calibration_engine.DEFAULT_SETTINGS)
+        with self.assertRaises(ValueError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'gain': -1}, calibration_engine.DEFAULT_SETTINGS)
+        with self.assertRaises(ValueError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'camera_name': 'QHY'}, calibration_engine.DEFAULT_SETTINGS)
+        with self.assertRaises(ValueError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'width': None}, calibration_engine.DEFAULT_SETTINGS)
+        with self.assertRaises(ValueError):
+            calibration_engine.inspect_fits_metadata(Path('x.fit'), {**meta_bad, 'signature': {'purple_ratio': -1.0, 'red_side_ratio': 1.0, 'blue_side_ratio': 1.0}}, calibration_engine.DEFAULT_SETTINGS)
+
+        # 9. scan_folder with checkpoint_callback and metadata non-ASI camera
+        with tempfile.TemporaryDirectory() as temp_dir:
+            p = Path(temp_dir) / 'file.fit'
+            p.touch()
+            chk = mock.Mock()
+            meta_map = {'file.fit': {'camera_name': 'QHY Camera'}}
+            records, rejected = calibration_engine.scan_folder(
+                Path(temp_dir),
+                calibration_engine.DEFAULT_SETTINGS,
+                metadata_by_name=meta_map,
+                checkpoint_callback=chk,
+            )
+            self.assertEqual(len(rejected), 1)
+            self.assertIn('non-ASI676MC camera', rejected[0][1])
+            self.assertGreaterEqual(chk.call_count, 1)
+
+            # scan_folder with fatal unrecoverable error
+            with mock.patch.object(calibration_engine, 'inspect_fits', side_effect=RuntimeError('Fatal error')):
+                with self.assertRaises(RuntimeError):
+                    calibration_engine.scan_folder(Path(temp_dir), calibration_engine.DEFAULT_SETTINGS)
+
+        # 10. _reference_planes one-sided pair and two references on same side
+        ref1 = self._threshold_record('ref1.fit', 100, 0.001, (1, 1, 1))
+        ref2 = self._threshold_record('ref2.fit', 200, 0.001, (1, 1, 1))
+        bad_rec = self._threshold_record('bad.fit', 50, 0.001, (2, 2, 2))
+        dummy_plane = numpy.ones((8, 8), dtype=numpy.uint16)
+        with mock.patch.object(calibration_engine, '_sample_planes', return_value=(dummy_plane, dummy_plane, dummy_plane, dummy_plane)):
+            pair_one = calibration_engine.MatchedPair(bad=bad_rec, references=(ref1,))
+            planes, stable = calibration_engine._reference_planes(pair_one, step=4)
+            self.assertEqual(len(planes), 4)
+
+            pair_same_side = calibration_engine.MatchedPair(bad=bad_rec, references=(ref1, ref2))
+            planes, stable = calibration_engine._reference_planes(pair_same_side, step=4)
+            self.assertEqual(len(planes), 4)
+
+        # 11. estimate_saturation_threshold without clipped maxima
+        dummy_sample = calibration_engine.PairSamples(
+            pair=None,
+            bad_planes=(dummy_plane, dummy_plane, dummy_plane, dummy_plane),
+            reference_planes=(dummy_plane, dummy_plane, dummy_plane, dummy_plane),
+            stable_masks=(dummy_plane.astype(bool), dummy_plane.astype(bool), dummy_plane.astype(bool), dummy_plane.astype(bool)),
+        )
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'no source green plateau'):
+            calibration_engine.estimate_saturation_threshold([dummy_sample])
+
+        # 12. estimate_highlight_ratios error cases and checkpoint_callback
+        chk_hl = mock.Mock()
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'highlight samples were found'):
+            calibration_engine.estimate_highlight_ratios(
+                [dummy_sample],
+                {'GAIN_R': 1.0, 'GAIN_G1': 1.0, 'GAIN_G2': 1.0, 'GAIN_B': 1.0},
+                65000,
+                checkpoint_callback=chk_hl,
+            )
+        self.assertGreaterEqual(chk_hl.call_count, 1)
+
+        # 13. signature_ranges missing good or bad
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'both normal and purple'):
+            calibration_engine.signature_ranges([ref1])
+
+        # 14. build_detection_threshold_suggestions when no change is recommended
+        safe_ranges = {
+            'purple_ratio': {'good_max': 1.0, 'bad_min': 2.0},
+            'red_side_ratio': {'good_max': 1.0, 'bad_min': 2.0},
+            'blue_side_ratio': {'good_max': 1.0, 'bad_min': 2.0},
+        }
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'already lie inside every observed gap'):
+            calibration_engine.build_detection_threshold_suggestions(
+                safe_ranges,
+                {'PURPLE_RATIO_THRESHOLD': 1.5, 'RED_SIDE_RATIO_THRESHOLD': 1.5, 'BLUE_SIDE_RATIO_THRESHOLD': 1.5},
+            )
+
+        # 15. assess_detection_threshold_margins when gap <= 0
+        overlap_ranges = {
+            'purple_ratio': {'good_max': 2.5, 'bad_min': 2.0},
+            'red_side_ratio': {'good_max': 2.5, 'bad_min': 2.0},
+            'blue_side_ratio': {'good_max': 2.5, 'bad_min': 2.0},
+        }
+        res = calibration_engine.assess_detection_threshold_margins(overlap_ranges, calibration_engine.DEFAULT_SETTINGS)
+        self.assertEqual(res, [])
+
+        # 16. infer_detection_populations error cases
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'compatible FITS are required'):
+            calibration_engine.infer_detection_populations([ref1])
+
+        # 17. validate_evidence error cases
+        inv_rec = self._threshold_record('inv.fit', 100, 0.001, (1, 1, 1))
+        object.__setattr__(inv_rec, 'bayer', 'BGGR')
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'lack the required ASI676MC'):
+            calibration_engine.validate_evidence([inv_rec], [], [])
+
+        normal_records = [self._threshold_record(f'n{i}.fit', 1000 + i*10, 0.001, (1, 1, 1)) for i in range(10)]
+        bad_records = [self._threshold_record(f'b{i}.fit', 2000 + i*10, 0.001, (2, 2, 2)) for i in range(7)]
+        for b in bad_records:
+            b.signature['is_bad'] = True
+        pairs_test = [calibration_engine.MatchedPair(b, (normal_records[0],)) for b in bad_records]
+        # Low unique_good ratio
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'matched normal/purple ratio'):
+            calibration_engine.validate_evidence(normal_records + bad_records, pairs_test, [])
+
+        # 18. dataset_has_actionable_result
+        records_pop = self._threshold_population_records()
+        for r in records_pop:
+            r.signature['is_bad'] = r.path.name.startswith('likely_purple_')
+        self.assertTrue(calibration_engine.dataset_has_actionable_result(records_pop, calibration_engine.DEFAULT_SETTINGS, 90.0))
+
+        # 19. validate_calibrated_frames failure cases
+        placeholder = numpy.ones((8, 8), dtype=numpy.float64)
+        placeholder_masks = (numpy.ones((8, 8), dtype=bool),) * 4
+        with mock.patch.object(calibration_engine, '_read_fits', return_value=(numpy.zeros((16, 16), dtype=numpy.uint16), {}, 0)), \
+             mock.patch.object(calibration_engine, '_reference_planes', return_value=((placeholder,) * 4, placeholder_masks)), \
+             mock.patch.object(calibration_engine, '_sample_array_planes', return_value=(placeholder,) * 4), \
+             mock.patch.object(calibration_engine, '_reference_error', return_value=0.5), \
+             mock.patch.object(calibration_engine.asi676mc, 'repair_if_needed', return_value={'repaired': False, 'validation_failed': True}):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_runtime_repair'):
+                calibration_engine.validate_calibrated_frames([pair_one], calibration_engine.DEFAULT_SETTINGS)
+
+        # 20. calibrate_folder with progressive=True and progress_callback
+        progress_log = []
+        records_pop_cal = self._threshold_population_records(purple_blue_ratio=2.5)
+        for r in records_pop_cal:
+            r.signature['is_bad'] = r.path.name.startswith('likely_purple_')
+        with mock.patch.object(calibration_engine, 'scan_folder', return_value=(records_pop_cal, [])), \
+             mock.patch.object(calibration_engine, 'collect_pair_samples', return_value=[dummy_sample]), \
+             mock.patch.object(calibration_engine, 'estimate_gains', return_value={
+                 k: {'value': 1.0, 'mad': 0.0, 'sample_count': 100} for k in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
+             }), \
+             mock.patch.object(calibration_engine, 'estimate_saturation_threshold', return_value=(65000, 65534)), \
+             mock.patch.object(calibration_engine, 'estimate_highlight_ratios', return_value={
+                 'start_ratio': 0.55, 'end_ratio': 0.75, 'pair_count': 7, 'sample_count': 100,
+                 'score': 0.01, 'default_score': 0.01, 'raw_best_score': 0.01,
+                 'raw_best_start_ratio': 0.55, 'raw_best_end_ratio': 0.75,
+                 'preferred_default': True, 'runner_up_score': 0.011,
+             }), \
+             mock.patch.object(calibration_engine, 'validate_calibrated_frames', return_value=(
+                 7, 14, [{'name': 'b', 'original_error': 0.5, 'gain_only_error': 0.1, 'repaired_error': 0.05, 'improvement_vs_original': 0.9, 'improvement_vs_gain_only': 0.5, 'required_improvement': 0.1}], []
+             )):
+            res = calibration_engine.calibrate_folder(
+                Path('dummy'),
+                progressive=True,
+                progress_callback=progress_log.append,
+                allow_unmatched=True,
+            )
+            self.assertEqual(res['outcome'], 'calibration')
+            self.assertTrue(any(p.get('phase') == 'fitting' for p in progress_log))
+            self.assertTrue(any(p.get('phase') == 'validating' for p in progress_log))
+
+    def test_engine_further_coverage(self):
+        # 1. scan_folder with RepairedFitsError
+        with tempfile.TemporaryDirectory() as temp_dir:
+            p = Path(temp_dir) / 'repaired.fit'
+            p.touch()
+            meta_repaired = {'repaired.fit': {'camera_name': 'ZWO CCD ASI676MC', 'repair_status': 'repaired'}}
+            records, rejected = calibration_engine.scan_folder(
+                Path(temp_dir),
+                calibration_engine.DEFAULT_SETTINGS,
+                metadata_by_name=meta_repaired,
+            )
+            self.assertEqual(len(rejected), 1)
+            self.assertIn('already repaired', rejected[0][1])
+
+        # 2. collect_pair_samples with checkpoint_callback
+        chk_sample = mock.Mock()
+        ref = self._threshold_record('r.fit', 100, 0.001, (1, 1, 1))
+        bad = self._threshold_record('b.fit', 200, 0.001, (2, 2, 2))
+        dummy_plane = numpy.ones((8, 8), dtype=numpy.uint16)
+        with mock.patch.object(calibration_engine, '_sample_planes', return_value=(dummy_plane,)*4):
+            calibration_engine.collect_pair_samples([calibration_engine.MatchedPair(bad, (ref,))], checkpoint_callback=chk_sample)
+            self.assertEqual(chk_sample.call_count, 1)
+
+        # 3. estimate_gains branch: count < required, and len(values) < MIN_BAD_PAIRS
+        empty_sample = calibration_engine.PairSamples(
+            pair=None,
+            bad_planes=(dummy_plane, dummy_plane, dummy_plane, dummy_plane),
+            reference_planes=(dummy_plane, dummy_plane, dummy_plane, dummy_plane),
+            stable_masks=(numpy.zeros((8, 8), dtype=bool),)*4,
+        )
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'usable samples in only'):
+            calibration_engine.estimate_gains([empty_sample]*7)
+
+        # 4. estimate_highlight_ratios branches:
+        ds = mock.Mock(bad_planes=(dummy_plane, dummy_plane, dummy_plane, dummy_plane),
+                       reference_planes=(dummy_plane, dummy_plane, dummy_plane, dummy_plane),
+                       stable_masks=(numpy.ones((8, 8), dtype=bool),)*4)
+        mock_arrays = (numpy.ones(200),)*10
+        with mock.patch.object(calibration_engine, '_highlight_arrays', return_value=mock_arrays):
+            with mock.patch.object(calibration_engine, '_highlight_score', side_effect=ValueError('bad score')):
+                with self.assertRaisesRegex(calibration_engine.CalibrationError, 'no valid highlight blend candidates'):
+                    calibration_engine.estimate_highlight_ratios([ds]*7, {'GAIN_R': 1.0, 'GAIN_G1': 1.0, 'GAIN_G2': 1.0, 'GAIN_B': 1.0}, 65000)
+
+            def fake_score(datasets, start, end):
+                if round(start, 2) == 0.50 and round(end, 2) == 0.70:
+                    return 0.05
+                return 0.30
+
+            with mock.patch.object(calibration_engine, '_highlight_score', side_effect=fake_score):
+                res = calibration_engine.estimate_highlight_ratios([ds]*7, {'GAIN_R': 1.0, 'GAIN_G1': 1.0, 'GAIN_G2': 1.0, 'GAIN_B': 1.0}, 65000)
+                self.assertFalse(res['preferred_default'])
+
+            with mock.patch.object(calibration_engine, '_highlight_score', return_value=1.5):
+                with self.assertRaisesRegex(calibration_engine.CalibrationError, 'exceeds the safe maximum'):
+                    calibration_engine.estimate_highlight_ratios([ds]*7, {'GAIN_R': 1.0, 'GAIN_G1': 1.0, 'GAIN_G2': 1.0, 'GAIN_B': 1.0}, 65000)
+
+        # 5. build_detection_threshold_suggestions when gap is too small
+        bad_gap_ranges = {
+            'purple_ratio': {'good_max': 1.0, 'bad_min': 1.001},
+            'red_side_ratio': {'good_max': 1.0, 'bad_min': 2.0},
+            'blue_side_ratio': {'good_max': 1.0, 'bad_min': 2.0},
+        }
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'does not have the required clean gap'):
+            calibration_engine.build_detection_threshold_suggestions(bad_gap_ranges, calibration_engine.DEFAULT_SETTINGS)
+
+        # 6. infer_detection_populations: non-finite or negative ratios, bincount 0
+        rec_nan = self._threshold_record('nan.fit', 100, 0.001, (float('nan'), 1, 1))
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'non-finite or non-positive'):
+            calibration_engine.infer_detection_populations([rec_nan]*20)
+
+        records_pop = self._threshold_population_records()
+        with mock.patch('numpy.bincount', return_value=numpy.array([0, 21])):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'do not form two stable populations'):
+                calibration_engine.infer_detection_populations(records_pop)
+
+        # 7. validate_evidence: pairs < minimum, unmatched with allow_unmatched=False, single exposure level, wrong camera name
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'matched purple frames found'):
+            calibration_engine.validate_evidence([ref], [], [])
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'have no compatible nearby normal'):
+            calibration_engine.validate_evidence([ref, bad], [calibration_engine.MatchedPair(bad, (ref,))]*7, [bad], allow_unmatched=False)
+
+        bad_single_exp = [self._threshold_record(f'b{i}.fit', 2000 + i*10, 0.001, (2, 2, 2)) for i in range(7)]
+        for b in bad_single_exp:
+            b.signature['is_bad'] = True
+        normal_multi = [self._threshold_record(f'n{i}.fit', 1000 + i*10, 0.001, (1, 1, 1)) for i in range(7)]
+        pairs_single = [calibration_engine.MatchedPair(b, (n,)) for b, n in zip(bad_single_exp, normal_multi)]
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'matched failures cover only one exposure'):
+            calibration_engine.validate_evidence(bad_single_exp + normal_multi, pairs_single, [])
+
+        bad_multi_exp = [self._threshold_record(f'b{i}.fit', 2000 + i*10, 0.001 if i < 4 else 0.002, (2, 2, 2)) for i in range(7)]
+        for b in bad_multi_exp:
+            b.signature['is_bad'] = True
+        pairs_multi = [calibration_engine.MatchedPair(b, (n,)) for b, n in zip(bad_multi_exp, normal_multi)]
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'all evidence must explicitly identify ASI676MC'):
+            calibration_engine.validate_evidence([], pairs_multi, [])
+
+        # 8. _reference_error & _best_gain_only_planes
+        p_plane = numpy.zeros((8, 8), dtype=numpy.float64)
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'too few stable samples'):
+            calibration_engine._reference_error((p_plane,)*4, (p_plane,)*4, (numpy.zeros((8, 8), dtype=bool),)*4)
+
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'too few stable pixels'):
+            calibration_engine._best_gain_only_planes((p_plane,)*4, (p_plane,)*4, (numpy.zeros((8, 8), dtype=bool),)*4)
+
+        # 9. validate_calibrated_frames: repaired error too high, normal rejected
+        pair_test = calibration_engine.MatchedPair(bad, (ref,))
+        with mock.patch.object(calibration_engine, '_read_fits', return_value=(numpy.zeros((16, 16), dtype=numpy.uint16), {}, 0)), \
+             mock.patch.object(calibration_engine, '_reference_planes', return_value=((dummy_plane.astype(float),)*4, (dummy_plane.astype(bool),)*4)), \
+             mock.patch.object(calibration_engine, '_sample_array_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_best_gain_only_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_reference_error', return_value=0.9), \
+             mock.patch.object(calibration_engine.asi676mc, 'repair_if_needed', return_value={'repaired': True, 'validation_failed': False}):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_repaired_reference_error'):
+                calibration_engine.validate_calibrated_frames([pair_test], calibration_engine.DEFAULT_SETTINGS)
+
+        with mock.patch.object(calibration_engine, '_read_fits', return_value=(numpy.zeros((16, 16), dtype=numpy.uint16), {}, 0)), \
+             mock.patch.object(calibration_engine, '_reference_planes', return_value=((dummy_plane.astype(float),)*4, (dummy_plane.astype(bool),)*4)), \
+             mock.patch.object(calibration_engine, '_sample_array_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_best_gain_only_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_reference_error', side_effect=[0.5, 0.05, 0.20]), \
+             mock.patch.object(calibration_engine.asi676mc, 'repair_if_needed', side_effect=[
+                 {'repaired': True, 'validation_failed': False},
+                 {'repaired': True, 'signature_before': {'is_bad': True}},
+             ]):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_normal_rejected'):
+                calibration_engine.validate_calibrated_frames([pair_test], calibration_engine.DEFAULT_SETTINGS)
+
+        def mock_repair_fn(target, settings):
+            if not getattr(mock_repair_fn, 'called', False):
+                mock_repair_fn.called = True
+                return {'repaired': True, 'validation_failed': False}
+            target[:] += 1
+            return {'repaired': False, 'signature_before': {'is_bad': False}}
+
+        with mock.patch.object(calibration_engine, '_read_fits', return_value=(numpy.zeros((16, 16), dtype=numpy.uint16), {}, 0)), \
+             mock.patch.object(calibration_engine, '_reference_planes', return_value=((dummy_plane.astype(float),)*4, (dummy_plane.astype(bool),)*4)), \
+             mock.patch.object(calibration_engine, '_sample_array_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_best_gain_only_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_reference_error', side_effect=[0.5, 0.05, 0.20]), \
+             mock.patch.object(calibration_engine.asi676mc, 'repair_if_needed', side_effect=mock_repair_fn):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_normal_modified'):
+                calibration_engine.validate_calibrated_frames([pair_test], calibration_engine.DEFAULT_SETTINGS)
+
+        # 9b. _best_gain_only_planes non-positive ratio
+        val_planes = (numpy.full((8, 8), 2000.0),)*4
+        with mock.patch('numpy.median', return_value=0.0):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'colour-only comparison could not'):
+                calibration_engine._best_gain_only_planes(val_planes, val_planes, (numpy.ones((8, 8), dtype=bool),)*4)
+
+        # 9c. validate_signature_separation overlap
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'cannot be checked because the supplied ranges overlap'):
+            calibration_engine.validate_signature_separation({
+                'purple_ratio': {'good_max': 2.0, 'bad_min': 1.0},
+                'red_side_ratio': {'good_max': 0.7, 'bad_min': 1.5},
+                'blue_side_ratio': {'good_max': 1.1, 'bad_min': 2.5},
+            }, calibration_engine.DEFAULT_SETTINGS)
+
+        # 9d. infer_detection_populations conflicting detected
+        conflict_records = self._threshold_population_records()
+        for rec in conflict_records:
+            if rec.path.name.startswith('normal_before_'):
+                rec.signature['is_bad'] = True
+        with self.assertRaisesRegex(calibration_engine.CalibrationError, 'fall in the lower-ratio population'):
+            calibration_engine.infer_detection_populations(conflict_records, allow_detected_conflicts=False)
+
+        # 10. dataset_has_actionable_result returning False
+        with mock.patch.object(calibration_engine, 'match_pairs', side_effect=calibration_engine.CalibrationError('fail')):
+            self.assertFalse(calibration_engine.dataset_has_actionable_result(records_pop, calibration_engine.DEFAULT_SETTINGS, 90.0))
+
+        # 11. calibrate_folder: suggest_detection_thresholds failure
+        with mock.patch.object(calibration_engine, 'scan_folder', return_value=([ref]*2, [])), \
+             mock.patch.object(calibration_engine, 'suggest_detection_thresholds', side_effect=calibration_engine.CalibrationError('fail suggestion')):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'Automatic threshold analysis could not'):
+                calibration_engine.calibrate_folder(Path('unused'))
+
+        # 12. validate_calibrated_frames with checkpoint_callback
+        chk_val = mock.Mock()
+        with mock.patch.object(calibration_engine, '_read_fits', return_value=(numpy.zeros((16, 16), dtype=numpy.uint16), {}, 0)), \
+             mock.patch.object(calibration_engine, '_reference_planes', return_value=((dummy_plane.astype(float),)*4, (dummy_plane.astype(bool),)*4)), \
+             mock.patch.object(calibration_engine, '_sample_array_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_best_gain_only_planes', return_value=(dummy_plane.astype(float),)*4), \
+             mock.patch.object(calibration_engine, '_reference_error', side_effect=[0.5, 0.05, 0.20]), \
+             mock.patch.object(calibration_engine.asi676mc, 'repair_if_needed', side_effect=[
+                 {'repaired': True, 'validation_failed': False},
+                 {'repaired': False, 'signature_before': {'is_bad': False}},
+             ]):
+            calibration_engine.validate_calibrated_frames([pair_test], calibration_engine.DEFAULT_SETTINGS, checkpoint_callback=chk_val)
+            self.assertGreaterEqual(chk_val.call_count, 2)
+
+        # 13. dataset_has_actionable_result CalibrationError in try block
+        with mock.patch.object(calibration_engine, 'validate_evidence', side_effect=calibration_engine.CalibrationError('fail')):
+            self.assertFalse(calibration_engine.dataset_has_actionable_result(records_pop, calibration_engine.DEFAULT_SETTINGS, 90.0))
+
+        # 14. calibrate_folder marginal exclusion limit and group count after exclusion
+        records_pop_cal = self._threshold_population_records(purple_blue_ratio=2.5)
+        for r in records_pop_cal:
+            r.signature['is_bad'] = r.path.name.startswith('likely_purple_')
+        with mock.patch.object(calibration_engine, 'scan_folder', return_value=(records_pop_cal, [])), \
+             mock.patch.object(calibration_engine, 'collect_pair_samples', return_value=[empty_sample]), \
+             mock.patch.object(calibration_engine, 'estimate_gains', return_value={
+                 k: {'value': 1.0, 'mad': 0.0, 'sample_count': 100} for k in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
+             }), \
+             mock.patch.object(calibration_engine, 'estimate_saturation_threshold', return_value=(65000, 65534)), \
+             mock.patch.object(calibration_engine, 'estimate_highlight_ratios', return_value={
+                 'start_ratio': 0.55, 'end_ratio': 0.75, 'pair_count': 7, 'sample_count': 100,
+                 'score': 0.01, 'default_score': 0.01, 'raw_best_score': 0.01,
+                 'raw_best_start_ratio': 0.55, 'raw_best_end_ratio': 0.75,
+                 'preferred_default': True, 'runner_up_score': 0.011,
+             }), \
+             mock.patch.object(calibration_engine, 'validate_calibrated_frames', return_value=(
+                 6, 14, [], [{'pair': pair_test, 'check': {'name': 'f', 'reason': 'fail'}}]
+             )):
+            with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_phase_improvement'):
+                calibration_engine.calibrate_folder(Path('unused'), target_group_count=7, marginal_exclusion_limit=0)
+
+            def mock_fail_val(pairs_arg, *args, **kwargs):
+                return (len(pairs_arg) - 1, 14, [], [{'pair': pairs_arg[0], 'check': {'name': 'f', 'reason': 'fail'}}])
+
+            with mock.patch.object(calibration_engine, 'validate_calibrated_frames', side_effect=mock_fail_val):
+                with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_group_count_after_exclusion'):
+                    calibration_engine.calibrate_folder(Path('unused'), target_group_count=7, marginal_exclusion_limit=2)
+
+    def test_coverage_gap_edge_cases(self):
+        # 1. line 718: match_adjacent_pairs with candidate having same timestamp
+        rec_bad = self._threshold_record('bad.fit', 1000.0, 0.001, (2.0, 1.5, 1.5))
+        rec_same_ts = self._threshold_record('same.fit', 1000.0, 0.001, (0.9, 0.7, 1.0))
+        # monkeypatch candidates list logic or call directly
+        cand = [rec_same_ts]
+        with mock.patch('indi_allsky.asi676mc_calibration_engine._compatible', return_value=True):
+            # In match_adjacent_pairs, candidates filters record.timestamp != bad.timestamp
+            # But line 718 is: if not references and candidates: references.append(min(...))
+            # So if candidates was populated by bypassing timestamp filter, line 718 runs:
+            def fake_compat(b, r):
+                return True
+            with mock.patch.object(calibration_engine, 'MatchedPair') as mock_pair:
+                # We can mock `candidates` inside match_adjacent_pairs or test match_adjacent_pairs
+                pass
+
+        # Direct test for line 718:
+        # If before and after are empty but candidates is non-empty (e.g. cand has record.timestamp == bad.timestamp)
+        records_test = [rec_bad]
+        # In match_adjacent_pairs:
+        # candidates = [record for record in normal if ... and record.timestamp != bad.timestamp ...]
+        # Notice record.timestamp != bad.timestamp makes before + after == candidates strictly!
+        # So line 718 is practically unreachable unless candidates has timestamp == bad.timestamp which filter prevents.
+
+        # 2. line 1140: checkpoint_callback during blend search in estimate_highlight_ratios
+        cb = mock.Mock()
+        mock_gains = {k: {'value': 1.0} for k in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')}
+        # Mock _highlight_arrays to return non-empty datasets and _highlight_score to avoid needing real datasets
+        with mock.patch('indi_allsky.asi676mc_calibration_engine._highlight_arrays', return_value=(numpy.ones((1000,)), numpy.ones((1000,)))), \
+             mock.patch('indi_allsky.asi676mc_calibration_engine._highlight_score', return_value=0.01):
+            res = calibration_engine.estimate_highlight_ratios(
+                [mock.Mock()],
+                mock_gains,
+                65000,
+                checkpoint_callback=cb,
+            )
+            self.assertTrue(cb.called)
+
+
+
+
+        # 4. lines 2013-2014: dataset_has_actionable_result CalibrationError in branch 1
+
+        pop_records = self._threshold_population_records(purple_blue_ratio=2.5)
+        for r in pop_records:
+            r.signature['is_bad'] = r.path.name.startswith('likely_purple_')
+        with mock.patch('indi_allsky.asi676mc_calibration_engine.validate_evidence', side_effect=calibration_engine.CalibrationError('err')):
+            self.assertFalse(calibration_engine.dataset_has_actionable_result(pop_records, calibration_engine.DEFAULT_SETTINGS, 90.0))
+
+        # 5. line 2161: duplicate record.path in records_for_pairs inside calibrate_folder
+        # Handled when pairs share a reference record
+        pair_a = mock.Mock(bad=rec_bad, references=(rec_same_ts,))
+        pair_b = mock.Mock(bad=rec_bad, references=(rec_same_ts,))
+        rec_bad.signature['is_bad'] = True
+        rec_same_ts.signature['is_bad'] = False
+
+        pop_cal = self._threshold_population_records(purple_blue_ratio=2.5)
+        for r in pop_cal:
+            r.signature['is_bad'] = r.path.name.startswith('likely_purple_')
+
+        # calibrate_folder with pair_a and pair_b will hit record.path in selected_paths
+        with mock.patch.object(calibration_engine, 'scan_folder', return_value=(pop_cal, [])), \
+             mock.patch.object(calibration_engine, 'match_pairs', return_value=([pair_a, pair_b], [])), \
+             mock.patch.object(calibration_engine, 'validate_evidence'), \
+             mock.patch.object(calibration_engine, 'validate_signature_separation', side_effect=calibration_engine.CalibrationError('sep')):
+            # line 2201-2202: build_detection_threshold_suggestions raises CalibrationError
+            with mock.patch.object(calibration_engine, 'build_detection_threshold_suggestions', side_effect=calibration_engine.CalibrationError('bld')):
+                with self.assertRaises(calibration_engine.CalibrationError):
+                    calibration_engine.calibrate_folder(Path('unused'), target_group_count=2)
+
+        # 6. line 2191: validate_signature_separation raises CalibrationError when excluded_checks is non-empty
+        # in calibrate_folder during validation exclusion retry
+        fail_check = {'pair': pair_a, 'check': {'name': 'f', 'reason': 'fail'}}
+        val_calls = [0]
+        def mock_val(pairs_arg, *args, **kwargs):
+            val_calls[0] += 1
+            if val_calls[0] == 1:
+                return (1, 2, [], [fail_check])
+            return (1, 2, [], [])
+
+        with mock.patch.object(calibration_engine, 'scan_folder', return_value=(pop_cal, [])), \
+             mock.patch.object(calibration_engine, 'collect_pair_samples', return_value=[mock.Mock()]), \
+             mock.patch.object(calibration_engine, 'estimate_gains', return_value={
+                 k: {'value': 1.0, 'mad': 0.0, 'sample_count': 100} for k in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
+             }), \
+             mock.patch.object(calibration_engine, 'estimate_saturation_threshold', return_value=(65000, 65534)), \
+             mock.patch.object(calibration_engine, 'estimate_highlight_ratios', return_value={
+                 'start_ratio': 0.55, 'end_ratio': 0.75, 'pair_count': 7, 'sample_count': 100,
+                 'score': 0.01, 'default_score': 0.01, 'raw_best_score': 0.01,
+                 'raw_best_start_ratio': 0.55, 'raw_best_end_ratio': 0.75,
+                 'preferred_default': True, 'runner_up_score': 0.011,
+             }), \
+             mock.patch.object(calibration_engine, 'validate_calibrated_frames', side_effect=mock_val), \
+             mock.patch.object(calibration_engine, 'match_pairs', return_value=([fail_check['pair']] + [mock.Mock(bad=rec_bad, references=(rec_same_ts,)) for _ in range(7)], [])), \
+             mock.patch.object(calibration_engine, 'validate_evidence', return_value={'pair_count': 7, 'unique_good_count': 7, 'good_bad_ratio': 1.0}):
+            # First pass succeeds, exclusion happens (excluded_checks has fail_check), then refit raises CalibrationError
+            sep_calls = [0]
+            def mock_sep(*args, **kwargs):
+                sep_calls[0] += 1
+                if sep_calls[0] > 1:
+                    raise calibration_engine.CalibrationError('sep fail')
+            with mock.patch.object(calibration_engine, 'validate_signature_separation', side_effect=mock_sep):
+                with self.assertRaisesRegex(calibration_engine.CalibrationError, 'validation_refit_signature_separation'):
+                    calibration_engine.calibrate_folder(Path('unused'), target_group_count=8, marginal_exclusion_limit=1)
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
+
+
+

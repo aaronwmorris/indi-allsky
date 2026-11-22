@@ -141,6 +141,12 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.ConnectTimeout as e:
                 logger.error('Connection timeout: %s', str(e))
                 raise AuroraDataUpdateFailure from e
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
             except requests.exceptions.ConnectionError as e:
                 logger.error('Connection error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
@@ -149,12 +155,6 @@ class IndiAllskyAuroraUpdate(object):
                 raise AuroraDataUpdateFailure from e
             except urllib3.exceptions.ReadTimeoutError as e:
                 logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
-            except ssl.SSLCertVerificationError as e:
-                logger.error('Certificate error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
-            except requests.exceptions.SSLError as e:
-                logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
 
 
@@ -229,17 +229,17 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.ConnectTimeout as e:
                 logger.error('Connection timeout: %s', str(e))
                 raise AuroraDataUpdateFailure from e
-            except requests.exceptions.ConnectionError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
-            except urllib3.exceptions.ReadTimeoutError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
 
 
@@ -294,17 +294,17 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.ConnectTimeout as e:
                 logger.error('Connection timeout: %s', str(e))
                 raise AuroraDataUpdateFailure from e
-            except requests.exceptions.ConnectionError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
-            except urllib3.exceptions.ReadTimeoutError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
 
 
@@ -396,17 +396,17 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.ConnectTimeout as e:
                 logger.error('Connection timeout: %s', str(e))
                 raise AuroraDataUpdateFailure from e
-            except requests.exceptions.ConnectionError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
-            except urllib3.exceptions.ReadTimeoutError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
 
 
@@ -504,17 +504,17 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.ConnectTimeout as e:
                 logger.error('Connection timeout: %s', str(e))
                 raise AuroraDataUpdateFailure from e
-            except requests.exceptions.ConnectionError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
-            except urllib3.exceptions.ReadTimeoutError as e:
-                logger.error('Connection error: %s', str(e))
-                raise AuroraDataUpdateFailure from e
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
 
 

@@ -5,6 +5,8 @@ tests measure model capacity and coverage; they do not validate blind matching.
 """
 import numpy as np
 import pytest
+
+pytestmark = pytest.mark.slow
 from scipy.optimize import least_squares
 from scipy.spatial.transform import Rotation
 

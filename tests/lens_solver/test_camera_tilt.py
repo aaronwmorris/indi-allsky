@@ -2,6 +2,8 @@ import cv2
 import numpy
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from indi_allsky.lens_solver import IndiAllSkyLensSolver, predictAltAz, projectToPixels
 from indi_allsky.lens_solver.projection import cameraAltAz, SIN45
 from indi_allsky.lens_solver.request import parseSolverRequestValues, applySolvedValuesToConfig
