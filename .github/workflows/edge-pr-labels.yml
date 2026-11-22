@@ -1,0 +1,104 @@
+name: Sync Edge PR Labels
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  sync-edge-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync edge labels from indi-allsky-edge manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MANIFEST_URL: https://raw.githubusercontent.com/TN-1/indi-allsky-edge/main/manifest.yaml
+        run: |
+          set -euo pipefail
+
+          gh label create edge \
+            --repo "$GITHUB_REPOSITORY" \
+            --color "0E8A16" \
+            --description "Included in indi-allsky-edge" \
+            --force
+
+          curl -fsSL "$MANIFEST_URL" -o /tmp/edge_manifest.yaml
+
+          python3 - << 'EOF'
+          import json
+          import os
+          import re
+          import subprocess
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          with open("/tmp/edge_manifest.yaml", "r", encoding="utf-8") as f:
+              text = f.read()
+
+          try:
+              import yaml
+              data = yaml.safe_load(text) or {}
+              manifest_prs = {int(item["id"]) for item in (data.get("pull_requests") or []) if "id" in item}
+          except ImportError:
+              in_prs = False
+              manifest_prs = set()
+              for line in text.splitlines():
+                  if re.match(r"^\s*pull_requests:\s*$", line):
+                      in_prs = True
+                      continue
+                  if in_prs and re.match(r"^\S", line):
+                      break
+                  if in_prs:
+                      m = re.match(r"^\s*-\s*id:\s*(\d+)\b", line)
+                      if m:
+                          manifest_prs.add(int(m.group(1)))
+
+          out = subprocess.check_output(
+              ["gh", "pr", "list", "--repo", repo, "--state", "open", "--limit", "500", "--json", "number,labels"],
+              text=True,
+          )
+          open_prs = json.loads(out)
+
+          for pr in open_prs:
+              num = int(pr["number"])
+              labels = {lbl["name"] for lbl in pr.get("labels", [])}
+              in_edge = num in manifest_prs
+              has_label = "edge" in labels
+
+              if in_edge and not has_label:
+                  print(f"Adding 'edge' label to PR #{num}")
+                  subprocess.run(
+                      ["gh", "pr", "edit", str(num), "--repo", repo, "--add-label", "edge"],
+                      check=True,
+                  )
+                  comments_out = subprocess.check_output(
+                      ["gh", "pr", "view", str(num), "--repo", repo, "--json", "comments"],
+                      text=True,
+                  )
+                  comments = json.loads(comments_out).get("comments", [])
+                  edge_url = "https://github.com/TN-1/indi-allsky-edge/releases/tag/edge"
+                  if not any(edge_url in (c.get("body") or "") for c in comments):
+                      print(f"Commenting on PR #{num} with edge release link")
+                      subprocess.run(
+                          [
+                              "gh",
+                              "pr",
+                              "comment",
+                              str(num),
+                              "--repo",
+                              repo,
+                              "--body",
+                              f"This PR is now included in the `indi-allsky-edge` build: {edge_url}",
+                          ],
+                          check=True,
+                      )
+              elif not in_edge and has_label:
+                  print(f"Removing 'edge' label from PR #{num}")
+                  subprocess.run(
+                      ["gh", "pr", "edit", str(num), "--repo", repo, "--remove-label", "edge"],
+                      check=True,
+                  )
+          EOF
