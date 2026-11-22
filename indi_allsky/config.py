@@ -1664,9 +1664,10 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         initial_mtime = config_temp_p.stat().st_mtime
 
 
+        import subprocess
         while True:
             # execute until JSON is correctly formatted
-            os.system('editor {0:s}'.format(str(config_temp_p)))
+            subprocess.run(['editor', str(config_temp_p)], check=False)
 
             try:
                 with io.open(str(config_temp_p), 'r', encoding='utf-8') as f_config:
