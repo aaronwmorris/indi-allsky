@@ -33,6 +33,9 @@ python ./misc/device_test.py fan
 ## Fan - Standard
 This type of fan only supports two modes:  ON and OFF.  Any duty cycle applied to the fan will set it to FULL power.  This type may use either a relay or MOSFET driver.
 
+## Fan - Open-Drain
+Emulates open-drain output by switching the GPIO pin to `OUTPUT` (driven `LOW`) for ON and `INPUT` (high-impedance/floating) for OFF. This is intended for active-low or 5 V pulled-up relay boards that fail to release reliably under 3.3 V push-pull output. Ensure the host GPIO pin tolerates the external pull-up voltage when floating.
+
 ## Fan - PWM
 The PWM fan may be set to different power levels by utilizing the hardware PWM support from the SBC pins.  This type requires the use of a MOSFET driver.  A relay will not work.
 

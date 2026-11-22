@@ -1,6 +1,7 @@
 from .fanSimulator import FanSimulator as fan_simulator
 from .fanPwm import FanPwm as blinka_fan_pwm
 from .fanStandard import FanStandard as blinka_fan_standard
+from .fanOpenDrain import FanOpenDrain as blinka_fan_open_drain
 
 from .fanSoftwarePwm import FanSoftwarePwmRpiGpio as rpigpio_fan_software_pwm
 from .fanSoftwarePwm import FanSoftwarePwmGpiozero as gpiozero_fan_software_pwm
@@ -18,6 +19,7 @@ __all__ = (
     'fan_simulator',
     'blinka_fan_pwm',
     'blinka_fan_standard',
+    'blinka_fan_open_drain',
     'fan_dockerpi_4channel_relay',
     'serial_fan_pwm',
     'rpigpio_fan_software_pwm',
