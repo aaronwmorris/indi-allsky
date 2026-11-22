@@ -20,8 +20,10 @@ _The indi-allsky web interface requires the use of a Virtual Private Server [VPS
 
 ## Install Remote Server
 
+Choose **either** Method 1 (APT package, recommended) **or** Method 2 (manual source install). Both paths produce a web-only `indi-allsky` instance and then proceed to **Generate API Key on Remote Server** below.
+
 ### Method 1: APT Package Installation (Recommended)
-On your remote VPS or cloud server running Debian or Ubuntu, install the standalone web dashboard package via the official APT repository:
+On your remote VPS or cloud server running Debian or Ubuntu, install `indi-allsky` via the official APT repository (the former `indi-allsky-web` package is now included in the unified `indi-allsky` package):
 
 ```bash
 # 1. Add GPG Keyring
@@ -45,10 +47,22 @@ sudo apt update
 sudo apt install -y indi-allsky
 ```
 
+During installation, answer **Yes** to the **Web-only instance** prompt (Step 1). This skips camera/hardware prompts and disables `indi-allsky.service` and `indiserver.service`, leaving only the web server and `gunicorn-indi-allsky` running.
+
+* **Already installed?** Re-run `sudo dpkg-reconfigure indi-allsky`, decline reusing the existing config, and select **Yes** for **Web-only instance**.
+* **Unattended / non-interactive install:** Preseed the debconf selection before `apt install`:
+  ```bash
+  echo "indi-allsky indi-allsky/web_only_instance boolean true" | sudo debconf-set-selections
+  ```
+
 ---
 
 ### Method 2: Manual Source Installation (`web_only_setup.sh`)
+On a vanilla host without the APT package, clone the repository and run `misc/web_only_setup.sh` (do **not** use `setup.sh` for web-only installs):
 ```bash
+sudo apt update && sudo apt install -y git
+git clone https://github.com/aaronwmorris/indi-allsky.git
+cd indi-allsky
 ./misc/web_only_setup.sh
 ```
 
@@ -109,6 +123,12 @@ Save and restart
 
 ### Enable multiple upload workers (optional)
 You may also enable multiple upload workers so that a single transfer does not halt all upload activities.  More workers requires more memory to support the additional processes.  2GB of memory is recommended for additional workers.
+
+
+## Public Exposure & Reverse Proxy Hardening (Cloudflare Tunnel)
+* Keep `INDI_ALLSKY_AUTH_ALL_VIEWS` set to `false` (default) if you want an unauthenticated public gallery while keeping administrative actions protected by Flask-Login.
+* **Never** set `LOGIN_DISABLED` to `true` on an internet-exposed server; `LOGIN_DISABLED` disables all authentication checks, allowing anonymous visitors to modify configuration, delete media, or shut down the system.
+* To expose a read-only public gallery via Cloudflare Tunnel or a reverse proxy with no login surface, block or gate `/indi-allsky/login`, `/indi-allsky/config`, `/indi-allsky/users`, and `/indi-allsky/admin` at the tunnel/proxy (or protect them with Cloudflare Access), while allowing public gallery paths and `/indi-allsky/sync/v1/*` (which always requires a valid `username` and 64-character `apikey`).
 
 
 ## Timestamps and Timezones
