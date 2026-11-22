@@ -884,6 +884,9 @@ class BaseView(View):
 
 
         web_extra_text_p = Path(self.indi_allsky_config['WEB_EXTRA_TEXT'])
+        if web_extra_text_p.name in ('flask.json', 'flask.json_old', 'password_key_backup.json'):
+            app.logger.error('Disallowed WEB_EXTRA_TEXT target: %s', web_extra_text_p)
+            return str()
 
         try:
             if not web_extra_text_p.exists():
@@ -915,10 +918,11 @@ class BaseView(View):
             return str()
 
 
+        from markupsafe import escape
         extra_lines = list()
         for line in extra_lines_raw:
             # encapsulate each line in a div
-            extra_lines.append('<div>{0:s}</div>'.format(line))
+            extra_lines.append('<div>{0:s}</div>'.format(escape(line)))
 
         extra_text = ''.join(extra_lines)
         #app.logger.info('Extra Text: %s', extra_text)
