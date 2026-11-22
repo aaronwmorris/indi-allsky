@@ -142,6 +142,14 @@ function closeFullscreen() {
                     {{ form_viewer.FILTER_DETECTIONS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                     <div id="FILTER_DETECTIONS-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                 </div>
+
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_viewer.FILTER_AURORA.label(class='tw:label-text tw:font-semibold') }}
+                    {{ form_viewer.FILTER_AURORA(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                    {{ form_viewer.FILTER_AURORA_MIN(class='tw:input tw:input-bordered tw:input-xs tw:w-16 tw:bg-base-100 tw:text-base-content tw:text-center', min=1, max=100, title='Minimum Aurora (OVATION) probability %') }}
+                    <span class="tw:text-xs tw:text-base-content/70">%</span>
+                    <div id="FILTER_AURORA-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                </div>
                 
                 <div class="tw:flex tw:items-center">
                     <span id="loader_filter" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
@@ -202,10 +210,12 @@ const field_names = [
     'DAY_SELECT',
     'HOUR_SELECT',
     'IMG_SELECT',
+    'FILTER_AURORA_MIN',
 ];
 
 const checkbox_field_names = [
     'FILTER_DETECTIONS',
+    'FILTER_AURORA',
 ];
 
 var fields = {};
@@ -310,6 +320,8 @@ $("#HOUR_SELECT").on("change", function() {
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
     };
 
     hour_change(json_data);
@@ -437,6 +449,8 @@ $("#DAY_SELECT").on("change", function() {
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
     };
 
     day_change(json_data);
@@ -475,6 +489,8 @@ function month_change(json_data, targetSelect) {
                     'MONTH_SELECT'      : json_data.MONTH_SELECT,
                     'DAY_SELECT'        : targetSelect.day,
                     'FILTER_DETECTIONS' : json_data.FILTER_DETECTIONS,
+                    'FILTER_AURORA'     : json_data.FILTER_AURORA,
+                    'FILTER_AURORA_MIN' : json_data.FILTER_AURORA_MIN,
                 };
                 day_change(next_json, targetSelect);
             } else {
@@ -517,6 +533,8 @@ $("#MONTH_SELECT").on("change", function() {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
     };
 
     month_change(json_data);
@@ -559,6 +577,8 @@ function year_change(json_data, targetSelect) {
                     'YEAR_SELECT'       : json_data.YEAR_SELECT,
                     'MONTH_SELECT'      : targetSelect.month,
                     'FILTER_DETECTIONS' : json_data.FILTER_DETECTIONS,
+                    'FILTER_AURORA'     : json_data.FILTER_AURORA,
+                    'FILTER_AURORA_MIN' : json_data.FILTER_AURORA_MIN,
                 };
                 month_change(next_json, targetSelect);
             } else {
@@ -602,13 +622,15 @@ $("#YEAR_SELECT").on("change", function() {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
     };
 
     year_change(json_data);
 });
 
 
-$("#FILTER_DETECTIONS").on("change", function() {
+$("#FILTER_DETECTIONS, #FILTER_AURORA").on("change", function() {
     // hide all errors
     successMessage.hide();
     Object.keys(fields).forEach((key) => {
@@ -620,6 +642,8 @@ $("#FILTER_DETECTIONS").on("change", function() {
     var json_data = {
         'CAMERA_ID'          : fields["CAMERA_ID"].input.val(),
         'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'      : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN'  : fields["FILTER_AURORA_MIN"].input.val(),
     };
 
     $.ajax({
@@ -675,6 +699,8 @@ function init() {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
     };
 
     // Attach listener for Cally calendar picker
@@ -708,6 +734,8 @@ function init() {
                         'MONTH_SELECT'      : mo,
                         'DAY_SELECT'        : dy,
                         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
                     };
                     day_change(next_json, { year: yr, month: mo, day: dy });
                     return;
@@ -734,6 +762,8 @@ function init() {
                     'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
                     'YEAR_SELECT'       : yr,
                     'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
                 };
                 $("#loader_filter").show();
                 year_change(next_json, { year: yr, month: mo, day: dy });
@@ -765,6 +795,8 @@ function init() {
                         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
                         'YEAR_SELECT'       : yr,
                         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
                     };
                     $("#loader_filter").show();
                     year_change(json_data, { year: yr, month: mo });
@@ -775,6 +807,8 @@ function init() {
                         'YEAR_SELECT'       : yr,
                         'MONTH_SELECT'      : mo,
                         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_AURORA'     : fields["FILTER_AURORA"].input.prop("checked"),
+        'FILTER_AURORA_MIN' : fields["FILTER_AURORA_MIN"].input.val(),
                     };
                     $("#loader_filter").show();
                     month_change(json_data);
@@ -1262,7 +1296,13 @@ $( document ).ready(function() {
     });
 
     // Uncheck checkboxes
-    $("#FILTER_DETECTIONS").prop('checked', false);
+    $("#FILTER_DETECTIONS, #FILTER_AURORA").prop('checked', false);
+
+    $("#FILTER_AURORA_MIN").on("change", function() {
+        if ($("#FILTER_AURORA").prop("checked")) {
+            $("#FILTER_AURORA").trigger("change");
+        }
+    });
 
     {% if current_user.is_authenticated or login_disabled %}
         $('#EXCLUDE_EXCLUDE').removeAttr('disabled');
