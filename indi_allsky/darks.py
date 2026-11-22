@@ -1668,6 +1668,13 @@ class IndiAllSkyDarks(object):
         self.config['FAN']['LEVEL_DEF'] = 0
         self.config['FAN']['THOLD_ENABLE'] = False
 
+        for idx, fan_cfg in enumerate(self.config.get('FANS') or [], start=2):
+            if isinstance(fan_cfg, dict):
+                if fan_cfg.get('CLASSNAME'):
+                    logger.warning('Disabling FAN %d', idx)
+                fan_cfg['LEVEL_DEF'] = 0
+                fan_cfg['THOLD_ENABLE'] = False
+
 
         # turn off dew heater
         # an inverted dew heater will be ACTIVE by default, initilize dew heater and then turn it off

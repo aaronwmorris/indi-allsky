@@ -750,6 +750,7 @@ class IndiAllSkyConfigBase(object):
             "HOLD_SECONDS"           : 0,
             "PWM_FREQUENCY"          : 500,
         },
+        "FANS" : [],
         "GENERIC_GPIO" : {
             "A_CLASSNAME"            : "",
             "A_I2C_ADDRESS"          : "0x12",

@@ -315,8 +315,122 @@
                     </div>
                 </div>
 
+                <!-- Additional Fans (List) -->
+                <div class="tw:pt-4 tw:border-t tw:border-base-300/60 tw:flex tw:flex-col tw:gap-4">
+                    <div class="tw:flex tw:items-center tw:justify-between">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">Additional Fans</span>
+                        <button type="button" id="add_fan_btn" class="tw:btn tw:btn-outline tw:btn-primary tw:btn-xs tw:gap-1">
+                            <i class="tw:icon-[lucide--plus] tw:w-3.5 tw:h-3.5"></i>
+                            Add Fan
+                        </button>
+                    </div>
+                    <div id="additional_fans_container" class="tw:flex tw:flex-col tw:gap-4"></div>
+                </div>
+
             </div>
         </div>
+
+        <script type="text/javascript">
+        (function() {
+            const initialExtraFans = {{ fans_extra | default([]) | tojson }};
+
+            function renderExtraFanCard(fan, idx) {
+                const fanNum = idx + 2;
+                const card = $('<div class="extra-fan-entry tw:p-4 tw:rounded-[var(--radius-box)] tw:bg-base-300/40 tw:border tw:border-base-300 tw:flex tw:flex-col tw:gap-3" />');
+
+                const header = $('<div class="tw:flex tw:items-center tw:justify-between" />');
+                header.append($('<span class="extra-fan-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider" />').text('Fan ' + fanNum));
+                const removeBtn = $('<button type="button" class="tw:btn tw:btn-ghost tw:btn-xs tw:text-error">Remove</button>');
+                removeBtn.on('click', function() {
+                    card.remove();
+                    $('#additional_fans_container .extra-fan-title').each(function(i) {
+                        $(this).text('Fan ' + (i + 2));
+                    });
+                });
+                header.append(removeBtn);
+                card.append(header);
+
+                const row1 = $('<div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-3" />');
+                const clsSelect = $('<select class="extra-fan-classname tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />')
+                    .html($('#FAN__CLASSNAME').html())
+                    .val(fan.CLASSNAME || '');
+                row1.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Driver</span></div>').append(clsSelect));
+                row1.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">I2C Address</span></div>').append($('<input type="text" class="extra-fan-i2c tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.I2C_ADDRESS || '0x11')));
+                row1.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Pin 1</span></div>').append($('<input type="text" class="extra-fan-pin1 tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.PIN_1 || 'D13')));
+                card.append(row1);
+
+                const row2 = $('<div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-3" />');
+                row2.append($('<div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:rounded tw:bg-base-100/50"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Invert Output</span></div>').append($('<input type="checkbox" class="extra-fan-invert tw:toggle tw:toggle-primary tw:toggle-sm" />').prop('checked', Boolean(fan.INVERT_OUTPUT))));
+                row2.append($('<div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:rounded tw:bg-base-100/50"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Enable Night</span></div>').append($('<input type="checkbox" class="extra-fan-night tw:toggle tw:toggle-primary tw:toggle-sm" />').prop('checked', Boolean(fan.ENABLE_NIGHT))));
+                row2.append($('<div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:rounded tw:bg-base-100/50"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Thresholds</span></div>').append($('<input type="checkbox" class="extra-fan-thold tw:toggle tw:toggle-primary tw:toggle-sm" />').prop('checked', Boolean(fan.THOLD_ENABLE))));
+                row2.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Default Level %</span></div>').append($('<input type="number" class="extra-fan-def tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.LEVEL_DEF ?? 0)));
+                card.append(row2);
+
+                const row3 = $('<div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-3" />');
+                const slotSelect = $('<select class="extra-fan-slot tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />')
+                    .html($('#FAN__TEMP_USER_VAR_SLOT').html())
+                    .val(fan.TEMP_USER_VAR_SLOT || 'sensor_user_10');
+                row3.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Temp Sensor Slot</span></div>').append(slotSelect));
+                row3.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Target Temp</span></div>').append($('<input type="number" step="0.1" class="extra-fan-target tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.TARGET ?? 30.0)));
+                row3.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Hold Seconds</span></div>').append($('<input type="number" class="extra-fan-hold tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.HOLD_SECONDS ?? 0)));
+                row3.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">PWM Frequency</span></div>').append($('<input type="number" class="extra-fan-pwm tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.PWM_FREQUENCY ?? 500)));
+                card.append(row3);
+
+                const row4 = $('<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-3" />');
+                row4.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Low Level / Diff</span></div>')
+                    .append($('<input type="number" class="extra-fan-lvl-low tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.LEVEL_LOW ?? 33))
+                    .append($('<input type="number" class="extra-fan-diff-low tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.THOLD_DIFF_LOW ?? -10)));
+                row4.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">Med Level / Diff</span></div>')
+                    .append($('<input type="number" class="extra-fan-lvl-med tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.LEVEL_MED ?? 66))
+                    .append($('<input type="number" class="extra-fan-diff-med tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.THOLD_DIFF_MED ?? -5)));
+                row4.append($('<div class="tw:flex tw:flex-col tw:gap-1"><span class="tw:text-[0.625rem] tw:font-bold tw:uppercase">High Level / Diff</span></div>')
+                    .append($('<input type="number" class="extra-fan-lvl-high tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.LEVEL_HIGH ?? 100))
+                    .append($('<input type="number" class="extra-fan-diff-high tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full" />').val(fan.THOLD_DIFF_HIGH ?? 0)));
+                card.append(row4);
+
+                return card;
+            }
+
+            window.collectAdditionalFans = function() {
+                const list = [];
+                $('#additional_fans_container .extra-fan-entry').each(function() {
+                    const el = $(this);
+                    list.push({
+                        'CLASSNAME': el.find('.extra-fan-classname').val() || '',
+                        'I2C_ADDRESS': el.find('.extra-fan-i2c').val() || '0x11',
+                        'PIN_1': el.find('.extra-fan-pin1').val() || 'D13',
+                        'INVERT_OUTPUT': el.find('.extra-fan-invert').prop('checked'),
+                        'ENABLE_NIGHT': el.find('.extra-fan-night').prop('checked'),
+                        'THOLD_ENABLE': el.find('.extra-fan-thold').prop('checked'),
+                        'LEVEL_DEF': parseInt(el.find('.extra-fan-def').val() || '0', 10),
+                        'TEMP_USER_VAR_SLOT': el.find('.extra-fan-slot').val() || 'sensor_user_10',
+                        'TARGET': parseFloat(el.find('.extra-fan-target').val() || '30.0'),
+                        'HOLD_SECONDS': parseInt(el.find('.extra-fan-hold').val() || '0', 10),
+                        'PWM_FREQUENCY': parseInt(el.find('.extra-fan-pwm').val() || '500', 10),
+                        'LEVEL_LOW': parseInt(el.find('.extra-fan-lvl-low').val() || '33', 10),
+                        'LEVEL_MED': parseInt(el.find('.extra-fan-lvl-med').val() || '66', 10),
+                        'LEVEL_HIGH': parseInt(el.find('.extra-fan-lvl-high').val() || '100', 10),
+                        'THOLD_DIFF_LOW': parseInt(el.find('.extra-fan-diff-low').val() || '-10', 10),
+                        'THOLD_DIFF_MED': parseInt(el.find('.extra-fan-diff-med').val() || '-5', 10),
+                        'THOLD_DIFF_HIGH': parseInt(el.find('.extra-fan-diff-high').val() || '0', 10),
+                    });
+                });
+                return list;
+            };
+
+            $(document).ready(function() {
+                const container = $('#additional_fans_container');
+                initialExtraFans.forEach((fan, idx) => {
+                    container.append(renderExtraFanCard(fan, idx));
+                });
+
+                $('#add_fan_btn').on('click', function() {
+                    const idx = container.children('.extra-fan-entry').length;
+                    container.append(renderExtraFanCard({}, idx));
+                });
+            });
+        })();
+        </script>
 
         <!-- Focuser & Hardware Device MQTT Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">

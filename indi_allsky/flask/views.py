@@ -2551,6 +2551,12 @@ class ConfigView(FormView):
             context['fan_target_high_str'] = 'n/a'
             context['fan_status_str'] = 'n/a'
 
+        from ..sensor import normalize_fan_config
+        context['fans_extra'] = [
+            normalize_fan_config(f)
+            for f in (self.indi_allsky_config.get('FANS') or [])
+            if isinstance(f, dict)
+        ]
 
         form_data = {
             'CAMERA_INTERFACE'               : self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
@@ -4208,6 +4214,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FAN']['THOLD_DIFF_HIGH']               = int(request.json['FAN__THOLD_DIFF_HIGH'])
         self.indi_allsky_config['FAN']['HOLD_SECONDS']                  = int(request.json['FAN__HOLD_SECONDS'])
         self.indi_allsky_config['FAN']['PWM_FREQUENCY']                 = int(request.json['FAN__PWM_FREQUENCY'])
+        if 'FANS' in request.json and isinstance(request.json['FANS'], list):
+            from ..sensor import normalize_fan_config
+            self.indi_allsky_config['FANS'] = [
+                normalize_fan_config(f)
+                for f in request.json['FANS']
+                if isinstance(f, dict)
+            ]
         self.indi_allsky_config['GENERIC_GPIO']['A_CLASSNAME']          = str(request.json['GENERIC_GPIO__A_CLASSNAME'])
         self.indi_allsky_config['GENERIC_GPIO']['A_I2C_ADDRESS']        = str(request.json['GENERIC_GPIO__A_I2C_ADDRESS'])
         self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])
