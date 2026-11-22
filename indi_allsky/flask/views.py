@@ -3186,6 +3186,9 @@ class ConfigView(FormView):
             'TEMP_SENSOR__ECOWITT_APIKEY'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_APIKEY', ''),
             'TEMP_SENSOR__ECOWITT_APPLICATIONKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_APPLICATIONKEY', ''),
             'TEMP_SENSOR__ECOWITT_MACADDRESS'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_MACADDRESS', ''),
+            'TEMP_SENSOR__TEMPEST_APIKEY'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TEMPEST_APIKEY', ''),
+            'TEMP_SENSOR__TEMPEST_STATION_ID'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TEMPEST_STATION_ID', ''),
+            'TEMP_SENSOR__TEMPEST_DEVICE_SERIAL'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TEMPEST_DEVICE_SERIAL', ''),
             'TEMP_SENSOR__MQTT_TRANSPORT'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_TRANSPORT', 'tcp'),
             'TEMP_SENSOR__MQTT_PROTOCOL'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_PROTOCOL', 'MQTTv5'),
             'TEMP_SENSOR__MQTT_HOST'         : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost'),
@@ -4277,6 +4280,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_APIKEY']         = str(request.json['TEMP_SENSOR__ECOWITT_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_APPLICATIONKEY'] = str(request.json['TEMP_SENSOR__ECOWITT_APPLICATIONKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_MACADDRESS']     = str(request.json['TEMP_SENSOR__ECOWITT_MACADDRESS'])
+        self.indi_allsky_config['TEMP_SENSOR']['TEMPEST_APIKEY']         = str(request.json['TEMP_SENSOR__TEMPEST_APIKEY'])
+        self.indi_allsky_config['TEMP_SENSOR']['TEMPEST_STATION_ID']     = str(request.json['TEMP_SENSOR__TEMPEST_STATION_ID'])
+        self.indi_allsky_config['TEMP_SENSOR']['TEMPEST_DEVICE_SERIAL']  = str(request.json['TEMP_SENSOR__TEMPEST_DEVICE_SERIAL'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_TRANSPORT']        = str(request.json['TEMP_SENSOR__MQTT_TRANSPORT'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_PROTOCOL']         = str(request.json['TEMP_SENSOR__MQTT_PROTOCOL'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_HOST']             = str(request.json['TEMP_SENSOR__MQTT_HOST'])
@@ -10829,6 +10835,10 @@ class ConfigDownloadView(BaseView):
             'ECOWITT_APPLICATIONKEY_E' : '',
             'ECOWITT_MACADDRESS' : 'REDACTED',
             'ECOWITT_MACADDRESS_E' : '',
+            'TEMPEST_APIKEY' : 'REDACTED',
+            'TEMPEST_APIKEY_E' : '',
+            'TEMPEST_STATION_ID' : 'REDACTED',
+            'TEMPEST_DEVICE_SERIAL' : 'REDACTED',
             'MQTT_PASSWORD' : 'REDACTED',
             'MQTT_PASSWORD_E' : '',
         },

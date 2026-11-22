@@ -3403,6 +3403,26 @@ def TEMP_SENSOR__ECOWITT_APPLICATIONKEY_validator(form, field):
     pass
 
 
+def TEMP_SENSOR__TEMPEST_APIKEY_validator(form, field):
+    pass
+
+
+def TEMP_SENSOR__TEMPEST_STATION_ID_validator(form, field):
+    if not field.data:
+        return
+
+    if not re.match(r'^\d+$', str(field.data).strip()):
+        raise ValidationError('Tempest Station ID must be numeric')
+
+
+def TEMP_SENSOR__TEMPEST_DEVICE_SERIAL_validator(form, field):
+    if not field.data:
+        return
+
+    if not re.match(r'^[A-Za-z0-9_-]+$', str(field.data).strip()):
+        raise ValidationError('Invalid Tempest Device Serial')
+
+
 def TEMP_SENSOR__MACADDRESS_validator(form, field):
     if not field.data:
         return
@@ -4207,6 +4227,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ('temp_api_astrospheric', 'Astrospheric API (6 slots)'),
             ('temp_api_ambientweather', 'AmbientWeather API (10 slots)'),
             ('temp_api_ecowitt', 'Ecowitt API (10)'),
+            ('temp_api_tempest', 'Tempest Weather API (10 slots)'),
+            ('temp_udp_tempest', 'Tempest Local UDP (10 slots)'),
         ),
         'Temperature Sensors' : (
             ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1 slot)'),
@@ -5270,6 +5292,9 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__ECOWITT_APIKEY         = PasswordField('Ecowitt API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ECOWITT_APPLICATIONKEY = PasswordField('Ecowitt Application Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APPLICATIONKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ECOWITT_MACADDRESS     = StringField('Ecowitt Device MAC Address', validators=[TEMP_SENSOR__MACADDRESS_validator])
+    TEMP_SENSOR__TEMPEST_APIKEY         = PasswordField('Tempest Personal Access Token', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__TEMPEST_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__TEMPEST_STATION_ID     = StringField('Tempest Station ID (optional)', validators=[TEMP_SENSOR__TEMPEST_STATION_ID_validator])
+    TEMP_SENSOR__TEMPEST_DEVICE_SERIAL  = StringField('Tempest Device Serial (optional)', validators=[TEMP_SENSOR__TEMPEST_DEVICE_SERIAL_validator])
     TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     TEMP_SENSOR__MQTT_PROTOCOL       = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     TEMP_SENSOR__MQTT_HOST           = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
