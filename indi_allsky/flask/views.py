@@ -4537,6 +4537,19 @@ class AjaxAllskyMapRequestKeyView(BaseView):
         if not api_url:
             api_url = self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com')
 
+        import ipaddress
+        import socket
+        from urllib.parse import urlsplit
+        parsed_url = urlsplit(str(api_url))
+        if parsed_url.scheme != 'https' or not parsed_url.hostname:
+            return jsonify({'error': 'Invalid API_URL'}), 400
+        try:
+            for info in socket.getaddrinfo(parsed_url.hostname, None):
+                if not ipaddress.ip_address(info[4][0]).is_global:
+                    return jsonify({'error': 'Invalid API_URL target'}), 400
+        except (OSError, ValueError):
+            return jsonify({'error': 'Unable to resolve API_URL'}), 400
+
         from ..allsky_map import request_allsky_map_api_key
         success, res = request_allsky_map_api_key(api_url, app.logger)
 
