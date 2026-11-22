@@ -5360,6 +5360,10 @@ class IndiAllskyConfigForm(FlaskForm):
     SATELLITE_TRACK__LABEL_LIMIT     = IntegerField('Label Limit', validators=[DataRequired(), SATELLITE_TRACK__LABEL_LIMIT_validator])
     SATELLITE_TRACK__SAT_LABEL_TEMPLATE = StringField('Satellite Label Template', validators=[DataRequired(), SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator])
     SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX = TextAreaField('Image Template Prefix', validators=[DataRequired(), SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
+    SATELLITE_TRACK__OVERLAY_ENABLE  = BooleanField('Enable Image Reticle Overlay')
+    SATELLITE_TRACK__OVERLAY_STYLE   = SelectField('Reticle Style', choices=(('circle', 'Circle'), ('cross', 'Crosshair'), ('both', 'Circle + Crosshair')))
+    SATELLITE_TRACK__OVERLAY_RADIUS  = IntegerField('Reticle Size (px)', default=15)
+    SATELLITE_TRACK__OVERLAY_LABEL_ENABLE = BooleanField('Show Satellite Name on Reticle')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

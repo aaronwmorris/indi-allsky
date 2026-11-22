@@ -43,3 +43,19 @@ Satellite telemetry tokens can be embedded into custom image label templates und
 ```text
 Satellite: {satellite.title} | Alt: {satellite.alt:.1f}° | Az: {satellite.az:.1f}° ({satellite.dir}) | Mag: {satellite.mag:.1f}
 ```
+
+---
+
+## 4. Satellite Reticle Overlay
+`indi-allsky` can project each visible satellite's `(alt, az)` position onto the allsky image view as a circle, crosshair, or both, with an optional satellite name (`title`).
+
+### Burned-In Image Overlay
+Configured under the **Satellite** tab in the Web UI (or `SATELLITE_TRACK` in `config.json`):
+* **Enable Image Reticle Overlay (`OVERLAY_ENABLE`)**: Draws reticles onto saved images during image labeling using the exposure midpoint UTC timestamp.
+* **Reticle Style (`OVERLAY_STYLE`)**: `circle`, `cross`, or `both`.
+* **Reticle Size (`OVERLAY_RADIUS`)**: Radius / half-size in pixels (default `15`).
+* **Show Satellite Name on Reticle (`OVERLAY_LABEL_ENABLE`)**: Renders the satellite `title` next to each reticle.
+* Advanced JSON defaults: `OVERLAY_THICKNESS` (`2`) and `OVERLAY_COLOR` (`[163, 230, 53]`).
+
+### VirtualSky Web UI Overlay
+In **Tools → VirtualSky**, use the **Satellites** toggle and reticle style selector (`Circle`, `Crosshair`, `Both`) under **Display only** to render satellite reticles dynamically on the browser canvas without modifying archived images. When a solved **VirtualSky** lens calibration is enabled and valid, its distortion model is applied automatically to both burned-in and Web UI reticles.

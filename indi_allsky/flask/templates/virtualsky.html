@@ -331,7 +331,8 @@ async function loop() {
             VirtualSkyCalibration.maskImage(planetarium, overlayImageMask, [image_width, image_height],
                 this.entry.binmode, [image_circle_diameter, offset_x, offset_y]);
             planetarium.draw();
-            drawAdsbAircraftOverlay(planetarium, this.entry.aircraft);
+            drawSkyReticleOverlay(planetarium, this.entry.aircraft, '#ADSB_OVERLAY', '#ADSB_OVERLAY_STYLE', '#00ffff', ['id']);
+            drawSkyReticleOverlay(planetarium, this.entry.satellites, '#SAT_OVERLAY', '#SAT_OVERLAY_STYLE', '#a3e635', ['title', 'id']);
 
 
             redraw_planetarium = false;
@@ -488,6 +489,16 @@ function loadJS(url, data, onDone, onError) {
                                     <option value="both">Both</option>
                                 </select>
                             </div>
+                            <div class="virtualsky-layer" role="group" aria-label="Satellites">
+                                <label for="SAT_OVERLAY">
+                                    <input type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" {{ 'checked' if satellite_track_enable | default(false) else '' }} id="SAT_OVERLAY"> Satellites
+                                </label>
+                                <select id="SAT_OVERLAY_STYLE" class="tw:select tw:select-bordered tw:select-xs tw:bg-base-100 tw:text-base-content">
+                                    <option value="circle" selected>Circle</option>
+                                    <option value="cross">Crosshair</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
                         </div>
                     </fieldset>
 
@@ -584,26 +595,26 @@ function loadJS(url, data, onDone, onError) {
 </div>
 
 <script>
-function drawAdsbAircraftOverlay(sky, aircraftList) {
-    if (!$('#ADSB_OVERLAY').prop('checked')) return;
-    if (!sky || !Array.isArray(aircraftList) || aircraftList.length === 0) return;
+function drawSkyReticleOverlay(sky, items, toggleSelector, styleSelector, color, labelKeys) {
+    if (!$(toggleSelector).prop('checked')) return;
+    if (!sky || !Array.isArray(items) || items.length === 0) return;
 
     const canvas = $('#starmap canvas')[0];
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const style = $('#ADSB_OVERLAY_STYLE').val() || 'circle';
+    const style = $(styleSelector).val() || 'circle';
     const dpr = canvas.width / Math.max(1, sky.wide);
     const radius = 12 * dpr;
 
     ctx.save();
-    ctx.strokeStyle = '#00ffff';
-    ctx.fillStyle = '#00ffff';
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
     ctx.lineWidth = Math.max(1.5, 1.5 * dpr);
     ctx.font = Math.round(11 * dpr) + 'px sans-serif';
 
-    aircraftList.forEach(item => {
+    items.forEach(item => {
         const altDeg = Number(item.alt);
         const azDeg = Number(item.az);
         if (!Number.isFinite(altDeg) || !Number.isFinite(azDeg)) return;
@@ -632,8 +643,9 @@ function drawAdsbAircraftOverlay(sky, aircraftList) {
         }
         ctx.stroke();
 
-        if (item.id) {
-            ctx.fillText(String(item.id), cx + radius + (4 * dpr), cy + (4 * dpr));
+        const labelKey = (labelKeys || []).find(k => item[k]);
+        if (labelKey) {
+            ctx.fillText(String(item[labelKey]), cx + radius + (4 * dpr), cy + (4 * dpr));
         }
     });
 
@@ -702,7 +714,7 @@ $("#SHOWPLANETS").on("change", function() {
     forceRedrawPlanetarium();
 });
 
-$("#ADSB_OVERLAY, #ADSB_OVERLAY_STYLE").on("change", function() {
+$("#ADSB_OVERLAY, #ADSB_OVERLAY_STYLE, #SAT_OVERLAY, #SAT_OVERLAY_STYLE").on("change", function() {
     forceRedrawPlanetarium();
 });
 

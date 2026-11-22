@@ -10,7 +10,7 @@ from ..lens_solver.calibration import displacement, pipelineSignature, validateC
 logger = logging.getLogger('indi_allsky')
 
 
-def _parse_rgb_color(color_val, default=(0, 255, 255)):
+def _parse_rgb_color(color_val, default=(163, 230, 53)):
     """Parse an RGB 3-tuple from a list/tuple or comma-separated string."""
     if isinstance(color_val, str):
         parts = [p.strip() for p in color_val.split(',')]
@@ -29,12 +29,12 @@ def _parse_rgb_color(color_val, default=(0, 255, 255)):
         return default
 
 
-def project_aircraft_positions(aircraft_list, config, image_width, image_height, binning=1):
-    """Project ADS-B aircraft (alt/az deg) into image pixel coordinates.
+def project_sky_objects(items, config, image_width, image_height, binning=1):
+    """Project sky objects (alt/az deg) into image pixel coordinates.
 
-    Returns a list of dicts: {'aircraft': dict, 'x': float, 'y': float}.
+    Returns a list of dicts: {'item': dict, 'x': float, 'y': float}.
     """
-    if not aircraft_list or image_width <= 0 or image_height <= 0:
+    if not items or image_width <= 0 or image_height <= 0:
         return []
 
     vs_cfg = config.get('VIRTUALSKY', {})
@@ -88,10 +88,10 @@ def project_aircraft_positions(aircraft_list, config, image_width, image_height,
     projected = []
     r_ref = image_height / 2.0
 
-    for aircraft in aircraft_list:
+    for item in items:
         try:
-            alt_deg = float(aircraft['alt'])
-            az_deg = float(aircraft['az'])
+            alt_deg = float(item['alt'])
+            az_deg = float(item['az'])
         except (KeyError, TypeError, ValueError):
             continue
 
@@ -121,7 +121,7 @@ def project_aircraft_positions(aircraft_list, config, image_width, image_height,
 
         if 0 <= x_f < image_width and 0 <= y_f < image_height:
             projected.append({
-                'aircraft': aircraft,
+                'item': item,
                 'x': x_f,
                 'y': y_f,
             })
@@ -129,29 +129,44 @@ def project_aircraft_positions(aircraft_list, config, image_width, image_height,
     return projected
 
 
-def draw_adsb_overlay_opencv(image, aircraft_list, config, binning=1):
-    """Draw ADS-B aircraft reticles onto an OpenCV BGR image in place."""
+def _extract_label(item, label_keys):
+    for key in label_keys:
+        val = item.get(key)
+        if val:
+            return str(val)
+    return ''
+
+
+def draw_sky_reticles_opencv(
+    image,
+    items,
+    overlay_cfg,
+    config,
+    binning=1,
+    label_keys=('title', 'id'),
+    default_color=(163, 230, 53),
+):
+    """Draw reticles for sky objects onto an OpenCV BGR image in place."""
     import cv2
 
-    adsb_cfg = config.get('ADSB', {})
-    if not adsb_cfg.get('OVERLAY_ENABLE', False):
+    if not overlay_cfg.get('OVERLAY_ENABLE', False):
         return 0
 
     image_height, image_width = image.shape[:2]
-    positions = project_aircraft_positions(aircraft_list, config, image_width, image_height, binning=binning)
+    positions = project_sky_objects(items, config, image_width, image_height, binning=binning)
     if not positions:
         return 0
 
-    style = str(adsb_cfg.get('OVERLAY_STYLE', 'circle')).lower()
-    radius = max(4, int(adsb_cfg.get('OVERLAY_RADIUS', 15)))
-    thickness = max(1, int(adsb_cfg.get('OVERLAY_THICKNESS', 2)))
-    show_label = bool(adsb_cfg.get('OVERLAY_LABEL_ENABLE', True))
-    r, g, b = _parse_rgb_color(adsb_cfg.get('OVERLAY_COLOR', (0, 255, 255)))
+    style = str(overlay_cfg.get('OVERLAY_STYLE', 'circle')).lower()
+    radius = max(4, int(overlay_cfg.get('OVERLAY_RADIUS', 15)))
+    thickness = max(1, int(overlay_cfg.get('OVERLAY_THICKNESS', 2)))
+    show_label = bool(overlay_cfg.get('OVERLAY_LABEL_ENABLE', True))
+    r, g, b = _parse_rgb_color(overlay_cfg.get('OVERLAY_COLOR', default_color), default=default_color)
     color_bgr = (b, g, r)
 
-    for item in positions:
-        cx = int(round(item['x']))
-        cy = int(round(item['y']))
+    for entry in positions:
+        cx = int(round(entry['x']))
+        cy = int(round(entry['y']))
 
         if style in ('circle', 'both'):
             cv2.circle(image, (cx, cy), radius, color_bgr, thickness, cv2.LINE_AA)
@@ -167,7 +182,7 @@ def draw_adsb_overlay_opencv(image, aircraft_list, config, binning=1):
             )
 
         if show_label:
-            label = str(item['aircraft'].get('id') or '')
+            label = _extract_label(entry['item'], label_keys)
             if label:
                 tx = min(image_width - 10, cx + radius + 4)
                 ty = max(15, cy + 4)
@@ -185,26 +200,35 @@ def draw_adsb_overlay_opencv(image, aircraft_list, config, binning=1):
     return len(positions)
 
 
-def draw_adsb_overlay_pillow(draw, image_size, aircraft_list, config, font=None, binning=1):
-    """Draw ADS-B aircraft reticles onto a Pillow ImageDraw surface."""
-    adsb_cfg = config.get('ADSB', {})
-    if not adsb_cfg.get('OVERLAY_ENABLE', False):
+def draw_sky_reticles_pillow(
+    draw,
+    image_size,
+    items,
+    overlay_cfg,
+    config,
+    font=None,
+    binning=1,
+    label_keys=('title', 'id'),
+    default_color=(163, 230, 53),
+):
+    """Draw reticles for sky objects onto a Pillow ImageDraw surface."""
+    if not overlay_cfg.get('OVERLAY_ENABLE', False):
         return 0
 
     image_width, image_height = image_size
-    positions = project_aircraft_positions(aircraft_list, config, image_width, image_height, binning=binning)
+    positions = project_sky_objects(items, config, image_width, image_height, binning=binning)
     if not positions:
         return 0
 
-    style = str(adsb_cfg.get('OVERLAY_STYLE', 'circle')).lower()
-    radius = max(4, int(adsb_cfg.get('OVERLAY_RADIUS', 15)))
-    thickness = max(1, int(adsb_cfg.get('OVERLAY_THICKNESS', 2)))
-    show_label = bool(adsb_cfg.get('OVERLAY_LABEL_ENABLE', True))
-    color_rgb = _parse_rgb_color(adsb_cfg.get('OVERLAY_COLOR', (0, 255, 255)))
+    style = str(overlay_cfg.get('OVERLAY_STYLE', 'circle')).lower()
+    radius = max(4, int(overlay_cfg.get('OVERLAY_RADIUS', 15)))
+    thickness = max(1, int(overlay_cfg.get('OVERLAY_THICKNESS', 2)))
+    show_label = bool(overlay_cfg.get('OVERLAY_LABEL_ENABLE', True))
+    color_rgb = _parse_rgb_color(overlay_cfg.get('OVERLAY_COLOR', default_color), default=default_color)
 
-    for item in positions:
-        cx = int(round(item['x']))
-        cy = int(round(item['y']))
+    for entry in positions:
+        cx = int(round(entry['x']))
+        cy = int(round(entry['y']))
 
         if style in ('circle', 'both'):
             draw.ellipse(
@@ -217,7 +241,7 @@ def draw_adsb_overlay_pillow(draw, image_size, aircraft_list, config, font=None,
             draw.line((cx, cy - radius, cx, cy + radius), fill=color_rgb, width=thickness)
 
         if show_label:
-            label = str(item['aircraft'].get('id') or '')
+            label = _extract_label(entry['item'], label_keys)
             if label:
                 tx = min(image_width - 10, cx + radius + 4)
                 ty = max(5, cy - 6)
