@@ -7860,6 +7860,29 @@ class FocusView(TemplateView):
         return context
 
 
+class GpsInfoView(TemplateView):
+    page_title = 'GPS Info'
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(GpsInfoView, self).get_context()
+        context['gps_enable'] = bool(self.indi_allsky_config.get('GPS_ENABLE', False))
+        context['camera_lat'] = round(self.camera.latitude, 6) if self.camera.latitude is not None else '-'
+        context['camera_lon'] = round(self.camera.longitude, 6) if self.camera.longitude is not None else '-'
+        return context
+
+
+class JsonGpsInfoView(JsonView):
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        from ..gpsd_client import query_gpsd
+
+        gpsd_host = self.indi_allsky_config.get('GPSD_HOST', '127.0.0.1')
+        gpsd_port = int(self.indi_allsky_config.get('GPSD_PORT', 2947))
+        return jsonify(query_gpsd(host=gpsd_host, port=gpsd_port))
+
+
 class JsonFocusView(JsonView):
     decorators = [login_required]
 
@@ -14851,6 +14874,8 @@ bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
+bp_allsky.add_url_rule('/gps', view_func=GpsInfoView.as_view('gps_view', template_name='gps.html'))
+bp_allsky.add_url_rule('/js/gps', view_func=JsonGpsInfoView.as_view('js_gps_view'))
 bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerView.as_view('focus_controller_view'))
 
 bp_allsky.add_url_rule('/manual_gpio', view_func=ManualGpioView.as_view('manual_gpio_view', template_name='manual_gpio.html'))

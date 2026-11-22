@@ -5404,6 +5404,9 @@
   .tw\:w-32 {
     width: calc(var(--tw-spacing) * 32);
   }
+  .tw\:w-40 {
+    width: calc(var(--tw-spacing) * 40);
+  }
   .tw\:w-44 {
     width: calc(var(--tw-spacing) * 44);
   }
