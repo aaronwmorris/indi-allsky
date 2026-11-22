@@ -41,7 +41,8 @@ class MockImporter:
     def exec_module(self, module):
         pass
 
-sys.meta_path.insert(0, MockImporter())
+_mock_importer = MockImporter()
+sys.meta_path.append(_mock_importer)
 
 import os
 from pathlib import Path
@@ -61,6 +62,9 @@ from indi_allsky.flask.forms import (
     STARTRAILS_MOON_ALT_THOLD_validator,
     STARTRAILS_MOON_PHASE_THOLD_validator,
 )
+
+if _mock_importer in sys.meta_path:
+    sys.meta_path.remove(_mock_importer)
 
 
 @pytest.fixture

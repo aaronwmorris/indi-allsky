@@ -215,7 +215,9 @@ def test_candidate_filtering_and_database_staging(calib_tmp):
 
     # Verify staging file errors
     with pytest.raises(calib.CalibrationSessionError, match='too many files'):
-        calib._stage_database_files_unlocked(sess_id, 'user1', range(calib.DATABASE_MAX_FILES + 1), calib_tmp)
+        calib._stage_database_files_unlocked(
+            sess_id, 'user1', [{'id': i} for i in range(calib.DATABASE_MAX_FILES + 1)], calib_tmp
+        )
 
     # Token mismatch
     with pytest.raises(calib.CalibrationSessionError, match='could not continue'):
@@ -1068,16 +1070,16 @@ def test_reports_and_helpers_coverage(calib_tmp):
         'two_sided_count': 0,  # one_sided_count == matched_count
         'matched_normal_count': 7,
     }, source_details={'kind': 'database', 'selection_mode': 'full_retention_population_groups'})
-    assert any('The remaining evidence was sufficient' in w for w in w1)
+    assert any('The selected evidence was sufficient' in w for w in w1)
     assert any('found another likely group' in w for w in w1)
-    assert any('All 7 purple frames had one nearby normal reference' in w for w in w1)
+    assert any('all 7 purple frames had one nearby normal reference' in w.lower() for w in w1)
 
     w2 = calib._result_warnings({
         'matched_bad_count': 10,
         'two_sided_count': 2,
         'matched_normal_count': 14,
     })
-    assert any('more complete normal/purple/normal groups would improve confidence' in w for w in w2)
+    assert any('2 of 10 purple frames had normal references before and after them' in w for w in w2)
 
     # 3. _rejection_summary and _friendly_threshold_analysis_failure
     assert calib._rejection_summary('prefix Rejection summary: invalid json') == {}
@@ -1295,7 +1297,7 @@ def test_reports_and_helpers_coverage(calib_tmp):
         'files': [{'name': 'f.fits'}],
     })
     assert 'compact evidence set' in rep_int_db_prog
-    assert 'Purple-frame groups staged: 5' in rep_int_db_prog
+    assert 'Purple-frame groups initially staged: 5' in rep_int_db_prog
 
     # active_manifest cancel_requested and worker claim lost
     sess3 = calib.create_session('user1', storage_root=calib_tmp)
@@ -1405,19 +1407,42 @@ def test_more_discovery_and_copy_edge_cases(tmp_path, calib_tmp):
 
     # 3. validate_evidence raises CalibrationError and seeded exposures continue and duplicate group records
     exposures = [5.0, 5.0, 10.0, 5.0, 10.0, 15.0, 20.0]
+    sample_bytes = sample_fits.read_bytes()
+    distinct_paths = []
+    for i in range(15):
+        p = tmp_path / f'sample_{i}.fits'
+        p.write_bytes(sample_bytes)
+        distinct_paths.append(p)
+    distinct_records = [{
+        'path': str(distinct_paths[i]),
+        'timestamp': 100.0 + i,
+        'id': 20 + i,
+        'camera_name': 'ZWO ASI676MC',
+        'exposure': 5.0,
+        'gain': 100.0,
+        'binmode': 1,
+        'width': 1000,
+        'height': 1000,
+        'size': len(sample_bytes),
+    } for i in range(15)]
     pairs_list = [
         mock.MagicMock(
-            bad=mock.MagicMock(timestamp=200.0 - i, exposure=exposures[i], path=sample_fits),
-            references=[mock.MagicMock(path=sample_fits)],
+            two_sided=False,
+            bad=mock.MagicMock(timestamp=200.0 - i, exposure=exposures[i], path=distinct_paths[i]),
+            references=[mock.MagicMock(path=distinct_paths[i], timestamp=195.0 - i)],
         )
         for i in range(7)
     ]
-    with mock.patch('indi_allsky.asi676mc_calibration_engine.inspect_fits', return_value=mock_frame):
-        with mock.patch('indi_allsky.asi676mc_calibration_engine.infer_detection_populations', return_value=[mock_frame] * 15):
+    distinct_frames = [
+        mock.MagicMock(is_bad=False, timestamp=100.0 + i, exposure=5.0, path=distinct_paths[i])
+        for i in range(15)
+    ]
+    with mock.patch('indi_allsky.asi676mc_calibration_engine.inspect_fits', side_effect=lambda p, *args, **kw: mock.MagicMock(is_bad=False, timestamp=100.0, exposure=5.0, path=Path(p))):
+        with mock.patch('indi_allsky.asi676mc_calibration_engine.infer_detection_populations', return_value=distinct_frames):
             with mock.patch('indi_allsky.asi676mc_calibration_engine.match_pairs', return_value=(pairs_list, [])):
                 with mock.patch('indi_allsky.asi676mc_calibration_engine.validate_evidence', side_effect=calibration_engine.CalibrationError('invalid evidence')):
                     with pytest.raises(calibration_engine.CalibrationError, match='could not satisfy calibration requirements'):
-                        calib.discover_full_retention_database_evidence(records, [], 10, 60, {})
+                        calib.discover_full_retention_database_evidence(distinct_records, [], 10, 60, {})
 
     # 4. _copy_database_file cancel_marker check after read loop
     src = tmp_path / 'source_f.fits'

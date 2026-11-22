@@ -41,7 +41,8 @@ class MockImporter:
     def exec_module(self, module):
         pass
 
-sys.meta_path.insert(0, MockImporter())
+_mock_importer = MockImporter()
+sys.meta_path.append(_mock_importer)
 
 import os
 from pathlib import Path
@@ -57,6 +58,9 @@ from cryptography.fernet import Fernet
 from indi_allsky.flask.forms import IndiAllskyConfigForm
 from indi_allsky.config import IndiAllSkyConfigBase, IndiAllSkyConfig
 from indi_allsky import constants
+
+if _mock_importer in sys.meta_path:
+    sys.meta_path.remove(_mock_importer)
 
 
 @pytest.fixture
