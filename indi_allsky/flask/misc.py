@@ -60,3 +60,13 @@ def decrypt_json_secret(token_val, password_key):
         return token_val
     f_key = Fernet(password_key.encode())
     return json.loads(f_key.decrypt(token_val.encode('utf-8')).decode('utf-8'))
+
+
+def is_valid_ws_origin(req):
+    """Validate browser WebSocket Origin header against request.host when present."""
+    from urllib.parse import urlsplit
+    origin = req.headers.get('Origin')
+    if not origin:
+        return True
+    parsed = urlsplit(origin)
+    return parsed.netloc == req.host

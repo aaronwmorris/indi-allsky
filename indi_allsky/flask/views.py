@@ -14240,6 +14240,10 @@ class WsShellView(BaseView):
         import threading
         import select
         import simple_websocket
+        from .misc import is_valid_ws_origin
+
+        if not is_valid_ws_origin(request):
+            return 'Forbidden', 403
 
         if not current_user.is_authenticated:
             return 'Unauthorized', 401
@@ -14350,6 +14354,10 @@ class WsEventsView(BaseView):
     def dispatch_request(self):
         import simple_websocket
         from ..events import event_manager
+        from .misc import is_valid_ws_origin
+
+        if not is_valid_ws_origin(request):
+            return 'Forbidden', 403
 
         api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
         if not api_key and request.headers.get('Authorization'):
@@ -14475,6 +14483,10 @@ class WsControlView(BaseView):
     def dispatch_request(self):
         import simple_websocket
         from ..events import event_manager
+        from .misc import is_valid_ws_origin
+
+        if not is_valid_ws_origin(request):
+            return 'Forbidden', 403
 
         api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
         if not api_key and request.headers.get('Authorization'):
