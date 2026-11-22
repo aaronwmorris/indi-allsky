@@ -935,6 +935,10 @@ $('#form_config').on('submit', function() {
         json_data[item] = fields[item].input.prop('checked');
     });
 
+    if (typeof collectAdditionalFans === 'function') {
+        json_data['FANS'] = collectAdditionalFans();
+    }
+
     // reset option
     $("#RELOAD_ON_SAVE").prop('checked', false);
 

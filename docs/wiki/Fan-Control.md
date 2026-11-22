@@ -5,6 +5,9 @@ The default functionality is to activate the fan during the day and deactivate a
 
 It is also possible to control the fan using temperature thresholds if you have an appropriate temperature sensor.
 
+## Multiple Fans
+In addition to the primary `FAN` configuration, you can add any number of extra fans under **Devices → Additional Fans** (`Add Fan`, stored in the `FANS` list in `config.json`). Each fan is instantiated independently and can be bound to its own GPIO/PWM/relay driver, temperature sensor slot (such as the Raspberry Pi CPU temperature sensor), target temperature, and threshold settings.
+
 
 ## GPIO Permissions
 If you encounter a `PermissionDenied` error when accessing GPIO lines or character devices, review:

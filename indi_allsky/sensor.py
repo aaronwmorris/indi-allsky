@@ -22,6 +22,62 @@ from .devices.exceptions import DeviceControlException
 logger = logging.getLogger('indi_allsky')
 
 
+def _safe_int(value, default):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_float(value, default):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def normalize_fan_config(fan_cfg):
+    """Return a fan config dictionary with defaults and normalized types."""
+    cfg = fan_cfg if isinstance(fan_cfg, dict) else {}
+    return {
+        'CLASSNAME': str(cfg.get('CLASSNAME') or ''),
+        'ENABLE_NIGHT': bool(cfg.get('ENABLE_NIGHT', False)),
+        'I2C_ADDRESS': str(cfg.get('I2C_ADDRESS') or '0x11'),
+        'PIN_1': str(cfg.get('PIN_1') or 'D13'),
+        'INVERT_OUTPUT': bool(cfg.get('INVERT_OUTPUT', False)),
+        'LEVEL_DEF': _safe_int(cfg.get('LEVEL_DEF'), 0),
+        'THOLD_ENABLE': bool(cfg.get('THOLD_ENABLE', False)),
+        'TARGET': _safe_float(cfg.get('TARGET'), 30.0),
+        'TEMP_USER_VAR_SLOT': str(cfg.get('TEMP_USER_VAR_SLOT') or 'sensor_user_10'),
+        'LEVEL_LOW': _safe_int(cfg.get('LEVEL_LOW'), 33),
+        'LEVEL_MED': _safe_int(cfg.get('LEVEL_MED'), 66),
+        'LEVEL_HIGH': _safe_int(cfg.get('LEVEL_HIGH'), 100),
+        'THOLD_DIFF_LOW': _safe_int(cfg.get('THOLD_DIFF_LOW'), -10),
+        'THOLD_DIFF_MED': _safe_int(cfg.get('THOLD_DIFF_MED'), -5),
+        'THOLD_DIFF_HIGH': _safe_int(cfg.get('THOLD_DIFF_HIGH'), 0),
+        'HOLD_SECONDS': _safe_int(cfg.get('HOLD_SECONDS'), 0),
+        'PWM_FREQUENCY': _safe_int(cfg.get('PWM_FREQUENCY'), 500),
+    }
+
+
+def get_fan_configs(config):
+    """Return all configured fans (primary FAN plus any additional FANS entries)."""
+    fan_configs = []
+    if 'FAN' in config and isinstance(config['FAN'], dict):
+        fan_configs.append(config['FAN'])
+
+    extra_fans = config.get('FANS')
+    if isinstance(extra_fans, list):
+        for entry in extra_fans:
+            if isinstance(entry, dict):
+                fan_configs.append(entry)
+
+    if not fan_configs:
+        fan_configs.append({})
+
+    return fan_configs
+
+
 ### lgpio module appears to not be thread safe when using with multiprocessing
 
 class SensorWorker(Process):
@@ -52,7 +108,7 @@ class SensorWorker(Process):
 
         self.gpio = None
         self.dew_heater = None
-        self.fan = None
+        self.fans = []
         self.sensors = [None, None, None, None, None, None]
 
         self.next_run = time.time()  # run immediately
@@ -74,20 +130,8 @@ class SensorWorker(Process):
         self.dh_thold_diff_high = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)
 
 
-        # fan
-        self.fan_target = self.config.get('FAN', {}).get('TARGET', 30.0)
-        self.fan_temp_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
-        self.fan_hold_seconds = self.config.get('FAN', {}).get('HOLD_SECONDS', 0)
-        self.fan_last_change_time = 0
-
-        self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 0)
-        self.fan_level_low = self.config.get('FAN', {}).get('LEVEL_LOW', 33)
-        self.fan_level_med = self.config.get('FAN', {}).get('LEVEL_MED', 66)
-        self.fan_level_high = self.config.get('FAN', {}).get('LEVEL_HIGH', 100)
-
-        self.fan_thold_diff_low = self.config.get('FAN', {}).get('THOLD_DIFF_LOW', -10)
-        self.fan_thold_diff_med = self.config.get('FAN', {}).get('THOLD_DIFF_MED', -5)
-        self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)
+        # fan configs are loaded into self.fans by init_fans()
+        self.fan_configs = [normalize_fan_config(cfg) for cfg in get_fan_configs(self.config)]
 
         self._shutdown = False
         #self._stopper = threading.Event()
@@ -147,7 +191,7 @@ class SensorWorker(Process):
 
         self.init_gpio()
         self.init_dew_heater()
-        self.init_fan()
+        self.init_fans()
 
 
         while True:
@@ -170,7 +214,11 @@ class SensorWorker(Process):
 
                 # deinit devices
                 self.gpio.deinit()
-                self.fan.deinit()
+                for fan_entry in self.fans:
+                    try:
+                        fan_entry['device'].deinit()
+                    except Exception as e:
+                        logger.error('Error deinitializing fan %d: %s', fan_entry['index'] + 1, str(e))
                 self.dew_heater.deinit()
 
                 for sensor in self.sensors:
@@ -234,11 +282,12 @@ class SensorWorker(Process):
 
 
             # fan
-            if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-                if not self.fan.state:
-                    self.set_fan(self.fan_level_default, force=True)
-            else:
-                self.set_fan(0)
+            for fan_entry in self.fans:
+                if fan_entry['config'].get('ENABLE_NIGHT'):
+                    if not fan_entry['device'].state:
+                        self.set_fan(fan_entry, fan_entry['level_default'], force=True)
+                else:
+                    self.set_fan(fan_entry, 0)
 
         else:
             ### day
@@ -256,8 +305,9 @@ class SensorWorker(Process):
 
 
             # fan
-            if not self.fan.state:
-                self.set_fan(self.fan_level_default, force=True)
+            for fan_entry in self.fans:
+                if not fan_entry['device'].state:
+                    self.set_fan(fan_entry, fan_entry['level_default'], force=True)
 
 
     def init_gpio(self):
@@ -368,66 +418,85 @@ class SensorWorker(Process):
                 self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL] = float(self.dew_heater.state)
 
 
-    def init_fan(self):
-        fan_classname = self.config.get('FAN', {}).get('CLASSNAME')
-        if fan_classname:
-            fan_class = getattr(fans, fan_classname)
+    def init_fans(self):
+        self.fans = []
 
-            fan_i2c_address = self.config.get('FAN', {}).get('I2C_ADDRESS', '0x11')
-            fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
-            fan_invert_output = self.config.get('FAN', {}).get('INVERT_OUTPUT', False)
-            fan_pwm_frequency = self.config.get('FAN', {}).get('PWM_FREQUENCY', 500)
+        for idx, fan_cfg in enumerate(self.fan_configs):
+            fan_classname = fan_cfg.get('CLASSNAME')
+            if fan_classname:
+                fan_i2c_address = fan_cfg.get('I2C_ADDRESS', '0x11')
+                fan_pin_1 = fan_cfg.get('PIN_1', 'notdefined')
+                fan_invert_output = fan_cfg.get('INVERT_OUTPUT', False)
+                fan_pwm_frequency = fan_cfg.get('PWM_FREQUENCY', 500)
 
-            try:
-                self.fan = fan_class(
-                    self.config,
-                    i2c_address=fan_i2c_address,
-                    pin_1_name=fan_pin_1,
-                    invert_output=fan_invert_output,
-                    pwm_frequency=fan_pwm_frequency,
-                )
-            except (OSError, ValueError) as e:
-                logger.error('Error initializing fan controller: %s', str(e))
-                self.fan = fans.fan_simulator(self.config)
-            except DeviceControlException as e:
-                logger.error('Error initializing fan controller: %s', str(e))
-                self.fan = fans.fan_simulator(self.config)
+                try:
+                    fan_class = getattr(fans, fan_classname)
+                    fan_device = fan_class(
+                        self.config,
+                        i2c_address=fan_i2c_address,
+                        pin_1_name=fan_pin_1,
+                        invert_output=fan_invert_output,
+                        pwm_frequency=fan_pwm_frequency,
+                    )
+                except (AttributeError, OSError, ValueError) as e:
+                    logger.error('Error initializing fan %d controller: %s', idx + 1, str(e))
+                    fan_device = fans.fan_simulator(self.config)
+                except DeviceControlException as e:
+                    logger.error('Error initializing fan %d controller: %s', idx + 1, str(e))
+                    fan_device = fans.fan_simulator(self.config)
+            else:
+                fan_device = fans.fan_simulator(self.config)
 
-        else:
-            self.fan = fans.fan_simulator(self.config)
+            # set initial state
+            fan_device.state = 0
+
+            self.fans.append({
+                'index': idx,
+                'config': fan_cfg,
+                'device': fan_device,
+                'target': float(fan_cfg.get('TARGET', 30.0)),
+                'temp_slot': fan_cfg.get('TEMP_USER_VAR_SLOT', 'sensor_user_10'),
+                'hold_seconds': int(fan_cfg.get('HOLD_SECONDS', 0)),
+                'last_change_time': 0,
+                'level_default': int(fan_cfg.get('LEVEL_DEF', 0)),
+                'level_low': int(fan_cfg.get('LEVEL_LOW', 33)),
+                'level_med': int(fan_cfg.get('LEVEL_MED', 66)),
+                'level_high': int(fan_cfg.get('LEVEL_HIGH', 100)),
+                'thold_diff_low': int(fan_cfg.get('THOLD_DIFF_LOW', -10)),
+                'thold_diff_med': int(fan_cfg.get('THOLD_DIFF_MED', -5)),
+                'thold_diff_high': int(fan_cfg.get('THOLD_DIFF_HIGH', 0)),
+            })
 
 
-        # set initial state
-        self.fan.state = 0
-
-
-    def set_fan(self, new_state, force=False):
-        if self.fan.state != new_state:
+    def set_fan(self, fan_entry, new_state, force=False):
+        fan_device = fan_entry['device']
+        if fan_device.state != new_state:
             now_time = time.time()
 
             if not force:
-                if self.fan_last_change_time > (now_time - self.fan_hold_seconds):
-                    logger.info('Fan will hold for an additional %ds', int(self.fan_last_change_time - (now_time - self.fan_hold_seconds)))
+                if fan_entry['last_change_time'] > (now_time - fan_entry['hold_seconds']):
+                    logger.info('Fan %d will hold for an additional %ds', fan_entry['index'] + 1, int(fan_entry['last_change_time'] - (now_time - fan_entry['hold_seconds'])))
                     return
 
 
             try:
-                self.fan.state = new_state
+                fan_device.state = new_state
             except DeviceControlException as e:
-                logger.error('Fan exception: %s', str(e))
+                logger.error('Fan %d exception: %s', fan_entry['index'] + 1, str(e))
                 return
             except OSError as e:
-                logger.error('Fan OSError: %s', str(e))
+                logger.error('Fan %d OSError: %s', fan_entry['index'] + 1, str(e))
                 return
             except IOError as e:
-                logger.error('Fan IOError: %s', str(e))
+                logger.error('Fan %d IOError: %s', fan_entry['index'] + 1, str(e))
                 return
 
 
-            self.fan_last_change_time = now_time
+            fan_entry['last_change_time'] = now_time
 
-            with self.sensors_user_av.get_lock():
-                self.sensors_user_av[constants.SENSOR_USER_FAN_LEVEL] = float(self.fan.state)
+            if fan_entry['index'] == 0:
+                with self.sensors_user_av.get_lock():
+                    self.sensors_user_av[constants.SENSOR_USER_FAN_LEVEL] = float(fan_device.state)
 
 
     def init_sensors(self):
@@ -767,42 +836,34 @@ class SensorWorker(Process):
 
     def check_fan_thresholds(self):
         # fan threshold processing
-        if not self.config.get('FAN', {}).get('THOLD_ENABLE'):
-            return
+        for fan_entry in self.fans:
+            fan_cfg = fan_entry['config']
+            if not fan_cfg.get('THOLD_ENABLE'):
+                continue
 
+            if self.night and not fan_cfg.get('ENABLE_NIGHT'):
+                continue
 
-        if self.night and not self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-            return
+            temp_slot = fan_entry['temp_slot']
+            if str(temp_slot).startswith('sensor_temp'):
+                current_temp = self.sensors_temp_av[constants.SENSOR_INDEX_MAP[temp_slot]]
 
-
-        if str(self.fan_temp_slot).startswith('sensor_temp'):
-            current_temp = self.sensors_temp_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
-
-            if self.config.get('TEMP_DISPLAY') == 'f':
-                current_temp = (current_temp * 9.0 / 5.0) + 32
-            elif self.config.get('TEMP_DISPLAY') == 'k':
-                current_temp = current_temp + 273.15
+                if self.config.get('TEMP_DISPLAY') == 'f':
+                    current_temp = (current_temp * 9.0 / 5.0) + 32
+                elif self.config.get('TEMP_DISPLAY') == 'k':
+                    current_temp = current_temp + 273.15
             else:
-                pass
-        else:
-            current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
+                current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[temp_slot]]
 
+            fan_temp_delta = current_temp - fan_entry['target']
 
-        fan_temp_delta = current_temp - self.fan_target
+            if fan_temp_delta > fan_entry['thold_diff_high']:
+                self.set_fan(fan_entry, fan_entry['level_high'])
+            elif fan_temp_delta > fan_entry['thold_diff_med']:
+                self.set_fan(fan_entry, fan_entry['level_med'])
+            elif fan_temp_delta > fan_entry['thold_diff_low']:
+                self.set_fan(fan_entry, fan_entry['level_low'])
+            else:
+                self.set_fan(fan_entry, fan_entry['level_default'])
 
-
-        if fan_temp_delta > self.fan_thold_diff_high:
-            # set fan to high
-            self.set_fan(self.fan_level_high)
-        elif fan_temp_delta > self.fan_thold_diff_med:
-            # set fan to medium
-            self.set_fan(self.fan_level_med)
-        elif fan_temp_delta > self.fan_thold_diff_low:
-            # set fan to low
-            self.set_fan(self.fan_level_low)
-        else:
-            self.set_fan(self.fan_level_default)
-            #self.set_fan(0)
-
-
-        logger.info('Fan threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', current_temp, self.fan_target, fan_temp_delta, self.fan.state)
+            logger.info('Fan %d threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', fan_entry['index'] + 1, current_temp, fan_entry['target'], fan_temp_delta, fan_entry['device'].state)
