@@ -41,25 +41,25 @@ sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg
 
 ### Step 2: Add Repository Source (DEB822 format)
 
-#### Stable Channel (Recommended for Production)
+#### Nightly Channel (Default / Recommended)
 ```bash
 sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: stable
+Components: nightly
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF
 ```
 
-#### Nightly Channel (Bleeding-Edge Development)
+#### Stable Channel
 ```bash
-sudo tee /etc/apt/sources.list.d/indi-allsky-nightly.sources <<EOF
+sudo tee /etc/apt/sources.list.d/indi-allsky-stable.sources <<EOF
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: nightly
+Components: stable
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF

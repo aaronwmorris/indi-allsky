@@ -314,14 +314,14 @@ class ImportDarkFrames(object):
                 self._miscDb.addBadPixelMap(
                     frame,
                     camera_id,
-                    dark_metadata,
+                    bpm_metadata,
                 )
 
             elif frame_type == 'dark':
                 self._miscDb.addDarkFrame(
                     frame,
                     camera_id,
-                    bpm_metadata,
+                    dark_metadata,
                 )
 
             else:

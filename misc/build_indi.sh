@@ -30,9 +30,9 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_CORE_REPO="https://github.com/indilib/indi.git"
-INDI_CORE_AUTO_TAG="v2.2.4.2"
+INDI_CORE_AUTO_TAG="v2.2.5"
 INDI_3RDPARTY_REPO="https://github.com/indilib/indi-3rdparty.git"
-INDI_3RDPARTY_AUTO_TAG="v2.2.4.1"
+INDI_3RDPARTY_AUTO_TAG="v2.2.5"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -111,7 +111,7 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-if [ -n "${WHIPTAIL_BIN:-}" ]; then
+if [ -z "${BUILD_INDI_SETTINGS:-}" ] && [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "NEW METHOD OF INSTALLATION" \
         --msgbox "There is now an official APT repository:\n\n  https://apt.indi-allsky.org\n\nInstallation guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started\n\nMigration guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration\n\n\nIt is *NOT* a requirement to migrate to the apt repository.  You may continue using the setup.sh to manage your installation." 0 0
@@ -980,7 +980,8 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-                "v2.2.4.2" "v2.2.4.2 - Recommended" "ON" \
+                "v2.2.5" "v2.2.5 - Recommended" "ON" \
+                "v2.2.4.2" "v2.2.4.2" "OFF" \
                 "v2.2.3.1" "v2.2.3.1" "OFF" \
                 "v2.2.2" "v2.2.2" "OFF" \
                 "v2.2.1.1" "v2.2.1.1" "OFF" \
@@ -1015,7 +1016,8 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-                "v2.2.4.1" "v2.2.4.1 - Recommended" "ON" \
+                "v2.2.5" "v2.2.5 - Recommended" "ON" \
+                "v2.2.4.1" "v2.2.4.1" "OFF" \
                 "v2.2.3.1" "v2.2.3.1" "OFF" \
                 "v2.2.2.1" "v2.2.2.1" "OFF" \
                 "v2.2.1.1" "v2.2.1.1" "OFF" \

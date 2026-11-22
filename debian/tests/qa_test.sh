@@ -14,7 +14,40 @@ indi-allsky indi-allsky/web_pass_confirm password testpassword123
 EOF
 
 apt-get update
-apt-get install -y /work/*.deb
+
+DISTRO=""
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO="${VERSION_CODENAME:-${UBUNTU_CODENAME:-}}"
+fi
+
+DEB_FILES=()
+if [ -n "$DISTRO" ]; then
+    for deb in /work/*+"${DISTRO}"*.deb; do
+        [ -f "$deb" ] && DEB_FILES+=("$deb")
+    done
+fi
+
+if [ ${#DEB_FILES[@]} -eq 0 ]; then
+    # Check if packages exist for a different distribution
+    OTHER_DEBS=$(ls /work/*+*.deb 2>/dev/null || true)
+    if [ -n "$OTHER_DEBS" ]; then
+        echo "ERROR: Target distribution is '${DISTRO}', but the .deb packages in /work/ are built for a different distribution:" >&2
+        echo "$OTHER_DEBS" >&2
+        echo "Please test using the distribution container that matches the packages (or build packages for '${DISTRO}')." >&2
+        exit 1
+    fi
+    for deb in /work/*.deb; do
+        [ -f "$deb" ] && DEB_FILES+=("$deb")
+    done
+fi
+
+if [ ${#DEB_FILES[@]} -eq 0 ]; then
+    echo "ERROR: No .deb packages found in /work to install." >&2
+    exit 1
+fi
+
+apt-get install -y "${DEB_FILES[@]}"
 
 echo "============================================================"
 echo "=== 2. Testing Bundled Virtualenv & Extensions ==="
@@ -72,7 +105,7 @@ echo "============================================================"
 echo "=== 5. Testing Non-Interactive Package Upgrade / Reinstall ==="
 echo "============================================================"
 # Verify that upgrading/reinstalling packages with -y automatically reuses configuration without prompting
-apt-get install --reinstall -y /work/*.deb
+apt-get install --reinstall -y "${DEB_FILES[@]}"
 test -f /etc/indi-allsky/flask.json
 echo "Non-interactive package reinstall/upgrade passed without prompts!"
 

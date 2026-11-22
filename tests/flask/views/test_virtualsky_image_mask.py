@@ -31,6 +31,7 @@ def virtualsky_view():
                      request=SimpleNamespace(args={}), IndiAllskyVirtualSkyHelperForm=lambda **kwargs: None)
     exec(compile(ast.Module(body=[cls], type_ignores=[]), 'views.py', 'exec'), namespace)
     view = namespace['VirtualSkyView']()
+    view.camera_time_offset = 0
     view.camera = SimpleNamespace(local=True, az=0, alt=90, uuid='camera', utc_offset=0,
                                   data={'vs_image_circle_diameter': 2218})
     view.indi_allsky_config = {}

@@ -1,19 +1,22 @@
-If you wish to remove or disable indi-allsky:
+# Uninstalling indi-allsky
+
+Instructions for removing, purging, or disabling `indi-allsky` across both Debian package installations and legacy manual source checkouts.
 
 ---
 
 ## Option 1: APT Package Removal (Debian / Ubuntu / Raspberry Pi OS)
 
-If you installed indi-allsky from the official APT repository:
+If you installed `indi-allsky` via the official APT repository (`apt.indi-allsky.org`):
 
-### Remove Application (Preserve Data & Config)
+### Remove Application (Preserve Configuration & Capture Data)
+Removes the application binaries and services while leaving databases (`/var/lib/indi-allsky/`), configurations (`/etc/indi-allsky/`), and media libraries (`/var/www/html/allsky/`) intact:
 ```bash
 sudo apt remove indi-allsky
 ```
 
 ### Complete Purge (Delete All Configuration & Data)
 > [!CAUTION]
-> Running `apt purge` permanently removes all configuration files in `/etc/indi-allsky/`, SQLite databases in `/var/lib/indi-allsky/`, and system user accounts.
+> Running `apt purge` permanently deletes all configuration files in `/etc/indi-allsky/`, SQLite databases in `/var/lib/indi-allsky/`, and system accounts.
 
 ```bash
 sudo apt purge indi-allsky
@@ -23,71 +26,53 @@ sudo apt purge indi-allsky
 
 ## Option 2: Manual Source Uninstall (`setup.sh` Installs)
 
-### Disable Services
-Running the following commands is sufficient to stop the program from running, but it will remain installed.
-```
-systemctl --user disable indiserver.service
-systemctl --user disable indi-allsky.service
-systemctl --user disable indi-allsky.timer
-systemctl --user disable gunicorn-indi-allsky.socket
-systemctl --user disable gunicorn-indi-allsky.service
+### 1. Stop and Disable Services
+```bash
+systemctl --user stop indi-allsky.service gunicorn-indi-allsky.socket gunicorn-indi-allsky.service indiserver.service
+systemctl --user disable indi-allsky.service gunicorn-indi-allsky.socket gunicorn-indi-allsky.service indiserver.service
 ```
 
-
-## Delete services
-If you want to permanently delete the services
-```
-rm -i "$HOME/.config/systemd/user/indiserver.service"
-rm -i "$HOME/.config/systemd/user/indi-allksy.service"
-rm -i "$HOME/.config/systemd/user/indi-allksy.timer"
-rm -i "$HOME/.config/systemd/user/gunicorn-indi-allsky.socket"
-rm -i "$HOME/.config/systemd/user/gunicorn-indi-allsky.service"
+### 2. Remove User Systemd Units
+```bash
+rm -f "$HOME/.config/systemd/user/indiserver.service"
+rm -f "$HOME/.config/systemd/user/indi-allsky.service"
+rm -f "$HOME/.config/systemd/user/gunicorn-indi-allsky.socket"
+rm -f "$HOME/.config/systemd/user/gunicorn-indi-allsky.service"
 systemctl --user daemon-reload
 ```
 
+### 3. Remove Web Server Virtual Hosts
 
-# Folders
-indi-allsky uses the following folders for operation
-* `/etc/indi-allsky/` <- configuration (insignificant space usage)
-* `/var/log/indi-allsky/` <- logs
-* `/var/www/html/allsky/` <- images and videos
-* `/var/lib/indi-allsky/` <- database
-
-
-# Web server
-The default install of indi-allsky installs Apache web server
-
-
-## Disable indi-allsky site config
+#### Caddy (Default Reverse Proxy)
+```bash
+sudo rm -f /etc/caddy/caddy_indi-allsky.conf
+sudo systemctl reload caddy
 ```
+
+#### Nginx
+```bash
+sudo rm -f /etc/nginx/sites-enabled/indi-allsky.conf /etc/nginx/sites-available/indi-allsky.conf
+sudo systemctl reload nginx
+```
+
+#### Apache
+```bash
 sudo a2dissite indi-allsky
-sudo systemctl restart apache2
+sudo rm -f /etc/apache2/sites-available/indi-allsky.conf
+sudo systemctl reload apache2
 ```
 
+### 4. Remove Filesystem Data
+```bash
+# Images and media archives
+sudo rm -rf /var/www/html/allsky
 
-## Delete Apache site
-```
-sudo rm -i /etc/apache2/sites-available/indi-allsky.conf
-sudo rm -i /etc/apache2/sites-enabled/indi-allsky.conf
-```
+# SQLite database and migrations
+sudo rm -rf /var/lib/indi-allsky
 
+# Configuration and logs
+sudo rm -rf /etc/indi-allsky /var/log/indi-allsky
 
-## Disable Apache
-```
-sudo systemctl disable apache2
-```
-
-
-# Git checkout
-Finally, delete the git checkout folder
-
-# TJs AllSky
-If you want to switch back to TJ's AllSky, you need to disable the `apache2` service and re-enable the `lighttpd` service.
-
-```
-sudo systemctl stop apache2
-sudo systemctl disable apache2
-
-sudo systemctl enable lighttpd
-sudo systemctl start lighttpd
+# Source checkout
+rm -rf "$HOME/indi-allsky"
 ```

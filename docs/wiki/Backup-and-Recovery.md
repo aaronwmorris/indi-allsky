@@ -69,6 +69,10 @@ Service environment variables are located at `/etc/indi-allsky/indi-allsky.env`.
 Images and videos are normally located at `/var/www/html/allsky/images/`
 
 # Migrate to a newer OS
+
+> [!NOTE]
+> **Debian Package (`.deb`) Users**: On Debian package installations, manage services using systemd system commands (`sudo systemctl disable --now indi-allsky.timer`, `sudo systemctl restart gunicorn-indi-allsky`, `sudo systemctl enable --now indi-allsky.timer`). Testing the capture binary manually is done via `/var/lib/indi-allsky/venv/bin/python /usr/lib/indi-allsky/allsky.py run`.
+
 1. Install a new OS
 1. Perform full indi-allsky setup as if setting up a new system
 1. Disable indi-allsky auto-start on new system

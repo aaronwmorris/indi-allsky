@@ -1,112 +1,104 @@
-# Automatic setup
+# Disabling Onboard LEDs
 
-On package installations, disable the onboard LEDs using the [`indi-allsky-ctl`](indi-allsky-ctl) utility:
+Light pollution originating from host Single Board Computer (SBC) activity and power LEDs can cause internal reflections inside camera domes or enclosures. Disabling these indicators ensures optimal sensor dark-sky sensitivity.
+
+---
+
+## 1. Automated Configuration
+
+The automated disable script interrogates `/proc/device-tree/model` and updates the firmware configuration (`/boot/firmware/config.txt`) on Raspberry Pi 3, 4, and 5 hardware.
+
+### Debian Package (`.deb`) Installations
+Execute via `indi-allsky-ctl`:
 ```bash
 sudo indi-allsky-ctl disable-leds
 ```
 
-Or execute the setup script directly from a git checkout:
+### Source / Git (`setup.sh`) Installations
+Execute the script directly from the repository root:
 ```bash
-./misc/setup_disable_leds.sh
+sudo ./misc/setup_disable_leds.sh
 ```
 
-# Manual instructions
-## Raspberry Pi
-Add the following parameters to `/boot/firmware/config.txt`
+A system reboot is required for device tree parameter alterations to take effect:
+```bash
+sudo reboot
+```
+
+---
+
+## 2. Manual Configuration
 
 ### Raspberry Pi 5
-```
-# Disable the PWR LED
+Append the following parameters to `/boot/firmware/config.txt`:
+
+```ini
+# Disable Power LED
 dtparam=power_led_trigger=none
 dtparam=power_led_activelow=off
 
-# Disable the Activity LED
+# Disable Activity LED
 dtparam=act_led_trigger=none
 dtparam=act_led_activelow=off
 
-# Disable ethernet port LEDs
+# Disable Gigabit Ethernet Jack LEDs
 dtparam=eth_led0=4
 dtparam=eth_led1=4
 ```
 
-### Raspberry Pi 4/3
-```
-# Disable the PWR LED
+### Raspberry Pi 4 and 3
+Append the following parameters to `/boot/firmware/config.txt`:
+
+```ini
+# Disable Power LED
 dtparam=pwr_led_trigger=none
 dtparam=pwr_led_activelow=on
 
-# Disable the Activity LED
+# Disable Activity LED
 dtparam=act_led_trigger=none
 dtparam=act_led_activelow=off
 
-# Disable ethernet port LEDs
+# Disable Ethernet Jack LEDs (Pi 4 only)
 dtparam=eth_led0=4
 dtparam=eth_led1=4
 ```
 
-### Legacy Raspberry Pi
-Create a script in `/usr/local/bin`
+---
 
-/usr/local/bin/disable_leds.sh
+## 3. Runtime Sysfs LED Control (Other SBC Architectures)
+
+For boards lacking device-tree overlay parameters, LEDs may be extinguished at boot time via sysfs triggers.
+
+Create `/usr/local/bin/disable_leds.sh`:
 ```bash
-sudo tee /usr/local/bin/disable_leds.sh <<EOF
+sudo tee /usr/local/bin/disable_leds.sh <<'EOF'
 #!/bin/bash
-
-# New names
-echo 0 > /sys/class/leds/ACT/brightness
-echo 0 > /sys/class/leds/PWR/brightness
-
-# Old names
-echo 0 > /sys/class/leds/led1/brightness
-echo 0 > /sys/class/leds/led0/brightness
+# Extinguish known LED sysfs nodes if present
+for led in \
+    /sys/class/leds/ACT \
+    /sys/class/leds/PWR \
+    /sys/class/leds/led0 \
+    /sys/class/leds/led1 \
+    /sys/class/leds/green:status \
+    /sys/class/leds/red:power \
+    /sys/class/leds/librecomputer:blue \
+    /sys/class/leds/librecomputer:system-status \
+    /sys/class/leds/status; do
+    if [ -d "$led" ]; then
+        echo none > "$led/trigger" 2>/dev/null || true
+        echo 0 > "$led/brightness" 2>/dev/null || true
+    fi
+done
 EOF
-
-```
-
-Make script executable
-```bash
 sudo chmod 755 /usr/local/bin/disable_leds.sh
 ```
 
-Add script to crontab
+Register a systemd service or cron entry to execute the script at startup:
 ```bash
-sudo tee /etc/cron.d/disable_leds <<EOF
+sudo tee /etc/cron.d/disable_leds <<'EOF'
 @reboot root /usr/local/bin/disable_leds.sh >/dev/null 2>&1
 EOF
-
 ```
 
-## Orange Pi
-```bash
-sudo tee /usr/local/bin/disable_leds.sh <<EOF
-#!/bin/bash
-
-echo 0 > /sys/class/leds/green\:status/brightness
-echo 0 > /sys/class/leds/red\:power/brightness
-EOF
-
-```
-
-## AML-S905X-CC (Le Potato)
-```bash
-sudo tee /usr/local/bin/disable_leds.sh <<EOF
-#!/bin/bash
-
-echo 0 > /sys/class/leds/librecomputer\:blue/brightness
-echo 0 > /sys/class/leds/librecomputer\:system-status/brightness
-EOF
-
-```
-* Note: The red power LED cannot be disabled in software.
-
-## RockPi
-
-```bash
-sudo tee /usr/local/bin/disable_leds.sh <<EOF
-#!/bin/bash
-
-echo 0 > /sys/class/leds/status/brightness
-EOF
-
-```
-Note: The green power LED cannot be disabled in software.
+> [!NOTE]
+> On certain hardware platforms—such as Libre Computer Le Potato (AML-S905X-CC) and Radxa RockPi—the hardware power indicator LED is hard-wired directly to the 5V power bus and cannot be disabled via software controls. Opaque physical shielding (e.g., electrical tape) is required for those diodes.

@@ -25,6 +25,35 @@ https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#canon-resolu
 
 
 ## Acquire Dark Frames
+
+### Option A: Debian Package Installations (`indi-allsky-ctl` — Recommended)
+
+On systems installed via the `.deb` package / APT repository, use [`indi-allsky-ctl`](indi-allsky-ctl) to capture dark calibration frames directly without activating virtual environments:
+
+1. Cover your camera lens with an opaque lens cap or cover thick enough to block **all** light.
+2. Stop the `indi-allsky` service:
+    ```bash
+    sudo systemctl stop indi-allsky
+    ```
+3. Run `indi-allsky-ctl darks` with your chosen algorithm:
+    ```bash
+    # Use "sigmaclip" if your camera returns 16-bit RAW data (Recommended for RAW cameras)
+    sudo indi-allsky-ctl darks sigmaclip
+
+    # Use "average" if your camera returns RGB/JPEG data
+    sudo indi-allsky-ctl darks average
+    ```
+    *(Direct CLI alternative: `/var/lib/indi-allsky/venv/bin/python /usr/share/indi-allsky/darks.py sigmaclip`)*
+
+4. Restart the `indi-allsky` service once dark frame generation completes:
+    ```bash
+    sudo systemctl start indi-allsky
+    ```
+
+---
+
+### Option B: Git / Source Installations
+
 1. Cover your camera lens with something thick enough to block *ALL* light.
 1. Stop indi-allsky service
     ```
@@ -46,6 +75,12 @@ https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#canon-resolu
     # Use "average" if your camera returns RGB data
     ./darks.py average
     ```
+1. Restart the capture service:
+    ```
+    systemctl --user start indi-allsky
+    ```
+
+---
 
 * Darks will be generated in 5 second increments for the configured gain for night, moonmode, and day frames.
     * 10 exposures at each gain level are used to create the master darks.  The number of frames is configurable with `--Count`.
@@ -76,14 +111,32 @@ https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#canon-resolu
 
 Using the `tempaverage` or `tempsigmaclip` options will generate a series of master darks at every 5c degree decrease.  Every 5c degree drop, a full set of darks will be generated at 5s exposure increments.  Generating daytime dark frames is automatically disabled in these modes.
 
-I would recommend a 3-6 foot USB cable so the camera can be placed in a freezer or refrigerator appliance while the computer can be kept room temperature.  As soon as the camera is placed in the freezer, start the darks.py program with the `tempsigmaclip` option.  A series of master darks will be generated at the initial temperature.  The program will then wait for the camera to decrease 5c degrees from the initial temperature and take a new series.  This will happen until the camera reaches equilibrium with the freezer.  When the minimum temperature is reached, the program will have to be manually cancelled with `control-c`.
+**Debian Package Installations:**
+```bash
+sudo indi-allsky-ctl darks tempsigmaclip
+```
+
+**Git / Source Installations:**
+```bash
+./darks.py tempsigmaclip
+```
+
+I would recommend a 3-6 foot USB cable so the camera can be placed in a freezer or refrigerator appliance while the computer can be kept room temperature.  As soon as the camera is placed in the freezer, start the darks capture program with the `tempsigmaclip` option.  A series of master darks will be generated at the initial temperature.  The program will then wait for the camera to decrease 5c degrees from the initial temperature and take a new series.  This will happen until the camera reaches equilibrium with the freezer.  When the minimum temperature is reached, the program will have to be manually cancelled with `control-c`.
 
 If the camera's temperature drops too fast, consider wrapping the camera in a single layer plastic freezer bag to slow down the rate of cooling.  Flush the darks and re-warm the camera to room temperature before restarting the process.
 
 ## Removing dark frames
 
-You may delete all of the existing dark frames by running the `flush` command:
+You may delete all existing dark frames by running the `flush` action:
 
+**Debian Package Installations:**
+```bash
+sudo indi-allsky-ctl darks flush
+# Or alias:
+sudo indi-allsky-ctl flush-darks
+```
+
+**Git / Source Installations:**
 ```bash
 # navigate to indi-allsky git checkout folder
 cd indi-allsky

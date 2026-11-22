@@ -8,21 +8,28 @@ It is also possible to operate the dew heater using temperature thresholds if yo
 Note:  The manual threshold does not need to be a temperature.  You may select any of the user data slots, which could be a RH value.
 
 ## GPIO Permissions
-If you receive a `PermissionDenied` exception when accessing GPIO pins
+If you encounter a `PermissionDenied` error when accessing GPIO lines or character devices, review:
+[`GPIO Permissions`](GPIO-Permissions.md)
 
-https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
-
-## WARNING
-**The pins from a SBC cannot be used to directly drive a dew heater.  Trying to do so WILL damage your system.**
+## Hardware Warning
+> [!CAUTION]
+> Single Board Computer GPIO pins (3.3V logic) cannot source sufficient current to drive resistive heating elements directly. Attempting to do so will permanently damage the SoC. Always interpose a logic-level N-channel MOSFET or optically isolated relay module.
 
 ## Testing Dew Heaters
-The following test command can be used to test your dew heater for proper wiring and operation. Dew Heaters can be difficult to detect operation if you do not have an oscilloscope or thermal camera. An LED is probably the best option to get feedback from the system.
+Verify electrical switching and control pin configuration using the diagnostic test utility:
 
+### Debian Package (`.deb`) Installations
 ```bash
-indi-allsky-ctl test-devices dew_heater
+sudo indi-allsky-ctl test-devices dew_heater
 ```
 
-*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/device_test.py dew_heater`).*
+### Source / Git (`setup.sh`) Installations
+```bash
+source /var/lib/indi-allsky/virtualenv/bin/activate
+# Or from git checkout: source virtualenv/indi-allsky/bin/activate
+
+python ./misc/device_test.py dew_heater
+```
 
 ## Dew Heater - Standard
 This type of dew heater only supports two modes:  ON and OFF.  Any duty cycle applied to this dew heater will set it to FULL power.  This type may use either a relay or MOSFET driver.
@@ -72,7 +79,11 @@ mosquitto_sub -d -V mqttv5 -F %j -h localhost -p 1883 -u mqtt_username -P passwo
 
 ### Raspberry Pi 5
 #### Raspberry Pi 5 - RuntimeError: Cannot determine SOC peripheral base address
-```
+
+> [!IMPORTANT]
+> **Debian Package (`.deb`) Users**: Do **NOT** run `pip` or modify virtualenvs manually. The Debian package already bundles pre-compiled, compatible GPIO and `rpi.lgpio` drivers inside `/var/lib/indi-allsky/venv/`. Manual pip modifications will break the package virtual environment. The steps below apply **only** to manual git source checkouts.
+
+```bash
 source virtualenv/indi-allsky/bin/activate
 
 pip uninstall RPi.GPIO rpi.lgpio

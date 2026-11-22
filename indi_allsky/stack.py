@@ -226,7 +226,7 @@ class IndiAllskyStacker(object):
                 #reg_data, footprint = astroalign.register(
                 #    i_ref.opencv_data,
                 #    reference_i_ref.opencv_data,
-                #    detection_sigma=self.detection_simga,
+                #    detection_sigma=self.detection_sigma,
                 #    max_control_points=self.max_control_points,
                 #    min_area=self.min_area,
                 #)

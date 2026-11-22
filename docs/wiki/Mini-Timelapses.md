@@ -118,4 +118,4 @@ If your account has permission, **Delete video** removes the local video and thu
 | Panorama dimensions differ | All panoramas used in one clip must have the same dimensions. If panorama settings changed during the period, select a shorter range with matching images. |
 | The panorama horizon looks incomplete or distorted | Check the source images and fisheye-to-panorama settings. A fisheye circle cut off by the image borders can produce an incomplete panorama; cropping or panning cannot recover the missing area. |
 
-For general information about video encoding and regular timelapse settings, see [Timelapses](https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses).
+For general information about video encoding and regular timelapse settings, see [`Timelapses`](Timelapses.md).

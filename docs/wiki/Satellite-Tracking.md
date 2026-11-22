@@ -1,18 +1,45 @@
-# Overview
-indi-allsky is able to track satellites and label which might be visible in your pictures.  Currently, only the [100 (or so) Brightest](https://celestrak.org/NORAD/elements/table.php?GROUP=visual&FORMAT=tle) list from CelesTrak is tracked.
+# Satellite Tracking
 
-## Label Variables
-| Name           | Type         | Add Date   | Info |
-| -------------- | ------------ | ---------- | ---- |
-| title          | str          |            | Satellite name |
-| alt            | float        |            | Angular altitude |
-| az             | float        |            | Azimuth |
-| dir            | str          |            | Cardinal direction from observer |
-| elevation      | float        |            | Elevation (km) above sea level (WGS66) |
-| mag            | float        |            | Magnitude (max) |
-| sublat         | float        |            | Geocentric latitude |
-| latitude       | float        |            | Alias of sublat |
-| sublong        | float        |            | Geocentric longitude |
-| longitude      | float        |            | Alias of sublong |
-| range          | float        |            | Range (km) from observer |
-| range_velocity | float        |            | Range rate of change |
+`indi-allsky` tracks visual satellite passes overhead in real time, determining which spacecraft and orbital objects are within the camera field of view and rendering their positional metadata as text overlays.
+
+---
+
+## 1. TLE Orbital Data Synchronization
+
+Satellite orbital ephemerides are retrieved automatically from **CelesTrak**:
+* **Catalog**: 100+ Brightest Visual Satellites (`GROUP=visual`), including the International Space Station (ISS), CSS Tiangong, Hubble Space Telescope (HST), and prominent rocket bodies.
+* **Storage**: Stored in the database table `tledata` (`IndiAllSkyDbTleDataTable`).
+* **Refresh Frequency**: Polled every 24 hours. If CelesTrak returns rate-limit or network errors, an exponential backoff schedule delays subsequent requests.
+
+---
+
+## 2. Ephemeris & Visibility Calculation
+
+When processing an image frame:
+1. `indi-allsky` propagates satellite orbits using the SGP4 orbital model paired with the observatory's latitude, longitude, and elevation.
+2. The system checks if any satellite has an altitude above the local horizon threshold.
+3. If an object is visible, its coordinates and photometric properties are exposed as image annotation tokens.
+
+---
+
+## 3. Image Overlay Variables
+
+Satellite telemetry tokens can be embedded into custom image label templates under **Configuration** → **Image Overlays** → **Image Labels**:
+
+| Token Variable | Type | Description | Example Output |
+|---|---|---|---|
+| `{satellite.title}` | String | Name of the visible satellite. | `ISS (ZARYA)` |
+| `{satellite.alt}` | Float | Angular altitude above the local horizon (degrees). | `42.5` |
+| `{satellite.az}` | Float | Azimuth bearing (degrees clockwise from North). | `215.3` |
+| `{satellite.dir}` | String | Cardinal compass direction from the observer. | `SW` |
+| `{satellite.mag}` | Float | Estimated visual magnitude ($m_v$). | `-2.1` |
+| `{satellite.elevation}` | Float | Orbital altitude (elevation) above sea level in kilometers. | `418.2` |
+| `{satellite.range}` | Float | Slant range distance from the observer to the spacecraft (km). | `612.4` |
+| `{satellite.range_velocity}` | Float | Radial velocity relative to the observer (km/s). | `-6.8` |
+| `{satellite.latitude}` | Float | Sub-satellite geocentric latitude. | `28.52` |
+| `{satellite.longitude}` | Float | Sub-satellite geocentric longitude. | `-80.68` |
+
+### Sample Overlay Template
+```text
+Satellite: {satellite.title} | Alt: {satellite.alt:.1f}° | Az: {satellite.az:.1f}° ({satellite.dir}) | Mag: {satellite.mag:.1f}
+```

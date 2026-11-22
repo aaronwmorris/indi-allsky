@@ -295,12 +295,12 @@ curl -fsSL https://apt.indi-allsky.org/key.gpg | \
   sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
 sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg
 
-# 2. Add APT Repository (Stable Channel)
+# 2. Add APT Repository
 sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: stable
+Components: nightly
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF
@@ -312,7 +312,7 @@ sudo apt install -y indi-allsky
 
 *(An interactive terminal wizard will prompt for camera driver selection, admin credentials, and observatory coordinates).*
 
-Visit the [APT Repository Web Portal](https://apt.indi-allsky.org/) to view repository status or switch to the **Nightly** release channel.
+Visit the [APT Repository Web Portal](https://apt.indi-allsky.org/) to view repository status.
 
 ---
 

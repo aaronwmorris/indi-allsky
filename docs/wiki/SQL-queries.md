@@ -1,21 +1,32 @@
-# General
-Start a sqlite session with the following command
+# Diagnostic SQL Queries
+
+This document provides sample SQL queries for operational auditing, diagnostic analysis, and performance benchmarking across `indi-allsky` SQLite and MySQL/MariaDB databases.
+
+---
+
+## 1. Connecting to the Database Console
+
+### SQLite (Default)
 ```bash
 sqlite3 -table -header /var/lib/indi-allsky/indi-allsky.sqlite
 ```
 
-## Hide cameras
-Use this to hide cameras from web interface.
+### MySQL / MariaDB
+```bash
+mysql -u indi-allsky -p indi-allsky
 ```
-sqlite> SELECT id, name, friendlyName, hidden FROM camera;
-+----+------------------+--------------+--------+
-| id |       name       | friendlyName | hidden |
-+----+------------------+--------------+--------+
-| 1  | CCD Simulator    |              | 0      |
-| 2  | ZWO CCD ASI290MM |              | 0      |
-+----+------------------+--------------+--------+
 
-sqlite> UPDATE camera SET hidden=1 WHERE id=1;
+---
+
+## 2. Camera Profile State
+
+To manage active versus hidden camera profiles, refer to [`Hide Camera Entries`](Hide-Camera-Entries.md):
+
+```sql
+SELECT id, name, friendlyName, hidden FROM camera;
+
+-- Hide an inactive profile
+UPDATE camera SET hidden = 1 WHERE id = 1;
 ```
 
 ## Use Non-Local Images S3 with SyncAPI

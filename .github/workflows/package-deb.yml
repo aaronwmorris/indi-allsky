@@ -349,13 +349,15 @@ jobs:
         run: |
           docker exec builder bash -c '
             set -e
-            # Clean up any debug symbol and development header packages before packaging
+            # Clean up any debug symbol, development header, and legacy/obsolete packages before packaging
             rm -f /*-dbgsym*.deb /tmp/*-dbgsym*.deb /*-dbg*.deb /tmp/*-dbg*.deb /work/*-dbgsym*.deb /work/*-dbg*.deb 2>/dev/null || true
             rm -f /*-dev*.deb /tmp/*-dev*.deb /work/*-dev*.deb 2>/dev/null || true
+            rm -f /*indi-allsky-web*.deb /tmp/*indi-allsky-web*.deb /work/*indi-allsky-web*.deb /tmp/indi-cached-debs/*indi-allsky-web*.deb 2>/dev/null || true
 
             # Move all built packages to workspace
             cp -f /*.deb /tmp/*.deb /work/ 2>/dev/null || true
             cp -f /tmp/indi-cached-debs/*.deb /work/ 2>/dev/null || true
+            rm -f /work/*indi-allsky-web*.deb 2>/dev/null || true
             chown -R '$(id -u):$(id -g)' /work || true
           '
 
@@ -577,16 +579,24 @@ jobs:
             done
           }
 
+          # Clean up any legacy indi-allsky-web packages from reprepro database
+          for distro in bookworm trixie noble resolute; do
+            reprepro -C stable -b apt-repo remove "$distro" indi-allsky-web 2>/dev/null || true
+            reprepro -C nightly -b apt-repo remove "$distro" indi-allsky-web 2>/dev/null || true
+          done
+
           # Index all historical tagged releases into 'stable' component
           echo "=== Fetching all tagged stable release packages from GitHub Releases ==="
           mkdir -p debs-tags
           for tag in $(gh release list --exclude-drafts --limit 10 --json tagName --jq '.[].tagName' 2>/dev/null | grep -v '^nightly$' || true); do
             mkdir -p "debs-tags/$tag"
             gh release download "$tag" --pattern '*.deb' --dir "debs-tags/$tag" 2>/dev/null || true
+            rm -f debs-tags/"$tag"/*indi-allsky-web*.deb 2>/dev/null || true
             index_debs_dir stable "debs-tags/$tag"
           done
 
           # Index current stable packages if tagged
+          rm -f debs-stable/*indi-allsky-web*.deb 2>/dev/null || true
           index_debs_dir stable debs-stable
 
           # If building a stable release, also fetch existing nightly packages so nightly component remains populated
@@ -598,6 +608,7 @@ jobs:
 
           # Index nightly packages into 'nightly' component
           echo "=== Indexing nightly packages into reprepro ==="
+          rm -f debs-nightly/*indi-allsky-web*.deb 2>/dev/null || true
           index_debs_dir nightly debs-nightly
 
           # Clean up unreferenced pool files

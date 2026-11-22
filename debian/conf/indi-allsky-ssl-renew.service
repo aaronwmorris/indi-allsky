@@ -1,0 +1,7 @@
+[Unit]
+Description=Renew indi-allsky TLS leaf certificate
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/indi-allsky-ctl ssl-renew
