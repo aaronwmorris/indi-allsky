@@ -5395,6 +5395,9 @@
   .tw\:w-10 {
     width: calc(var(--tw-spacing) * 10);
   }
+  .tw\:w-16 {
+    width: calc(var(--tw-spacing) * 16);
+  }
   .tw\:w-20 {
     width: calc(var(--tw-spacing) * 20);
   }

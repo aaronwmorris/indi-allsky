@@ -6576,6 +6576,27 @@ def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
     return image_assets
 
 
+DEFAULT_AURORA_MIN = 80
+
+
+def normalize_aurora_min(value, default=DEFAULT_AURORA_MIN):
+    """Clamp aurora probability threshold to 1..100."""
+    if value is None or value == '':
+        return default
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(1, min(100, parsed))
+
+
+def _apply_aurora_filter(query, aurora_min):
+    """Filter image queries to frames meeting the minimum ovation_max %."""
+    if not aurora_min:
+        return query
+    return query.filter(IndiAllSkyDbImageTable.ovation_max >= aurora_min)
+
+
 class IndiAllskyImageViewer(FlaskForm):
     CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
@@ -6584,12 +6605,15 @@ class IndiAllskyImageViewer(FlaskForm):
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     IMG_SELECT           = SelectField('Image', choices=[], validators=[])
     FILTER_DETECTIONS    = BooleanField('Detections')
+    FILTER_AURORA        = BooleanField('Aurora')
+    FILTER_AURORA_MIN    = IntegerField('Aurora %', default=DEFAULT_AURORA_MIN)
 
 
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewer, self).__init__(*args, **kwargs)
 
         self.detections_count = kwargs.get('detections_count', 0)
+        self.aurora_min = kwargs.get('aurora_min', 0)
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
@@ -6610,6 +6634,8 @@ class IndiAllskyImageViewer(FlaskForm):
                 )
         )
 
+
+        years_query = _apply_aurora_filter(years_query, self.aurora_min)
 
         if not self.local:
             # Do not serve local assets
@@ -6649,6 +6675,8 @@ class IndiAllskyImageViewer(FlaskForm):
                 )
         )
 
+
+        months_query = _apply_aurora_filter(months_query, self.aurora_min)
 
         if not self.local:
             # Do not serve local assets
@@ -6693,6 +6721,8 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
+        days_query = _apply_aurora_filter(days_query, self.aurora_min)
+
         if not self.local:
             # Do not serve local assets
             days_query = days_query\
@@ -6736,6 +6766,8 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
+        hours_query = _apply_aurora_filter(hours_query, self.aurora_min)
+
         if not self.local:
             # Do not serve local assets
             hours_query = hours_query\
@@ -6776,6 +6808,8 @@ class IndiAllskyImageViewer(FlaskForm):
                 )
         )
 
+
+        images_query = _apply_aurora_filter(images_query, self.aurora_min)
 
         if not self.local:
             # Do not serve local assets
@@ -6915,7 +6949,7 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = db.session.query(
+        last_image_query = db.session.query(
             IndiAllSkyDbImageTable,
         )\
             .filter(
@@ -6923,7 +6957,9 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
                     IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
-        )\
+        )
+        last_image_query = _apply_aurora_filter(last_image_query, self.aurora_min)
+        last_image = last_image_query\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
@@ -7251,6 +7287,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     FILTER_DETECTIONS    = BooleanField('Detections')
+    FILTER_AURORA        = BooleanField('Aurora')
+    FILTER_AURORA_MIN    = IntegerField('Aurora %', default=DEFAULT_AURORA_MIN)
     FILTER_ASI676MC_REPAIRED = BooleanField('Purple frame repaired')
     FILTER_ASI676MC_EXCLUDED = BooleanField('Purple frame excluded')
     FILTER_ASI676MC_FAILED = BooleanField('Purple-frame repair failed')
@@ -7260,6 +7298,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
         super(IndiAllskyGalleryViewer, self).__init__(*args, **kwargs)
 
         self.detections_count = kwargs.get('detections_count', 0)
+        self.aurora_min = kwargs.get('aurora_min', 0)
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
@@ -7300,6 +7339,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
         ### Disable this join to make things faster
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
+
+        years_query = _apply_aurora_filter(years_query, self.aurora_min)
 
         if not self.local:
             # Do not serve local assets
@@ -7344,6 +7385,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
         ### Disable this join to make things faster
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
+
+        months_query = _apply_aurora_filter(months_query, self.aurora_min)
 
         if not self.local:
             # Do not serve local assets
@@ -7394,6 +7437,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
 
+        days_query = _apply_aurora_filter(days_query, self.aurora_min)
+
         if not self.local:
             # Do not serve local assets
             days_query = days_query\
@@ -7443,6 +7488,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
 
+        hours_query = _apply_aurora_filter(hours_query, self.aurora_min)
+
         if not self.local:
             # Do not serve local assets
             hours_query = hours_query\
@@ -7486,6 +7533,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
         )
 
         images_query = self._apply_asi676mc_status_filter(images_query)
+        images_query = _apply_aurora_filter(images_query, self.aurora_min)
 
 
         if not self.local:
@@ -7551,7 +7599,7 @@ class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyGalleryViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = db.session.query(
+        last_image_query = db.session.query(
             IndiAllSkyDbImageTable,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
@@ -7561,7 +7609,9 @@ class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
                     IndiAllSkyDbCameraTable.id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
-        )\
+        )
+        last_image_query = _apply_aurora_filter(last_image_query, self.aurora_min)
+        last_image = last_image_query\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
