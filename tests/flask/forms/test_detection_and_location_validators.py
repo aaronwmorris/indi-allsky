@@ -174,7 +174,7 @@ def test_night_sun_and_label_validators():
         forms.NIGHT_MOONMODE_ALT_DEG_validator(None, DummyField('abc'))
     with pytest.raises(ValidationError, match='Moon altitude must be greater than -90'):
         forms.NIGHT_MOONMODE_ALT_DEG_validator(None, DummyField(-91.0))
-    with pytest.raises(ValidationError, match='Moon altitude must be less than 90'):
+    with pytest.raises(ValidationError, match='Moon altitude must be less than 91'):
         forms.NIGHT_MOONMODE_ALT_DEG_validator(None, DummyField(92.0))
     forms.NIGHT_MOONMODE_ALT_DEG_validator(None, DummyField(10.0))
 

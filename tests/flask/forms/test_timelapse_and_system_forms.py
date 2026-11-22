@@ -567,5 +567,5 @@ def test_indi_server_change_form(flask_app):
     with flask_app.test_request_context():
         form = f_mod.IndiAllskyIndiServerChangeForm()
         assert form is not None
-        assert form.CAMERA_SERVER_SELECT.choices == [['', 'None']]
-        assert form.GPS_SERVER_SELECT.choices == [['', 'None']]
+        assert form.CAMERA_SERVER_SELECT.choices == [('', 'None')]
+        assert form.GPS_SERVER_SELECT.choices == [('', 'None')]

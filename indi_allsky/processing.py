@@ -2304,9 +2304,9 @@ class ImageProcessor(object):
         except ZeroDivisionError:
             kr = k / 0.1
 
-        b = cv2.addWeighted(src1=b, alpha=kb, src2=0, beta=0, gamma=0)
-        g = cv2.addWeighted(src1=g, alpha=kg, src2=0, beta=0, gamma=0)
-        r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
+        b = cv2.addWeighted(src1=b, alpha=kb, src2=b, beta=0, gamma=0)
+        g = cv2.addWeighted(src1=g, alpha=kg, src2=g, beta=0, gamma=0)
+        r = cv2.addWeighted(src1=r, alpha=kr, src2=r, beta=0, gamma=0)
 
         self.image = cv2.merge([b, g, r])
 

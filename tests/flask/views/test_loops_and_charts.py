@@ -301,8 +301,11 @@ def test_json_chart_histogram_jpg(flask_app, loops_db):
     client = flask_app.test_client()
     with flask_app.app_context():
         cam = db.session.get(IndiAllSkyDbCameraTable, 1)
-        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
-        camera_now = datetime.now() + timedelta(seconds=offset)
+        if cam.local:
+            camera_now = datetime.now()
+        else:
+            offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+            camera_now = datetime.now() + timedelta(seconds=offset)
 
         img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
         img_rec.createDate = camera_now - timedelta(seconds=60)
@@ -341,8 +344,11 @@ def test_json_chart_histogram_png(flask_app, loops_db):
     client = flask_app.test_client()
     with flask_app.app_context():
         cam = db.session.get(IndiAllSkyDbCameraTable, 1)
-        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
-        camera_now = datetime.now() + timedelta(seconds=offset)
+        if cam.local:
+            camera_now = datetime.now()
+        else:
+            offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+            camera_now = datetime.now() + timedelta(seconds=offset)
 
         img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
         img_rec.filename = 'image1.png'
@@ -399,8 +405,11 @@ def test_json_chart_histogram_pil_and_sqm(flask_app, loops_db):
     client = flask_app.test_client()
     with flask_app.app_context():
         cam = db.session.get(IndiAllSkyDbCameraTable, 1)
-        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
-        camera_now = datetime.now() + timedelta(seconds=offset)
+        if cam.local:
+            camera_now = datetime.now()
+        else:
+            offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+            camera_now = datetime.now() + timedelta(seconds=offset)
 
         img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
         img_rec.filename = 'image1.tif'
@@ -442,8 +451,11 @@ def test_json_chart_histogram_mask_loader(flask_app, loops_db):
     client = flask_app.test_client()
     with flask_app.app_context():
         cam = db.session.get(IndiAllSkyDbCameraTable, 1)
-        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
-        camera_now = datetime.now() + timedelta(seconds=offset)
+        if cam.local:
+            camera_now = datetime.now()
+        else:
+            offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+            camera_now = datetime.now() + timedelta(seconds=offset)
 
         img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
         img_rec.createDate = camera_now - timedelta(seconds=60)
