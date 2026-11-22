@@ -375,13 +375,13 @@ $('#activate-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#activate-button', 'Activate');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#activate-button', 'Activate');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -402,13 +402,13 @@ $('#deactivate-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#deactivate-button', 'Deactivate');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#deactivate-button', 'Deactivate');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -429,13 +429,13 @@ $('#delete-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#delete-button', 'Delete');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#delete-button', 'Delete');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -456,13 +456,13 @@ $('#autostart-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#autostart-button', 'Enable');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#autostart-button', 'Enable');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -483,13 +483,13 @@ $('#no-autostart-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#no-autostart-button', 'Disable');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#no-autostart-button', 'Disable');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -510,13 +510,13 @@ $('#incpriority-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#incpriority-button', '+10 priority');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#incpriority-button', '+10 priority');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -537,13 +537,13 @@ $('#decpriority-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#decpriority-button', '-10 priority');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#decpriority-button', '-10 priority');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -564,13 +564,13 @@ $('#powersavedisable-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#powersavedisable-button', 'Disable');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#powersavedisable-button', 'Disable');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -591,13 +591,13 @@ $('#powersaveenable-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#powersaveenable-button', 'Enable');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#powersaveenable-button', 'Enable');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -626,7 +626,7 @@ $('#scan-button').on('click', function() {
         error: function(rdata){
             hideLoading('#scan-button', 'Scan Networks');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -652,13 +652,13 @@ $('#connect-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#connect-button', 'Connect');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#connect-button', 'Connect');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });
@@ -684,13 +684,13 @@ $('#create-hotspot-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             hideLoading('#create-hotspot-button', 'Create Hotspot');
-            successMessage.html(rdata['success-message']).show();
+            successMessage.text(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
             hideLoading('#create-hotspot-button', 'Create Hotspot');
             var errors = JSON.parse(rdata.responseText);
-            failureMessage.html(errors['failure-message']).show();
+            failureMessage.text(errors['failure-message']).show();
         },
     });
 });

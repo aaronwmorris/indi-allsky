@@ -241,7 +241,7 @@ $('#poweroff-button').on('click', function() {
             $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
             $("#poweroff-button").html('<i class="tw:icon-[lucide--power] tw:w-4 tw:h-4 tw:block"></i> Power Off');
 
-            $('#success-message').html(rdata['success-message']).show();
+            $('#success-message').text(rdata['success-message']).show();
             setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
 
         },
@@ -250,7 +250,7 @@ $('#poweroff-button').on('click', function() {
             $("#poweroff-button").html('<i class="tw:icon-[lucide--power] tw:w-4 tw:h-4 tw:block"></i> Power Off');
 
             var errors = JSON.parse(rdata.responseText);
-            $('#failure-message').html(errors['failure-message']).show();
+            $('#failure-message').text(errors['failure-message']).show();
         },
     });
 });
@@ -293,7 +293,7 @@ $('#unmount-button').on('click', function() {
             $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-warning tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
             $("#unmount-button").html('<i class="tw:icon-[lucide--folder-closed] tw:w-4 tw:h-4 tw:block"></i> Unmount');
 
-            $('#success-message').html(rdata['success-message']).show();
+            $('#success-message').text(rdata['success-message']).show();
             setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
 
         },
@@ -302,7 +302,7 @@ $('#unmount-button').on('click', function() {
             $("#unmount-button").html('<i class="tw:icon-[lucide--folder-closed] tw:w-4 tw:h-4 tw:block"></i> Unmount');
 
             var errors = JSON.parse(rdata.responseText);
-            $('#failure-message').html(errors['failure-message']).show();
+            $('#failure-message').text(errors['failure-message']).show();
         },
     });
 });
@@ -345,7 +345,7 @@ $('#mount-button').on('click', function() {
             $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-success tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
             $("#mount-button").html('<i class="tw:icon-[lucide--folder-symlink] tw:w-4 tw:h-4 tw:block"></i> Mount');
 
-            $('#success-message').html(rdata['success-message']).show();
+            $('#success-message').text(rdata['success-message']).show();
             setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
 
         },
@@ -354,7 +354,7 @@ $('#mount-button').on('click', function() {
             $("#mount-button").html('<i class="tw:icon-[lucide--folder-symlink] tw:w-4 tw:h-4 tw:block"></i> Mount');
 
             var errors = JSON.parse(rdata.responseText);
-            $('#failure-message').html(errors['failure-message']).show();
+            $('#failure-message').text(errors['failure-message']).show();
         },
     });
 });
