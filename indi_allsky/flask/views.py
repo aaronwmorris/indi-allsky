@@ -10640,8 +10640,11 @@ class AjaxCustomCssView(BaseView):
     decorators = [login_required]
 
     def dispatch_request(self):
+        import re
         data = request.get_json(force=True, silent=True) or {}
         custom_css_new = str(data.get('custom_css', ''))
+        if re.search(r'@(plugin|import|source|config)\b', custom_css_new, re.IGNORECASE):
+            return jsonify({'success': False, 'error': 'Disallowed CSS directive'}), 400
         custom_css_path = os.path.join(app.static_folder, 'css', 'custom.css')
 
         try:
