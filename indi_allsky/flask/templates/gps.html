@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+{% endblock %}
+
+{% block content %}
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
+
+    <!-- Header & Controls -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <i class="tw:icon-[lucide--satellite] tw:w-5 tw:h-5 tw:text-primary"></i>
+                    <h2 class="tw:text-lg tw:font-bold">GPS Status</h2>
+                    <span id="gps_fix_badge" class="tw:badge tw:badge-neutral tw:font-bold">Loading...</span>
+                    <span id="gps_sat_badge" class="tw:badge tw:badge-outline tw:font-mono tw:text-xs">0 / 0 sats</span>
+                </div>
+
+                <div class="tw:flex tw:items-center tw:gap-4">
+                    <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
+                        <span class="tw:label-text tw:text-xs tw:font-semibold">Auto-refresh (3s)</span>
+                        <input type="checkbox" id="gps_auto_refresh" class="tw:toggle tw:toggle-primary tw:toggle-sm" checked>
+                    </label>
+                    <button type="button" id="gps_refresh_btn" class="tw:btn tw:btn-primary tw:btn-sm tw:gap-2">
+                        <i class="tw:icon-[lucide--refresh-cw] tw:w-4 tw:h-4"></i>
+                        Refresh
+                    </button>
+                    <span id="gps_loader" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
+                </div>
+            </div>
+
+            {% if not gps_enable %}
+            <div class="tw:alert tw:alert-info tw:text-sm">
+                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                <span>GPS integration (<code>GPS_ENABLE</code>) is currently disabled in Configuration, though <code>gpsd</code> is still queried directly below if running.</span>
+            </div>
+            {% endif %}
+
+            <div id="gps_error_alert" class="tw:alert tw:alert-warning tw:text-sm" style="display: none;">
+                <i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i>
+                <span id="gps_error_text"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fix & Accuracy Cards -->
+    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-6">
+                <h3 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:mb-2">Position &amp; Time</h3>
+                <div class="tw:overflow-x-auto">
+                    <table class="tw:table tw:table-sm">
+                        <tbody>
+                            <tr><th class="tw:w-40">Fix Mode</th><td id="gps_mode" class="tw:font-mono">-</td></tr>
+                            <tr><th>UTC Time</th><td id="gps_time" class="tw:font-mono">-</td></tr>
+                            <tr><th>Latitude</th><td id="gps_lat" class="tw:font-mono">-</td></tr>
+                            <tr><th>Longitude</th><td id="gps_lon" class="tw:font-mono">-</td></tr>
+                            <tr><th>Altitude (m)</th><td id="gps_alt" class="tw:font-mono">-</td></tr>
+                            <tr><th>Speed (m/s)</th><td id="gps_speed" class="tw:font-mono">-</td></tr>
+                            <tr><th>Track (&deg;)</th><td id="gps_track" class="tw:font-mono">-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-6">
+                <h3 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:mb-2">Precision &amp; Daemon</h3>
+                <div class="tw:overflow-x-auto">
+                    <table class="tw:table tw:table-sm">
+                        <tbody>
+                            <tr><th class="tw:w-40">HDOP / VDOP / PDOP</th><td id="gps_dops" class="tw:font-mono">-</td></tr>
+                            <tr><th>Est. Error (X / Y / V)</th><td id="gps_errors" class="tw:font-mono">-</td></tr>
+                            <tr><th>Time Error (ept)</th><td id="gps_ept" class="tw:font-mono">-</td></tr>
+                            <tr><th>gpsd Endpoint</th><td id="gps_endpoint" class="tw:font-mono">-</td></tr>
+                            <tr><th>gpsd Release</th><td id="gps_version" class="tw:font-mono">-</td></tr>
+                            <tr><th>Devices</th><td id="gps_devices" class="tw:font-mono">-</td></tr>
+                            <tr><th>Camera Config Lat/Lon</th><td class="tw:font-mono">{{ camera_lat }} / {{ camera_lon }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Satellites Table -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h3 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:mb-2">Satellites</h3>
+            <div class="tw:overflow-x-auto">
+                <table class="tw:table tw:table-sm tw:table-zebra">
+                    <thead>
+                        <tr>
+                            <th>PRN</th>
+                            <th>Elevation (&deg;)</th>
+                            <th>Azimuth (&deg;)</th>
+                            <th>SNR (dBHz)</th>
+                            <th>Used</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gps_satellites_body">
+                        <tr><td colspan="5" class="tw:text-center tw:text-base-content/50">Waiting for gpsd data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+function fmtNum(val, digits) {
+    if (val === null || val === undefined || Number.isNaN(Number(val))) {
+        return '-';
+    }
+    return Number(val).toFixed(digits);
+}
+
+function updateGpsView(data) {
+    const fix = data.fix || {};
+    const sky = data.sky || {};
+
+    const badge = $('#gps_fix_badge');
+    badge.removeClass('tw:badge-neutral tw:badge-error tw:badge-warning tw:badge-success');
+    if (!data.connected) {
+        badge.addClass('tw:badge-error').text('Disconnected');
+    } else if (fix.mode === 3) {
+        badge.addClass('tw:badge-success').text(fix.mode_label || '3D Fix');
+    } else if (fix.mode === 2) {
+        badge.addClass('tw:badge-warning').text(fix.mode_label || '2D Fix');
+    } else {
+        badge.addClass('tw:badge-error').text(fix.mode_label || 'No Fix');
+    }
+
+    const used = sky.satellites_used ?? 0;
+    const visible = sky.satellites_visible ?? 0;
+    $('#gps_sat_badge').text(used + ' / ' + visible + ' sats');
+
+    if (data.error) {
+        $('#gps_error_text').text('Unable to query gpsd (' + data.host + ':' + data.port + '): ' + data.error);
+        $('#gps_error_alert').show();
+    } else {
+        $('#gps_error_alert').hide();
+    }
+
+    $('#gps_mode').text((fix.mode_label || '-') + (fix.mode !== undefined ? ' (' + fix.mode + ')' : ''));
+    $('#gps_time').text(fix.time || '-');
+    $('#gps_lat').text(fmtNum(fix.lat, 6));
+    $('#gps_lon').text(fmtNum(fix.lon, 6));
+    $('#gps_alt').text(fmtNum(fix.alt, 2));
+    $('#gps_speed').text(fmtNum(fix.speed, 2));
+    $('#gps_track').text(fmtNum(fix.track, 1));
+
+    $('#gps_dops').text([fmtNum(sky.hdop, 2), fmtNum(sky.vdop, 2), fmtNum(sky.pdop, 2)].join(' / '));
+    $('#gps_errors').text([fmtNum(fix.epx, 2) + 'm', fmtNum(fix.epy, 2) + 'm', fmtNum(fix.epv, 2) + 'm'].join(' / '));
+    $('#gps_ept').text(fix.ept !== null && fix.ept !== undefined ? fmtNum(fix.ept, 3) + ' s' : '-');
+    $('#gps_endpoint').text((data.host || '-') + ':' + (data.port || '-'));
+    $('#gps_version').text(data.version || '-');
+
+    const devices = data.devices || [];
+    if (devices.length) {
+        $('#gps_devices').text(devices.map(d => (d.path || '?') + (d.driver ? ' (' + d.driver + ')' : '')).join(', '));
+    } else {
+        $('#gps_devices').text('-');
+    }
+
+    const tbody = $('#gps_satellites_body');
+    tbody.empty();
+    const sats = sky.satellites || [];
+    if (!sats.length) {
+        tbody.append('<tr><td colspan="5" class="tw:text-center tw:text-base-content/50">No satellites reported</td></tr>');
+        return;
+    }
+
+    sats.forEach(sat => {
+        const row = $('<tr />');
+        row.append($('<td class="tw:font-mono" />').text(sat.PRN ?? '-'));
+        row.append($('<td class="tw:font-mono" />').text(sat.el ?? '-'));
+        row.append($('<td class="tw:font-mono" />').text(sat.az ?? '-'));
+        row.append($('<td class="tw:font-mono" />').text(sat.ss ?? '-'));
+        const usedBadge = sat.used
+            ? '<span class="tw:badge tw:badge-success tw:badge-xs">Yes</span>'
+            : '<span class="tw:badge tw:badge-ghost tw:badge-xs">No</span>';
+        row.append($('<td />').html(usedBadge));
+        tbody.append(row);
+    });
+}
+
+function fetchGpsInfo() {
+    $('#gps_loader').show();
+    $.ajax({
+        type: 'GET',
+        url: "{{ url_for('indi_allsky.js_gps_view') }}",
+        dataType: 'json',
+        success: function(data) {
+            updateGpsView(data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            $('#gps_error_text').text('Failed to fetch GPS status: ' + (errorThrown || textStatus));
+            $('#gps_error_alert').show();
+        },
+        complete: function() {
+            $('#gps_loader').hide();
+        }
+    });
+}
+
+$(document).ready(function() {
+    $('#gps_refresh_btn').on('click', fetchGpsInfo);
+    fetchGpsInfo();
+    setInterval(function() {
+        if ($('#gps_auto_refresh').prop('checked')) {
+            fetchGpsInfo();
+        }
+    }, 3000);
+});
+</script>
+{% endblock %}

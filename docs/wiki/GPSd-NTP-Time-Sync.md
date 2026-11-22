@@ -23,7 +23,7 @@ sudo indi-allsky-ctl setup-gps
 The script automatically detects the GPS serial port, installs `gpsd` and diagnostic utilities (`gpsd-clients`), configures `/etc/default/gpsd`, and enables the systemd service.
 
 ### Verify GPS Reception
-Test satellite fix and NMEA sentences using `cgps` or `gpsmon`:
+You can inspect live `gpsd` fix status (No Fix / 2D / 3D), coordinates, DOP metrics, and per-satellite SNR directly in the Web UI under **Tools → GPS Info**, or via CLI using `cgps` or `gpsmon`:
 ```bash
 cgps -s
 ```
