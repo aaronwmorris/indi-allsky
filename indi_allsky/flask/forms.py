@@ -7588,6 +7588,23 @@ class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
+def normalize_video_tags(raw_tags):
+    """Normalize comma-separated or list tags into unique lowercase tokens without leading '#'."""
+    if isinstance(raw_tags, (list, tuple)):
+        candidates = [str(t) for t in raw_tags]
+    else:
+        candidates = str(raw_tags or '').split(',')
+
+    normalized = []
+    seen = set()
+    for item in candidates:
+        tag = item.strip().lstrip('#').strip().lower()
+        if tag and tag not in seen:
+            seen.add(tag)
+            normalized.append(tag)
+    return normalized
+
+
 class IndiAllskyVideoViewer(FlaskForm):
     TIMEOFDAY_SELECT_choices = (
         ('all', 'All'),
@@ -7599,6 +7616,7 @@ class IndiAllskyVideoViewer(FlaskForm):
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     TIMEOFDAY_SELECT     = SelectField('Time of Day', choices=TIMEOFDAY_SELECT_choices, validators=[])
+    TAG_FILTER           = StringField('Tag', validators=[])
 
 
     def __init__(self, *args, **kwargs):
@@ -7696,7 +7714,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         return month_choices
 
 
-    def getVideos(self, year, month, timeofday):
+    def getVideos(self, year, month, timeofday, tag_filter=''):
         year_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_year,
             extract('year', IndiAllSkyDbVideoTable.dayDate),
@@ -7746,6 +7764,8 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         app.logger.info('Found %d timelapses', videos_query.count())
 
+        filter_tags = normalize_video_tags(tag_filter)
+
         videos_data = []
         for v in videos_query:
             try:
@@ -7759,6 +7779,17 @@ class IndiAllskyVideoViewer(FlaskForm):
                 data = v.data
             else:
                 data = {}
+
+            entry_tags = normalize_video_tags(data.get('tags', []))
+            entry_note = str(data.get('note') or '')
+
+            if filter_tags:
+                note_lower = entry_note.lower()
+                if not any(
+                    any(ft in t for t in entry_tags) or ft in note_lower
+                    for ft in filter_tags
+                ):
+                    continue
 
             entry = {
                 'id'                : v.id,
@@ -7775,6 +7806,8 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
                 'youtube_uploaded'  : bool(data.get('youtube_id', False)),
+                'note'              : entry_note,
+                'tags'              : entry_tags,
             }
             videos_data.append(entry)
 

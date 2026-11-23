@@ -90,6 +90,14 @@ var youtube__enable = {{ youtube__enable }};
                 </div>
             </div>
 
+            <div class="tw:flex tw:items-center tw:gap-2">
+                {{ form_video_viewer.TAG_FILTER.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                <div class="tw:flex tw:flex-col">
+                    {{ form_video_viewer.TAG_FILTER(class='tw:input tw:input-bordered tw:input-sm tw:bg-base-100 tw:text-base-content tw:w-44', placeholder='e.g. #aurora') }}
+                    <div id="TAG_FILTER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+            </div>
+
             {% if current_user.is_authenticated or login_disabled %}
             <div class="tw:flex tw:items-center">
                 <a href="{{ url_for('indi_allsky.generate_view') }}" class="tw:btn tw:btn-success tw:btn-sm tw:text-xs tw:font-bold tw:gap-1 tw:no-underline">
@@ -125,6 +133,7 @@ const field_names = [
     'YEAR_SELECT',
     'MONTH_SELECT',
     'TIMEOFDAY_SELECT',
+    'TAG_FILTER',
 ];
 
 const checkbox_field_names = [
@@ -206,6 +215,28 @@ function populate_videos(video_list) {
             $('<div />', { 'text': 'AURORA: ' + item['max_ovation_max'] + '%' }).appendTo(stats_grid);
         }
         $('<div />', { 'text': 'SMOKE: ' + item['max_smoke_rating'] }).appendTo(stats_grid);
+
+        if (item['tags'] && item['tags'].length > 0) {
+            var tags_wrap = $('<div />', {
+                'class': 'tw:flex tw:flex-wrap tw:gap-1 tw:mt-1 max-md:tw:justify-start tw:justify-end'
+            }).appendTo(start_div);
+            item['tags'].forEach(tag => {
+                $('<button />', {
+                    'type': 'button',
+                    'text': '#' + tag,
+                    'title': 'Filter by #' + tag,
+                    'class': 'tw:badge tw:badge-xs tw:badge-info tw:cursor-pointer'
+                }).on('click', function() {
+                    fields['TAG_FILTER'].input.val(tag).trigger('change');
+                }).appendTo(tags_wrap);
+            });
+        }
+        if (item['note']) {
+            $('<p />', {
+                'text': item['note'],
+                'class': 'tw:text-[0.6875rem] tw:text-base-content/75 tw:mt-1 tw:line-clamp-3 max-md:tw:text-left tw:text-right'
+            }).appendTo(start_div);
+        }
         
         // 2. Timeline Middle (Moon / Sun Icon)
         var middle_div = $('<div />', {
@@ -634,7 +665,7 @@ $("#MONTH_SELECT").on("change", function() {
 });
 
 
-$("#TIMEOFDAY_SELECT").on("change", function() {
+$("#TIMEOFDAY_SELECT, #TAG_FILTER").on("change", function() {
     // hide all errors
     successMessage.hide();
     Object.keys(fields).forEach((key) => {
@@ -648,6 +679,7 @@ $("#TIMEOFDAY_SELECT").on("change", function() {
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
         'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+        'TAG_FILTER'       : fields["TAG_FILTER"].input.val(),
     };
 
     month_change(json_data);
