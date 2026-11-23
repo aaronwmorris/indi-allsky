@@ -11455,6 +11455,158 @@ class KeogramImageView(TimelapseImageView):
     page_title = 'Keogram'
     file_view = 'indi_allsky.keogram_image_view'
 
+    def get_context(self):
+        from .forms import night_report_urls
+        context = super(KeogramImageView, self).get_context()
+        entry = db.session.get(self.model, context['image_id'])
+        local = entry is not None and (not entry.camera.web_nonlocal_images or (
+            entry.camera.web_local_images_admin and self.verify_admin_network()
+        ))
+        context['night_report'] = night_report_urls(entry, local=local)
+        return context
+
+
+class NightReportView(BaseView):
+    """Serve completed reports and queue selection changes outside HTTP."""
+    methods = ['GET', 'POST']
+    decorators = [login_optional_media]
+
+    def report_entry(self):
+        try:
+            keogram_id = int(request.args.get('keogram_id', ''))
+        except (TypeError, ValueError):
+            abort(400)
+        if not 0 < keogram_id < 2 ** 63:
+            abort(400)
+        entry = db.session.get(IndiAllSkyDbKeogramTable, keogram_id)
+        if (entry is None or not entry.night or not entry.success
+                or not entry.camera.local or entry.camera.hidden):
+            abort(404)
+        if entry.camera.web_nonlocal_images and not (
+                entry.camera.web_local_images_admin and self.verify_admin_network()):
+            abort(404)
+        try:
+            root = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).resolve(strict=True)
+            Path(entry.getFilesystemPath()).resolve().relative_to(root)
+        except (OSError, ValueError):
+            abort(404)
+        return entry
+
+    def can_edit(self):
+        return bool((self.login_disabled or (current_user.is_authenticated and current_user.is_admin))
+                    and self.verify_admin_network())
+
+    def report_catalog(self, entry):
+        from ..night_report_service import read_report_metadata
+        from ..night_report_data import metric_catalog
+        metadata = read_report_metadata(entry)
+        available = metadata.get('metrics')
+        if not isinstance(available, list):
+            available = metric_catalog(self.indi_allsky_config)
+        return available, metadata
+
+    @staticmethod
+    def pending_tasks(entry):
+        tasks = IndiAllSkyDbTaskQueueTable.query.filter(
+            IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO,
+            IndiAllSkyDbTaskQueueTable.state.in_((TaskQueueState.MANUAL, TaskQueueState.QUEUED, TaskQueueState.RUNNING)),
+        )
+        return [task for task in tasks if (task.data or {}).get('action') == 'generateNightReport'
+                and (task.data or {}).get('kwargs', {}).get('camera_id') == entry.camera_id
+                and (task.data or {}).get('kwargs', {}).get('keogram_id') == entry.id]
+
+    def update_report(self, entry):
+        from ..night_report_service import save_report_options
+        if not self.can_edit():
+            abort(403)
+        available, _ = self.report_catalog(entry)
+        allowed = {metric['id'] for metric in available}
+        selected = list(dict.fromkeys(request.form.getlist('metrics')))
+        if not set(selected).issubset(allowed):
+            abort(400, description='Select only available measurements.')
+        # Serialize requests for this night so a double-click cannot enqueue
+        # two waiting renders. The worker reads the saved selection on start.
+        IndiAllSkyDbKeogramTable.query.filter_by(id=entry.id).update(
+            {'filename': IndiAllSkyDbKeogramTable.filename}, synchronize_session=False,
+        )
+        save_report_options(entry.camera_id, selected, commit=False)
+        pending = self.pending_tasks(entry)
+        waiting = any(task.state in (TaskQueueState.MANUAL, TaskQueueState.QUEUED) for task in pending)
+        if not waiting:
+            db.session.add(IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO, state=TaskQueueState.MANUAL, priority=100,
+                data={'action': 'generateNightReport', 'kwargs': {
+                    'camera_id': entry.camera_id, 'keogram_id': entry.id,
+                }},
+            ))
+        db.session.commit()
+        return redirect(url_for('indi_allsky.night_report_view', keogram_id=entry.id), code=303)
+
+    def dispatch_request(self):
+        from ..night_report_service import report_paths, report_ready
+        fmt = request.args.get('format')
+        if fmt is None and request.method != 'POST':
+            return NightReportPageView(template_name='night_report.html').dispatch_request()
+        entry = self.report_entry()
+        if request.method == 'POST':
+            return self.update_report(entry)
+        if fmt not in ('png', 'csv'):
+            abort(400)
+        try:
+            root = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).resolve(strict=True)
+            # A sidecar symlink must not expose files outside the archive.
+            path = Path(report_paths(entry)[fmt]).resolve(strict=True)
+            path.relative_to(root)
+            if not path.is_file() or not report_ready(entry):
+                abort(404)
+        except (OSError, ValueError):
+            abort(404)
+        filename = 'allsky-night-report_ccd{}_{}.{}'.format(
+            entry.camera_id, entry.dayDate.strftime('%Y%m%d'), fmt,
+        )
+        response = send_file(
+            path, mimetype='image/png' if fmt == 'png' else 'text/csv',
+            as_attachment=fmt == 'csv' or request.args.get('download') == '1',
+            download_name=filename, conditional=True, max_age=0,
+        )
+        response.cache_control.private = True
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+
+
+class NightReportPageView(TemplateView):
+    page_title = 'Night Report'
+    report_entry = NightReportView.report_entry
+    report_catalog = NightReportView.report_catalog
+    can_edit = NightReportView.can_edit
+    pending_tasks = staticmethod(NightReportView.pending_tasks)
+
+    def get_context(self):
+        from ..night_report_service import report_options, report_ready
+        from .forms import night_report_urls
+        entry = self.report_entry()
+        context = super(NightReportPageView, self).get_context()
+        available, metadata = self.report_catalog(entry)
+        selected = report_options(entry.camera_id)
+        if selected is None:
+            selected = metadata.get('selected_metrics')
+        if selected is None:
+            selected = [m['id'] for m in available
+                if m['id'] in ('sky_temperature', 'lux', 'air_temperature', 'dew_point')]
+        pending = self.pending_tasks(entry)
+        state = (entry.data or {}).get('night_report') or {}
+        try:
+            automatic = state.get('status') == 'generating' and float(state.get('next_retry', 0)) > time.time()
+        except (TypeError, ValueError):
+            automatic = False
+        context.update(report_entry=entry, report_metrics=available, report_selected=selected,
+                       report_links=night_report_urls(entry, local=True), report_ready=report_ready(entry),
+                       report_can_edit=self.can_edit(), report_pending=bool(pending) or automatic,
+                       report_running=automatic or any(t.state == TaskQueueState.RUNNING for t in pending),
+                       report_waiting=state.get('status') == 'waiting',
+                       report_displayed=[m['label'] for m in available if m['id'] in metadata.get('selected_metrics', [])])
+        return context
+
 
 class StartrailImageView(TimelapseImageView):
     model = IndiAllSkyDbStarTrailsTable
@@ -14821,6 +14973,7 @@ bp_allsky.add_url_rule('/view_image', view_func=TimelapseImageView.as_view('time
 bp_allsky.add_url_rule('/view_panorama', view_func=PanoramaImageView.as_view('panorama_image_view', template_name='view_image.html'))
 bp_allsky.add_url_rule('/view_startrail', view_func=StartrailImageView.as_view('startrail_image_view', template_name='view_image.html'))
 bp_allsky.add_url_rule('/view_keogram', view_func=KeogramImageView.as_view('keogram_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/night_report', view_func=NightReportView.as_view('night_report_view'))
 bp_allsky.add_url_rule('/view_raw', view_func=RawImageView.as_view('raw_image_view', template_name='view_image.html'))
 
 bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))

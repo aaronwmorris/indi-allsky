@@ -608,6 +608,19 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
 
+    def deleteAsset(self):
+        # Serialize removal with the report publisher before unlinking sidecars.
+        if self.id is not None:
+            data = dict(self.data or {})
+            data['night_report'] = dict(data.get('night_report') or {}, deleted=True)
+            type(self).query.filter_by(id=self.id, filename=self.filename).update(
+                {'data': data}, synchronize_session=False)
+            self.data = data
+        from ..night_report_service import remove_report
+        remove_report(self)
+        super().deleteAsset()
+
+
     def __repr__(self):
         return '<Keogram {0:s}>'.format(self.filename)
 
