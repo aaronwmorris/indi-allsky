@@ -2845,6 +2845,7 @@ class ConfigView(FormView):
             'CAPTURE_HOOK_TIMEOUT'           : self.indi_allsky_config.get('CAPTURE_HOOK_TIMEOUT', 5),
             'BACKUP_DB_PERIOD_DAYS'          : self.indi_allsky_config.get('BACKUP_DB_PERIOD_DAYS', 7),
             'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 10),
+            'IMAGE_NON_DETECTION_EXPIRE_DAYS': self.indi_allsky_config.get('IMAGE_NON_DETECTION_EXPIRE_DAYS', 0),
             'IMAGE_RAW_EXPIRE_DAYS'          : self.indi_allsky_config.get('IMAGE_RAW_EXPIRE_DAYS', 10),
             'IMAGE_FITS_EXPIRE_DAYS'         : self.indi_allsky_config.get('IMAGE_FITS_EXPIRE_DAYS', 10),
             'TIMELAPSE_EXPIRE_DAYS'          : self.indi_allsky_config.get('TIMELAPSE_EXPIRE_DAYS', 365),
@@ -3924,6 +3925,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CAPTURE_HOOK_TIMEOUT']                 = int(request.json['CAPTURE_HOOK_TIMEOUT'])
         self.indi_allsky_config['BACKUP_DB_PERIOD_DAYS']                = int(request.json['BACKUP_DB_PERIOD_DAYS'])
         self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
+        self.indi_allsky_config['IMAGE_NON_DETECTION_EXPIRE_DAYS']      = int(request.json.get('IMAGE_NON_DETECTION_EXPIRE_DAYS', 0))
         self.indi_allsky_config['IMAGE_RAW_EXPIRE_DAYS']                = int(request.json['IMAGE_RAW_EXPIRE_DAYS'])
         self.indi_allsky_config['IMAGE_FITS_EXPIRE_DAYS']               = int(request.json['IMAGE_FITS_EXPIRE_DAYS'])
         self.indi_allsky_config['TIMELAPSE_EXPIRE_DAYS']                = int(request.json['TIMELAPSE_EXPIRE_DAYS'])

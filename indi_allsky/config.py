@@ -403,6 +403,7 @@ class IndiAllSkyConfigBase(object):
         },
         "BACKUP_DB_PERIOD_DAYS" : 7,
         "IMAGE_EXPIRE_DAYS"     : 10,
+        "IMAGE_NON_DETECTION_EXPIRE_DAYS" : 0,
         "IMAGE_RAW_EXPIRE_DAYS" : 10,
         "IMAGE_FITS_EXPIRE_DAYS": 10,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
