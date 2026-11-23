@@ -10,6 +10,7 @@ import queue
 from multiprocessing import Process
 
 from . import constants
+from .worker_init import configure_worker_logging
 
 from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
@@ -123,6 +124,8 @@ class SensorWorker(Process):
 
 
     def run(self):
+        configure_worker_logging()
+
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)

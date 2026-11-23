@@ -32,13 +32,7 @@ from fractions import Fraction
 from . import constants
 from . import asi676mc
 
-from .processing import ImageProcessor
-from .panorama import panoramaSourceCircleClipped
-from .miscUpload import miscUpload
-from .adsb import AdsbAircraftHttpWorker
-
-from . import exposure as exposure_module
-
+from .worker_init import configure_worker_logging
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -49,6 +43,13 @@ from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbFitsImageTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
+
+from .processing import ImageProcessor
+from .panorama import panoramaSourceCircleClipped
+from .miscUpload import miscUpload
+from .adsb import AdsbAircraftHttpWorker
+
+from . import exposure as exposure_module
 
 from sqlalchemy import func
 #from sqlalchemy.orm.exc import NoResultFound
@@ -125,44 +126,10 @@ class ImageWorker(Process):
         # frame is classified; the default bad/following path uses no cache.
         self.asi676mc_diagnostic_previous = {}
 
-        self.image_processor = ImageProcessor(
-            self.config,
-            self.position_av,
-            self.exposure_av,
-            self.gain_av,
-            self.binning_av,
-            self.sensors_temp_av,
-            self.sensors_user_av,
-            self.night_av,
-            self.astro_av,
-        )
-
-
-        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
-        logger.warning('Exposure Class: %s', exposure_class_str)
-
-        try:
-            exposure_class = getattr(exposure_module, exposure_class_str)
-        except AttributeError:
-            logger.error('Unknown exposure class: %s', exposure_class_str)
-            exposure_class = getattr(exposure_module, 'exposure_basic')
-
-
-        self.exposure_o = exposure_class(
-            self.config,
-            self.exposure_av,
-            self.gain_av,
-            self.binning_av,
-            self.night_av,
-        )
-
-
-        self._miscDb = miscDb(self.config)
-        self._miscUpload = miscUpload(
-            self.config,
-            self.upload_q,
-            self.night_av,
-        )
+        self.image_processor = None
+        self.exposure_o = None
+        self._miscDb = None
+        self._miscUpload = None
 
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
@@ -224,11 +191,49 @@ class ImageWorker(Process):
 
 
     def run(self):
+        configure_worker_logging()
+
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
+
+        self.image_processor = ImageProcessor(
+            self.config,
+            self.position_av,
+            self.exposure_av,
+            self.gain_av,
+            self.binning_av,
+            self.sensors_temp_av,
+            self.sensors_user_av,
+            self.night_av,
+            self.astro_av,
+        )
+
+        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
+        logger.warning('Exposure Class: %s', exposure_class_str)
+
+        try:
+            exposure_class = getattr(exposure_module, exposure_class_str)
+        except AttributeError:
+            logger.error('Unknown exposure class: %s', exposure_class_str)
+            exposure_class = getattr(exposure_module, 'exposure_basic')
+
+        self.exposure_o = exposure_class(
+            self.config,
+            self.exposure_av,
+            self.gain_av,
+            self.binning_av,
+            self.night_av,
+        )
+
+        self._miscDb = miscDb(self.config)
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            self.night_av,
+        )
 
 
         ### use this as a method to log uncaught exceptions

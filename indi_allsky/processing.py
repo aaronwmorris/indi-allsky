@@ -53,12 +53,6 @@ from .exceptions import BadImage
 from .exceptions import KeogramMismatchException
 
 
-try:
-    import rawpy  # not available in all cases
-except ImportError:
-    rawpy = None
-
-
 logger = logging.getLogger('indi_allsky')
 
 
@@ -698,8 +692,10 @@ class ImageProcessor(object):
                 hdulist[0].header['ORIGIN'] = camera.owner
 
         elif image_type == 'DNG':
-            if not rawpy:
-                raise Exception('*** rawpy module not available ***')
+            try:
+                import rawpy  # lazy import to avoid OpenMP initialization before fork
+            except ImportError as e:
+                raise Exception('*** rawpy module not available ***') from e
 
             # DNG raw
             try:

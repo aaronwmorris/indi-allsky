@@ -39,6 +39,7 @@ from .exceptions import CameraException
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
 
+from .worker_init import configure_worker_logging
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -242,9 +243,9 @@ class CaptureWorker(Process):
         self.night_av = night_av
         self.astro_av = astro_av
 
-        self._miscDb = miscDb(self.config)
-        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
-        self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
+        self._miscDb = None
+        self._expUtils = None
+        self._dateCalcs = None
 
         self.next_forced_transition_time = None
 
@@ -324,11 +325,17 @@ class CaptureWorker(Process):
 
 
     def run(self):
+        configure_worker_logging()
+
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
+
+        self._miscDb = miscDb(self.config)
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
+        self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
 
         ### use this as a method to log uncaught exceptions
