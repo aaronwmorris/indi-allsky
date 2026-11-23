@@ -55,9 +55,74 @@ curl -s -X POST \
   -d '{"username": "admin", "password": "your_secure_password"}' \
   https://allsky.local/indi-allsky/action/pause
 
-# Resume capture
+# resume capture
 curl -s -X POST \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "your_secure_password"}' \
   https://allsky.local/indi-allsky/action/unpause
+```
+
+---
+
+## WebSocket Control (`/ws/control`) — Custom Timelapses
+
+The authenticated `/ws/control` WebSocket endpoint (authenticated via `api_key` / `token` query parameter, `X-API-Key` header, `Authorization: Bearer <key>`, or an active admin session) supports queuing custom time-range timelapses (stored in `IndiAllSkyDbMiniVideoTable` and visible in **Mini Timelapses**) as well as polling task status.
+
+### `generate_custom_timelapse`
+
+Provide either explicit `start_time` / `end_time` (ISO-8601 strings or Unix timestamps) or a rolling `hours` window (`0 < hours <= 168`):
+
+```json
+{
+  "action": "generate_custom_timelapse",
+  "camera_id": 1,
+  "hours": 24,
+  "framerate": 25,
+  "bitrate": "5000k",
+  "source_type": "standard",
+  "note": "Rolling 24h timelapse"
+}
+```
+
+Response:
+
+```json
+{
+  "event": "command_result",
+  "timestamp": 1763868000.0,
+  "data": {
+    "action": "generate_custom_timelapse",
+    "status": "queued",
+    "task_id": 42,
+    "camera_id": 1,
+    "start_date": "2026-11-22T12:00:00",
+    "end_date": "2026-11-23T12:00:00"
+  }
+}
+```
+
+### `get_task_status`
+
+Poll a queued task by `task_id`:
+
+```json
+{
+  "action": "get_task_status",
+  "task_id": 42
+}
+```
+
+Response:
+
+```json
+{
+  "event": "task_status",
+  "timestamp": 1763868120.0,
+  "data": {
+    "task_id": 42,
+    "queue": "VIDEO",
+    "state": "SUCCESS",
+    "result": "Generated timelapse (mini_video_id=15): ..."
+  }
+}
 ```

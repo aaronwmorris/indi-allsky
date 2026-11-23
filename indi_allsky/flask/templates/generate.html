@@ -129,6 +129,98 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="tw:w-full my-1">
+        <hr class="tw:border-base-300/40">
+    </div>
+
+    <!-- Custom Time-Range Timelapse Generator -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6 tw:gap-5">
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3 tw:pb-3 tw:border-b tw:border-base-content/10">
+                <div class="tw:flex tw:items-center tw:gap-2.5">
+                    <i class="tw:icon-[lucide--film] tw:w-5 tw:h-5 tw:text-primary"></i>
+                    <div>
+                        <h2 class="tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content">Custom Time-Range Timelapse</h2>
+                        <p class="tw:text-xs tw:text-base-content/60">Generate a custom timelapse across any date/time window (stored in Mini Timelapses).</p>
+                    </div>
+                </div>
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
+                    <button type="button" class="tw:btn tw:btn-xs tw:btn-outline custom-preset-btn" data-preset="6h">Last 6h</button>
+                    <button type="button" class="tw:btn tw:btn-xs tw:btn-outline custom-preset-btn" data-preset="12h">Last 12h</button>
+                    <button type="button" class="tw:btn tw:btn-xs tw:btn-outline custom-preset-btn" data-preset="24h">Last 24h</button>
+                    <button type="button" class="tw:btn tw:btn-xs tw:btn-outline custom-preset-btn" data-preset="noon">Noon-to-Noon</button>
+                </div>
+            </div>
+
+            <form id="form_custom_timelapse" onsubmit="return false;" class="tw:flex tw:flex-col tw:gap-5">
+                {{ form_custom_timelapse.csrf_token(id='custom_csrf_token') }}
+                {{ form_custom_timelapse.CAMERA_ID(id='CUSTOM_CAMERA_ID') }}
+                {% if not fish2pano_enable %}
+                <input type="hidden" id="CUSTOM_SOURCE_TYPE" name="SOURCE_TYPE" value="standard">
+                {% endif %}
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4">
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="CUSTOM_START_TIME">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_custom_timelapse.START_TIME.label.text }}</span>
+                        </label>
+                        {{ form_custom_timelapse.START_TIME(id='CUSTOM_START_TIME', type='datetime-local', class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary', required=True) }}
+                    </div>
+
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="CUSTOM_END_TIME">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_custom_timelapse.END_TIME.label.text }}</span>
+                        </label>
+                        {{ form_custom_timelapse.END_TIME(id='CUSTOM_END_TIME', type='datetime-local', class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary', required=True) }}
+                    </div>
+
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="CUSTOM_FRAMERATE_SELECT">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_custom_timelapse.FRAMERATE_SELECT.label.text }}</span>
+                        </label>
+                        {{ form_custom_timelapse.FRAMERATE_SELECT(id='CUSTOM_FRAMERATE_SELECT', class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                    </div>
+
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="CUSTOM_BITRATE_SELECT">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_custom_timelapse.BITRATE_SELECT.label.text }}</span>
+                        </label>
+                        {{ form_custom_timelapse.BITRATE_SELECT(id='CUSTOM_BITRATE_SELECT', class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:items-end">
+                    {% if fish2pano_enable %}
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="CUSTOM_SOURCE_TYPE">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_custom_timelapse.SOURCE_TYPE.label.text }}</span>
+                        </label>
+                        {{ form_custom_timelapse.SOURCE_TYPE(id='CUSTOM_SOURCE_TYPE', class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                    </div>
+                    {% endif %}
+
+                    <div class="tw:form-control tw:w-full {% if not fish2pano_enable %}md:tw:col-span-2{% endif %}">
+                        <label class="tw:label tw:pb-1" for="CUSTOM_NOTE">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_custom_timelapse.NOTE.label.text }} <span class="tw:text-error">*</span></span>
+                        </label>
+                        {{ form_custom_timelapse.NOTE(id='CUSTOM_NOTE', class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary', placeholder='e.g. Last 24 hours', maxlength=255, required=True) }}
+                    </div>
+
+                    <div class="tw:flex tw:justify-end">
+                        <button id="custom-generate-button" type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6 tw:w-full md:tw:w-auto tw:font-bold tw:uppercase tw:tracking-wider tw:rounded-[var(--radius-box)]">
+                            <i class="tw:icon-[lucide--clapperboard] tw:w-4 tw:h-4 tw:block"></i> Generate Custom Timelapse
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tw:w-full">
+                    <div id="custom_timelapse_success-message" class="tw:alert tw:alert-success tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+                    <div id="custom_timelapse_failure-message" class="tw:alert tw:alert-error tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="tw:w-full tw:my-1">
         <hr class="tw:border-base-300/40">
     </div>
@@ -368,6 +460,88 @@ $( document ).ready(function() {
 
     // Run initial button check
     updateGenerateButtonState();
+
+    function formatDatetimeLocal(dt) {
+        const pad = n => String(n).padStart(2, '0');
+        return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+    }
+
+    $('.custom-preset-btn').on('click', function() {
+        const preset = $(this).data('preset');
+        const now = new Date();
+        let end = new Date(now);
+        let start = new Date(now);
+
+        if (preset === '6h') {
+            start.setHours(end.getHours() - 6);
+        } else if (preset === '12h') {
+            start.setHours(end.getHours() - 12);
+        } else if (preset === '24h') {
+            start.setHours(end.getHours() - 24);
+        } else if (preset === 'noon') {
+            end.setHours(12, 0, 0, 0);
+            if (now < end) {
+                end.setDate(end.getDate() - 1);
+            }
+            start = new Date(end);
+            start.setDate(start.getDate() - 1);
+        }
+
+        $('#CUSTOM_START_TIME').val(formatDatetimeLocal(start));
+        $('#CUSTOM_END_TIME').val(formatDatetimeLocal(end));
+        if (!$('#CUSTOM_NOTE').val().trim()) {
+            $('#CUSTOM_NOTE').val('Custom ' + $(this).text().trim());
+        }
+    });
+
+    $('#form_custom_timelapse').on('submit', function() {
+        const successMsg = $('#custom_timelapse_success-message');
+        const failureMsg = $('#custom_timelapse_failure-message');
+        const btn = $('#custom-generate-button');
+
+        successMsg.hide();
+        failureMsg.hide();
+        btn.prop('disabled', true);
+        btn.html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Queuing...');
+
+        const payload = {
+            'csrf_token': $('#custom_csrf_token').val(),
+            'CAMERA_ID': $('#CUSTOM_CAMERA_ID').val(),
+            'SOURCE_TYPE': $('#CUSTOM_SOURCE_TYPE').val() || 'standard',
+            'START_TIME': $('#CUSTOM_START_TIME').val(),
+            'END_TIME': $('#CUSTOM_END_TIME').val(),
+            'FRAMERATE_SELECT': $('#CUSTOM_FRAMERATE_SELECT').val(),
+            'BITRATE_SELECT': $('#CUSTOM_BITRATE_SELECT').val(),
+            'NOTE': $('#CUSTOM_NOTE').val(),
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "{{ url_for('indi_allsky.ajax_custom_timelapse_view') }}",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function(rdata) {
+                btn.prop('disabled', false);
+                btn.html('<i class="tw:icon-[lucide--clapperboard] tw:w-4 tw:h-4 tw:block"></i> Generate Custom Timelapse');
+                successMsg.text(rdata['success-message'] || 'Custom timelapse queued.');
+                successMsg.show();
+                setTimeout(function() { successMsg.fadeOut(); }, 15000);
+            },
+            error: function(rdata) {
+                btn.prop('disabled', false);
+                btn.html('<i class="tw:icon-[lucide--clapperboard] tw:w-4 tw:h-4 tw:block"></i> Generate Custom Timelapse');
+                let msg = 'Failed to queue custom timelapse.';
+                try {
+                    const err = JSON.parse(rdata.responseText);
+                    if (err['failure-message']) {
+                        msg = err['failure-message'];
+                    }
+                } catch (e) {}
+                failureMsg.text(msg);
+                failureMsg.show();
+            },
+        });
+    });
 });
 
 </script>

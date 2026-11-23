@@ -9290,6 +9290,21 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
     NOTE                             = StringField('Description', validators=[DataRequired()])
 
 
+class IndiAllskyCustomTimelapseForm(FlaskForm):
+    SOURCE_TYPE_choices = (
+        ('standard', 'All-sky images'),
+        ('panorama', 'Panorama images'),
+    )
+
+    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
+    SOURCE_TYPE                      = SelectField('Images to use', choices=SOURCE_TYPE_choices, default='standard', validators=[DataRequired()])
+    START_TIME                       = StringField('Start Date/Time', validators=[DataRequired()])
+    END_TIME                         = StringField('End Date/Time', validators=[DataRequired()])
+    FRAMERATE_SELECT                 = SelectField('Speed', choices=IndiAllskyMiniTimelapseForm.FRAMERATE_SELECT_choices, default='10', validators=[DataRequired()])
+    BITRATE_SELECT                   = SelectField('Bitrate/File size', choices=IndiAllskyMiniTimelapseForm.BITRATE_SELECT_choices, default='5000k', validators=[DataRequired()])
+    NOTE                             = StringField('Description', validators=[DataRequired()])
+
+
 class IndiAllskyLongTermKeogramForm(FlaskForm):
     END_SELECT_choices = (
         ('today', 'Today'),
