@@ -376,6 +376,7 @@ $(document).ready(function() {
 
 $('#form_userinfo').on('submit', function() {
     successMessage.hide();
+    failureMessage.hide();
     Object.keys(fields).forEach((key) => {
         fields[key].error.hide();
         if(fields[key].input) {
@@ -410,9 +411,16 @@ $('#form_userinfo').on('submit', function() {
             $('#NEW_PASSWORD2').val('');
         },
         error: function(data){
-            var errors = JSON.parse(data.responseText);
+            var errors = JSON.parse(data.responseText || '{}');
             Object.keys(errors).forEach((key) => {
-                if (key === 'form_global' || !fields[key]) return;
+                if (key === 'form_global') {
+                    failureMessage.text(errors[key][0]).show();
+                    return;
+                }
+                if (!fields[key]) {
+                    failureMessage.text(key + ': ' + errors[key][0]).show();
+                    return;
+                }
                 fields[key].input.addClass('tw:input-error tw:select-error tw:toggle-error');
                 fields[key].error.html(errors[key][0]).show();
             });
