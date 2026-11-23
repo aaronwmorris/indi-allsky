@@ -38,7 +38,7 @@ from .utils import IndiAllSkyDateCalcs
 from .overlay.moonOverlay import IndiAllSkyMoonOverlay
 from .overlay.lightgraphOverlay import IndiAllSkyLightgraphOverlay
 from .overlay.imageOverlay import IndiAllSkyImageOverlay
-from .overlay.skyReticleOverlay import draw_sky_reticles_opencv, draw_sky_reticles_pillow
+from .overlay.skyReticleOverlay import draw_sky_reticles_opencv, draw_sky_reticles_pillow, satellite_title_matches_filter
 
 from .flask.miscDb import miscDb
 from .flask.models import IndiAllSkyDbBadPixelMapTable
@@ -3853,10 +3853,16 @@ class ImageProcessor(object):
             .order_by(IndiAllSkyDbTleDataTable.id.desc())\
             .limit(300)  # 300 is a sanity check
 
-        alt_deg_min = self.config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20)
+        sat_cfg = self.config.get('SATELLITE_TRACK', {})
+        alt_deg_min = sat_cfg.get('ALT_DEG_MIN', 20)
+        tle_include = sat_cfg.get('TLE_INCLUDE', '')
+        tle_exclude = sat_cfg.get('TLE_EXCLUDE', '')
 
         sat_list = list()
         for sat_entry in sat_entries:
+            if not satellite_title_matches_filter(sat_entry.title, tle_include, tle_exclude):
+                continue
+
             try:
                 sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
             except ValueError as e:

@@ -331,8 +331,7 @@ async function loop() {
             VirtualSkyCalibration.maskImage(planetarium, overlayImageMask, [image_width, image_height],
                 this.entry.binmode, [image_circle_diameter, offset_x, offset_y]);
             planetarium.draw();
-            drawSkyReticleOverlay(planetarium, this.entry.aircraft, '#ADSB_OVERLAY', '#ADSB_OVERLAY_STYLE', '#00ffff', ['id']);
-            drawSkyReticleOverlay(planetarium, this.entry.satellites, '#SAT_OVERLAY', '#SAT_OVERLAY_STYLE', '#a3e635', ['title', 'id']);
+            drawSkyReticleOverlays(this.entry);
 
 
             redraw_planetarium = false;
@@ -811,6 +810,12 @@ function getDownloadTimestamp() {
     return last_image_timestamp || Math.floor(Date.now() / 1000);
 }
 
+function drawSkyReticleOverlays(entry) {
+    if (!entry || !planetarium) return;
+    drawSkyReticleOverlay(planetarium, entry.aircraft, '#ADSB_OVERLAY', '#ADSB_OVERLAY_STYLE', '#00ffff', ['id']);
+    drawSkyReticleOverlay(planetarium, entry.satellites, '#SAT_OVERLAY', '#SAT_OVERLAY_STYLE', '#a3e635', ['title', 'id']);
+}
+
 async function downloadImageWithOverlay() {
     const $btn = $('#download_overlay');
     $btn.prop('disabled', true);
@@ -849,6 +854,7 @@ async function downloadImageWithOverlay() {
             if (typeof planetarium.drawImmediate === 'function') {
                 planetarium.drawImmediate();
             }
+            drawSkyReticleOverlays(img ? img.entry : null);
 
             const starmapCanvas = document.querySelector('#starmap canvas');
             if (starmapCanvas) {
@@ -861,6 +867,7 @@ async function downloadImageWithOverlay() {
                 if (typeof planetarium.drawImmediate === 'function') {
                     planetarium.drawImmediate();
                 }
+                drawSkyReticleOverlays(img ? img.entry : null);
             }
         } else {
             const starmapCanvas = document.querySelector('#starmap canvas');
@@ -906,6 +913,7 @@ async function downloadMapData() {
             if (typeof planetarium.drawImmediate === 'function') {
                 planetarium.drawImmediate();
             }
+            drawSkyReticleOverlays(img ? img.entry : null);
 
             const starmapCanvas = document.querySelector('#starmap canvas');
             if (!starmapCanvas) {
@@ -926,6 +934,7 @@ async function downloadMapData() {
                 if (typeof planetarium.drawImmediate === 'function') {
                     planetarium.drawImmediate();
                 }
+                drawSkyReticleOverlays(img ? img.entry : null);
             }
 
             mapCanvas.toBlob(blob => {

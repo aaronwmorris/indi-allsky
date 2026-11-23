@@ -5364,6 +5364,8 @@ class IndiAllskyConfigForm(FlaskForm):
     SATELLITE_TRACK__OVERLAY_STYLE   = SelectField('Reticle Style', choices=(('circle', 'Circle'), ('cross', 'Crosshair'), ('both', 'Circle + Crosshair')))
     SATELLITE_TRACK__OVERLAY_RADIUS  = IntegerField('Reticle Size (px)', default=15)
     SATELLITE_TRACK__OVERLAY_LABEL_ENABLE = BooleanField('Show Satellite Name on Reticle')
+    SATELLITE_TRACK__TLE_INCLUDE     = StringField('TLE Include Filter')
+    SATELLITE_TRACK__TLE_EXCLUDE     = StringField('TLE Exclude Filter')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

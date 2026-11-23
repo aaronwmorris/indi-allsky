@@ -942,6 +942,8 @@ class IndiAllSkyConfigBase(object):
             "OVERLAY_THICKNESS"      : 2,
             "OVERLAY_COLOR"          : [163, 230, 53],
             "OVERLAY_LABEL_ENABLE"   : True,
+            "TLE_INCLUDE"            : "",
+            "TLE_EXCLUDE"            : "",
         },
     })
 

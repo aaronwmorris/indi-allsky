@@ -3284,6 +3284,8 @@ class ConfigView(FormView):
             'SATELLITE_TRACK__OVERLAY_STYLE'       : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('OVERLAY_STYLE', 'circle'),
             'SATELLITE_TRACK__OVERLAY_RADIUS'      : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('OVERLAY_RADIUS', 15),
             'SATELLITE_TRACK__OVERLAY_LABEL_ENABLE': self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('OVERLAY_LABEL_ENABLE', True),
+            'SATELLITE_TRACK__TLE_INCLUDE'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('TLE_INCLUDE', ''),
+            'SATELLITE_TRACK__TLE_EXCLUDE'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('TLE_EXCLUDE', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -4383,6 +4385,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SATELLITE_TRACK']['OVERLAY_STYLE']       = str(request.json.get('SATELLITE_TRACK__OVERLAY_STYLE', 'circle'))
         self.indi_allsky_config['SATELLITE_TRACK']['OVERLAY_RADIUS']      = max(4, min(100, int(request.json.get('SATELLITE_TRACK__OVERLAY_RADIUS', 15))))
         self.indi_allsky_config['SATELLITE_TRACK']['OVERLAY_LABEL_ENABLE'] = bool(request.json.get('SATELLITE_TRACK__OVERLAY_LABEL_ENABLE', True))
+        self.indi_allsky_config['SATELLITE_TRACK']['TLE_INCLUDE']          = str(request.json.get('SATELLITE_TRACK__TLE_INCLUDE', '')).strip()
+        self.indi_allsky_config['SATELLITE_TRACK']['TLE_EXCLUDE']          = str(request.json.get('SATELLITE_TRACK__TLE_EXCLUDE', '')).strip()
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))

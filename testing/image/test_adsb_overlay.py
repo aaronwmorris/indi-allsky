@@ -122,11 +122,25 @@ class TestSkyReticleOverlay(unittest.TestCase):
 
         self.assertIn('ADSB__OVERLAY_ENABLE', adsb_html)
         self.assertIn('SATELLITE_TRACK__OVERLAY_ENABLE', sat_html)
+        self.assertIn('SATELLITE_TRACK__TLE_INCLUDE', sat_html)
+        self.assertIn('SATELLITE_TRACK__TLE_EXCLUDE', sat_html)
         self.assertIn('drawSkyReticleOverlay', virtualsky_html)
+        self.assertIn('drawSkyReticleOverlays', virtualsky_html)
         self.assertIn('#SAT_OVERLAY', virtualsky_html)
         self.assertIn("data['aircraft']", views_py)
         self.assertIn("data['satellites']", views_py)
         self.assertIn('Satellite Reticle Overlay', sat_doc)
+
+    def test_satellite_tle_filter(self):
+        from indi_allsky.overlay.skyReticleOverlay import satellite_title_matches_filter
+
+        fn = satellite_title_matches_filter
+        self.assertTrue(fn('SL-4 R/B', '', ''))
+        self.assertFalse(fn('SL-4 R/B', '', 'R/B, DEB'))
+        self.assertTrue(fn('ISS (ZARYA)', '', 'R/B, DEB'))
+        self.assertTrue(fn('ISS (ZARYA)', 'iss, hst', ''))
+        self.assertFalse(fn('SL-4 R/B', 'iss, hst', ''))
+        self.assertFalse(fn('ISS R/B', 'iss', 'r/b'))
 
 
 if __name__ == '__main__':

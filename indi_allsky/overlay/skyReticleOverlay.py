@@ -10,6 +10,19 @@ from ..lens_solver.calibration import displacement, pipelineSignature, validateC
 logger = logging.getLogger('indi_allsky')
 
 
+def satellite_title_matches_filter(title, include_raw, exclude_raw):
+    """Return True if a TLE title passes comma-separated include/exclude substring filters."""
+    title_lower = str(title or '').strip().lower()
+    include_tokens = [t.strip().lower() for t in str(include_raw or '').split(',') if t.strip()]
+    exclude_tokens = [t.strip().lower() for t in str(exclude_raw or '').split(',') if t.strip()]
+
+    if include_tokens and not any(tok in title_lower for tok in include_tokens):
+        return False
+    if any(tok in title_lower for tok in exclude_tokens):
+        return False
+    return True
+
+
 def _parse_rgb_color(color_val, default=(163, 230, 53)):
     """Parse an RGB 3-tuple from a list/tuple or comma-separated string."""
     if isinstance(color_val, str):
