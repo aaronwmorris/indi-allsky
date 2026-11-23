@@ -111,6 +111,7 @@ from .forms import IndiAllskyChartHistoryForm
 from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskySetTimezoneForm
 from .forms import IndiAllskyTimelapseGeneratorForm
+from .forms import IndiAllskyCustomTimelapseForm
 from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
@@ -7256,6 +7257,20 @@ class TimelapseGeneratorView(TemplateView):
             camera_id=self.camera.id,
         )
 
+        default_end = self.camera_now.replace(second=0, microsecond=0)
+        default_start = default_end - timedelta(hours=24)
+        context['form_custom_timelapse'] = IndiAllskyCustomTimelapseForm(
+            data={
+                'CAMERA_ID': self.camera.id,
+                'SOURCE_TYPE': 'standard',
+                'START_TIME': default_start.strftime('%Y-%m-%dT%H:%M'),
+                'END_TIME': default_end.strftime('%Y-%m-%dT%H:%M'),
+                'FRAMERATE_SELECT': '10',
+                'BITRATE_SELECT': self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'),
+            },
+        )
+        context['fish2pano_enable'] = bool(self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False))
+
         # Lookup tasks
         state_list = (
             TaskQueueState.MANUAL,
@@ -7304,6 +7319,155 @@ class TimelapseGeneratorView(TemplateView):
 
 
         return context
+
+
+def _parse_custom_timelapse_datetime(value):
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(float(value))
+    raw = str(value).strip()
+    if not raw:
+        raise ValueError('Empty timestamp')
+    try:
+        return datetime.fromtimestamp(float(raw))
+    except ValueError:
+        pass
+    dt = datetime.fromisoformat(raw)
+    if dt.tzinfo is not None:
+        dt = dt.astimezone().replace(tzinfo=None)
+    return dt
+
+
+def _parse_custom_timelapse_request(request_data, default_camera_id=None, fish2pano_enabled=False, require_note=True):
+    source_type = str(request_data.get('SOURCE_TYPE') or request_data.get('source_type') or 'standard').strip()
+    if source_type not in ('standard', 'panorama'):
+        return None, 'Choose all-sky images or panorama images.'
+    if source_type == 'panorama' and not fish2pano_enabled:
+        return None, 'Panorama creation is turned off in the Image Processing settings.'
+
+    raw_camera_id = request_data.get('CAMERA_ID', request_data.get('camera_id', default_camera_id))
+    try:
+        camera_id = int(raw_camera_id)
+    except (TypeError, ValueError):
+        return None, 'Invalid camera ID.'
+
+    if camera_id <= 0:
+        return None, 'Invalid camera ID.'
+
+    hours_raw = request_data.get('hours')
+    start_raw = request_data.get('START_TIME', request_data.get('start_time', request_data.get('start_date')))
+    end_raw = request_data.get('END_TIME', request_data.get('end_time', request_data.get('end_date')))
+
+    try:
+        if hours_raw is not None and start_raw is None and end_raw is None:
+            hours = float(hours_raw)
+            if not math.isfinite(hours) or hours <= 0 or hours > 168:
+                return None, 'Hours must be greater than 0 and at most 168.'
+            end_dt = datetime.now()
+            start_dt = end_dt - timedelta(hours=hours)
+        else:
+            if start_raw is None or end_raw is None:
+                return None, 'Provide start_time and end_time, or hours.'
+            start_dt = _parse_custom_timelapse_datetime(start_raw)
+            end_dt = _parse_custom_timelapse_datetime(end_raw)
+    except (TypeError, ValueError):
+        return None, 'Invalid start or end date/time.'
+
+    if start_dt >= end_dt:
+        return None, 'Start date/time must be before end date/time.'
+
+    if (end_dt - start_dt).total_seconds() > 7 * 86400:
+        return None, 'Custom timelapse range cannot exceed 7 days.'
+
+    framerate_raw = request_data.get('FRAMERATE_SELECT', request_data.get('framerate', 10))
+    try:
+        framerate = float(framerate_raw)
+    except (TypeError, ValueError):
+        return None, 'Invalid framerate.'
+
+    if not math.isfinite(framerate) or framerate <= 0 or framerate > 60:
+        return None, 'Framerate must be greater than 0 and at most 60.'
+
+    bitrate = request_data.get('BITRATE_SELECT', request_data.get('bitrate'))
+    if bitrate is not None and str(bitrate).strip() != '':
+        bitrate = str(bitrate).strip()
+        if not re.fullmatch(r'\d+[km]', bitrate):
+            return None, 'Choose a valid bitrate/file size.'
+    else:
+        bitrate = None
+
+    note = str(request_data.get('NOTE', request_data.get('note')) or '').strip()
+    if not note:
+        if require_note:
+            return None, 'Enter a description for this video.'
+        note = 'Custom {0:s} - {1:s}'.format(
+            start_dt.strftime('%Y-%m-%d %H:%M'),
+            end_dt.strftime('%Y-%m-%d %H:%M'),
+        )
+    if len(note) > 255:
+        return None, 'Keep the description to 255 characters or fewer.'
+
+    return {
+        'camera_id': camera_id,
+        'source_type': source_type,
+        'start_date': start_dt.isoformat(),
+        'end_date': end_dt.isoformat(),
+        'framerate': framerate,
+        'bitrate': bitrate,
+        'note': note,
+    }, None
+
+
+def _queue_custom_timelapse(job_kwargs):
+    task = IndiAllSkyDbTaskQueueTable(
+        queue=TaskQueueQueue.VIDEO,
+        state=TaskQueueState.MANUAL,
+        priority=100,
+        data={
+            'action': 'generateCustomVideo',
+            'kwargs': job_kwargs,
+        },
+    )
+    db.session.add(task)
+    db.session.commit()
+    return task
+
+
+class AjaxCustomTimelapseGeneratorView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(AjaxCustomTimelapseGeneratorView, self).__init__(**kwargs)
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            return jsonify({'failure-message': 'User does not have permission to generate content'}), 400
+
+        if not self.verify_admin_network():
+            return jsonify({'failure-message': 'Request not from admin network (flask.json)'}), 400
+
+        request_data = request.get_json(silent=True) or {}
+        fish2pano_enabled = bool(self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False))
+        job_kwargs, error_message = _parse_custom_timelapse_request(
+            request_data,
+            fish2pano_enabled=fish2pano_enabled,
+            require_note=True,
+        )
+        if error_message:
+            return jsonify({'failure-message': error_message}), 400
+
+        try:
+            IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == job_kwargs['camera_id'])\
+                .one()
+        except NoResultFound:
+            return jsonify({'failure-message': 'Selected camera was not found.'}), 400
+
+        task = _queue_custom_timelapse(job_kwargs)
+        return jsonify({
+            'success-message': 'Custom timelapse queued (task ID: {0:d}). Check Mini Timelapses once complete.'.format(task.id),
+            'task_id': task.id,
+        })
 
 
 class AjaxTimelapseGeneratorView(BaseView):
@@ -14587,6 +14751,90 @@ class WsControlView(BaseView):
                             "timestamp": time.time(),
                             "data": {"action": msg_type, "status": "queued", "task_id": task.id}
                         }, default=str))
+                    elif msg_type == 'generate_custom_timelapse':
+                        from .models import IndiAllSkyDbCameraTable
+
+                        default_camera_id = None
+                        if msg.get('camera_id') is None:
+                            default_cam = IndiAllSkyDbCameraTable.query.order_by(IndiAllSkyDbCameraTable.id.asc()).first()
+                            if default_cam:
+                                default_camera_id = default_cam.id
+
+                        fish2pano_enabled = bool(getattr(self, 'indi_allsky_config', {}).get('FISH2PANO', {}).get('ENABLE', False))
+                        job_kwargs, error_message = _parse_custom_timelapse_request(
+                            msg,
+                            default_camera_id=default_camera_id,
+                            fish2pano_enabled=fish2pano_enabled,
+                            require_note=False,
+                        )
+                        if error_message:
+                            ws.send(json.dumps({
+                                "event": "command_result",
+                                "timestamp": time.time(),
+                                "data": {
+                                    "action": msg_type,
+                                    "status": "error",
+                                    "error": error_message,
+                                }
+                            }, default=str))
+                        else:
+                            cam_exists = IndiAllSkyDbCameraTable.query\
+                                .filter(IndiAllSkyDbCameraTable.id == job_kwargs['camera_id'])\
+                                .first()
+                            if not cam_exists:
+                                ws.send(json.dumps({
+                                    "event": "command_result",
+                                    "timestamp": time.time(),
+                                    "data": {
+                                        "action": msg_type,
+                                        "status": "error",
+                                        "error": "Selected camera was not found.",
+                                    }
+                                }, default=str))
+                            else:
+                                task = _queue_custom_timelapse(job_kwargs)
+                                ws.send(json.dumps({
+                                    "event": "command_result",
+                                    "timestamp": time.time(),
+                                    "data": {
+                                        "action": msg_type,
+                                        "status": "queued",
+                                        "task_id": task.id,
+                                        "camera_id": job_kwargs['camera_id'],
+                                        "start_date": job_kwargs['start_date'],
+                                        "end_date": job_kwargs['end_date'],
+                                    }
+                                }, default=str))
+                    elif msg_type == 'get_task_status':
+                        from .models import IndiAllSkyDbTaskQueueTable
+                        try:
+                            task_id = int(msg.get('task_id'))
+                            task_entry = IndiAllSkyDbTaskQueueTable.query.filter(IndiAllSkyDbTaskQueueTable.id == task_id).first()
+                        except (TypeError, ValueError):
+                            task_entry = None
+                            task_id = None
+
+                        if not task_entry:
+                            ws.send(json.dumps({
+                                "event": "task_status",
+                                "timestamp": time.time(),
+                                "data": {
+                                    "task_id": task_id,
+                                    "status": "error",
+                                    "error": "Task not found",
+                                }
+                            }, default=str))
+                        else:
+                            ws.send(json.dumps({
+                                "event": "task_status",
+                                "timestamp": time.time(),
+                                "data": {
+                                    "task_id": task_entry.id,
+                                    "queue": task_entry.queue.name,
+                                    "state": task_entry.state.name,
+                                    "result": task_entry.result,
+                                }
+                            }, default=str))
                     elif msg_type in ('restart_service', 'start_service', 'stop_service'):
                         service_name = msg.get('service', 'indi-allsky')
                         unit_map = {
@@ -14830,6 +15078,7 @@ bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('p
 
 bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
+bp_allsky.add_url_rule('/ajax/custom_timelapse', view_func=AjaxCustomTimelapseGeneratorView.as_view('ajax_custom_timelapse_view'))
 
 bp_allsky.add_url_rule('/minigenerate', view_func=MiniTimelapseGeneratorView.as_view('mini_generate_view', template_name='mini_generate.html'))
 bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGeneratorView.as_view('ajax_mini_generate_view'))

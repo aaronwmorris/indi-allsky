@@ -17,6 +17,7 @@ Find an image containing the event through either view:
 
 * **Media -> Images:** click **Mini Timelapse** beneath the image.
 * **Media -> Gallery:** open an image, then click the **Mini-Timelapse** button in the image viewer's toolbar.
+* **Generate Page (`/generate`):** use the **Custom Time-Range Timelapse** card to generate a clip over an arbitrary start/end date/time window (or quick presets such as *Last 24h* or *Noon-to-Noon*). Custom timelapses are stored in **Mini Timelapses** and can also be triggered programmatically via the `/ws/control` WebSocket (see [Action API](Action-API)).
 
 Sign in if prompted. The selected image is the reference point for the time before and after the event.
 
