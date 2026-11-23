@@ -5465,6 +5465,7 @@ class AjaxVideoViewerView(BaseView):
         form_year      = int(request.json.get('YEAR_SELECT', 0))
         form_month     = int(request.json.get('MONTH_SELECT', 0))
         form_timeofday = str(request.json.get('TIMEOFDAY_SELECT', ''))
+        form_tag_filter = str(request.json.get('TAG_FILTER', '')).strip()
 
 
         self.cameraSetup(camera_id=camera_id)
@@ -5494,7 +5495,7 @@ class AjaxVideoViewerView(BaseView):
             year = form_datetime.year
             month = form_datetime.month
 
-            json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+            json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday, tag_filter=form_tag_filter)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -5505,7 +5506,7 @@ class AjaxVideoViewerView(BaseView):
 
             if json_data['MONTH_SELECT']:
                 month = json_data['MONTH_SELECT'][0][0]
-                json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+                json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday, tag_filter=form_tag_filter)
             else:
                 json_data['video_list'] = []
         else:
@@ -11533,8 +11534,93 @@ class TimelapseVideoView(TemplateView):
         context['dayDate_full'] = video.dayDate.strftime('%B %d, %Y')
         context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
 
+        video_data = video.data if isinstance(video.data, dict) else {}
+        context['video_note'] = str(video_data.get('note') or '')
+        context['video_tags'] = list(video_data.get('tags') or [])
+        context['video_camera_id'] = video.camera_id
+        context['video_metadata_editable'] = (
+            self.file_view == 'indi_allsky.timelapse_video_view'
+            and bool(app.config.get('LOGIN_DISABLED', False) or (current_user.is_authenticated and current_user.is_admin))
+        )
+
 
         return context
+
+
+class AjaxVideoMetadataView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(AjaxVideoMetadataView, self).__init__(**kwargs)
+
+    def dispatch_request(self):
+        if not app.config.get('LOGIN_DISABLED', False) and not (current_user.is_authenticated and current_user.is_admin):
+            return jsonify({'failure-message': 'User does not have permission to edit video metadata.'}), 400
+
+        if not self.verify_admin_network():
+            return jsonify({'failure-message': 'Request not from admin network (flask.json).'}), 400
+
+        from sqlalchemy.orm.attributes import flag_modified
+        from .forms import normalize_video_tags
+
+        request_data = request.get_json(silent=True) or {}
+        try:
+            video_id = int(request_data['VIDEO_ID'])
+        except (KeyError, TypeError, ValueError):
+            return jsonify({'failure-message': 'Invalid video ID.'}), 400
+
+        note = str(request_data.get('NOTE') or '').strip()
+        if len(note) > 2000:
+            return jsonify({'failure-message': 'Keep the description to 2000 characters or fewer.'}), 400
+
+        tags = normalize_video_tags(request_data.get('TAGS', ''))
+        if len(tags) > 30:
+            return jsonify({'failure-message': 'Maximum 30 tags allowed.'}), 400
+
+        try:
+            video = IndiAllSkyDbVideoTable.query.filter(IndiAllSkyDbVideoTable.id == video_id).one()
+        except NoResultFound:
+            return jsonify({'failure-message': 'Timelapse video not found.'}), 404
+
+        data = dict(video.data) if isinstance(video.data, dict) else {}
+        data['note'] = note
+        data['tags'] = tags
+        video.data = data
+        flag_modified(video, 'data')
+        db.session.commit()
+
+        sync_queued = False
+        if self.indi_allsky_config.get('SYNCAPI', {}).get('ENABLE'):
+            sync_metadata = {
+                'type': constants.VIDEO,
+                'createDate': int(video.createDate.timestamp()),
+                'dayDate': video.dayDate.strftime('%Y%m%d'),
+                'night': bool(video.night),
+                'framerate': float(video.framerate or 0),
+                'frames': int(video.frames or 0),
+                'camera_uuid': video.camera.uuid if video.camera else '',
+                'data': data,
+            }
+            upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data={
+                    'action': constants.TRANSFER_SYNC_V1,
+                    'model': video.__class__.__name__,
+                    'id': video.id,
+                    'metadata': sync_metadata,
+                },
+            )
+            db.session.add(upload_task)
+            db.session.commit()
+            sync_queued = True
+
+        return jsonify({
+            'success-message': 'Description and tags saved.' + (' SyncAPI update queued.' if sync_queued else ''),
+            'note': note,
+            'tags': tags,
+        })
 
 
 class MiniTimelapseVideoView(TimelapseVideoView):
@@ -14810,6 +14896,7 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+bp_allsky.add_url_rule('/ajax/videometadata', view_func=AjaxVideoMetadataView.as_view('ajax_videometadata_view'))
 
 bp_allsky.add_url_rule('/minivideoviewer', view_func=MiniVideoViewerView.as_view('mini_videoviewer_view', template_name='minivideoviewer.html'))
 bp_allsky.add_url_rule('/ajax/minivideoviewer', view_func=AjaxMiniVideoViewerView.as_view('ajax_mini_videoviewer_view'))

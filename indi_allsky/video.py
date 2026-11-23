@@ -547,6 +547,8 @@ class VideoWorker(Process):
         )
 
 
+        preserved_note = ''
+        preserved_tags = list()
         try:
             # delete old video entry if it exists
             old_video_entry = IndiAllSkyDbVideoTable.query\
@@ -565,6 +567,12 @@ class VideoWorker(Process):
                 logger.error('Timelapse already exists, overwrite not permitted')
                 task.setFailed('Timelapse already exists, overwrite not permitted')
                 return
+
+
+            if isinstance(old_video_entry.data, dict):
+                preserved_note = str(old_video_entry.data.get('note') or '')
+                if isinstance(old_video_entry.data.get('tags'), list):
+                    preserved_tags = list(old_video_entry.data['tags'])
 
 
             logger.warning('Removing old video db entry')
@@ -678,6 +686,10 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
+        if preserved_note:
+            video_metadata['data']['note'] = preserved_note
+        if preserved_tags:
+            video_metadata['data']['tags'] = preserved_tags
 
         # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(

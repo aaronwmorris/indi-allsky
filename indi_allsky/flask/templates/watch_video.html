@@ -51,6 +51,53 @@ var file_view = "{{ file_view }}";
             </video>
         </div>
 
+        {% if file_view == 'indi_allsky.timelapse_video_view' %}
+        <!-- Description & Tags Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-5 tw:gap-4">
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                    <h2 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70">Description &amp; Tags</h2>
+                    <div id="video-tags-display" class="tw:flex tw:flex-wrap tw:gap-1.5">
+                        {% for tag in video_tags | default([]) %}
+                        <span class="tw:badge tw:badge-sm tw:badge-info tw:font-semibold">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <p id="video-note-display" class="tw:text-sm tw:text-base-content/85 tw:whitespace-pre-wrap {% if not video_note %}tw:hidden{% endif %}">{{ video_note }}</p>
+                {% if not video_note and not video_tags %}
+                <p id="video-metadata-empty" class="tw:text-xs tw:text-base-content/50 tw:italic">No description or tags added yet.</p>
+                {% endif %}
+
+                {% if video_metadata_editable %}
+                <form id="form_video_metadata" onsubmit="return false;" class="tw:flex tw:flex-col tw:gap-3 tw:pt-3 tw:border-t tw:border-base-content/10">
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="video_note_input">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">Description</span>
+                        </label>
+                        <textarea id="video_note_input" rows="3" maxlength="2000" placeholder="Add notes about aurora, weather, or notable events..." class="tw:textarea tw:textarea-bordered tw:bg-base-100 tw:w-full tw:text-sm">{{ video_note | default('') }}</textarea>
+                    </div>
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1" for="video_tags_input">
+                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">Tags (comma-separated)</span>
+                        </label>
+                        <input id="video_tags_input" type="text" placeholder="e.g. #aurora, #storm, lightning bugs" value="{% if video_tags %}{{ video_tags | map('string') | join(', ') }}{% endif %}" class="tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm">
+                    </div>
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                        <div class="tw:text-xs">
+                            <span id="metadata-success-message" class="tw:text-success tw:font-medium" style="display: none;"></span>
+                            <span id="metadata-failure-message" class="tw:text-error tw:font-medium" style="display: none;"></span>
+                        </div>
+                        <button id="save-metadata-btn" type="submit" class="tw:btn tw:btn-sm tw:btn-primary tw:gap-1.5">
+                            <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i> Save Description &amp; Tags
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 
@@ -120,6 +167,56 @@ function deleteMiniTimelapse() {
 
 $(document).ready(function() {
     init();
+
+    {% if video_metadata_editable %}
+    $('#form_video_metadata').on('submit', function() {
+        var btn = $('#save-metadata-btn');
+        var origHtml = btn.html();
+        $('#metadata-success-message, #metadata-failure-message').hide();
+        btn.prop('disabled', true).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Saving...');
+
+        $.ajax({
+            type: "POST",
+            url: "{{ url_for('indi_allsky.ajax_videometadata_view') }}",
+            contentType: "application/json",
+            data: JSON.stringify({
+                'VIDEO_ID': video_id,
+                'NOTE': $('#video_note_input').val(),
+                'TAGS': $('#video_tags_input').val(),
+            }),
+            success: function(rdata) {
+                var tagsDiv = $('#video-tags-display').empty();
+                (rdata.tags || []).forEach(function(tag) {
+                    $('<span />', {
+                        'class': 'tw:badge tw:badge-sm tw:badge-info tw:font-semibold',
+                        'text': '#' + tag,
+                    }).appendTo(tagsDiv);
+                });
+                if (rdata.note) {
+                    $('#video-note-display').text(rdata.note).removeClass('tw:hidden');
+                } else {
+                    $('#video-note-display').text('').addClass('tw:hidden');
+                }
+                if (rdata.note || (rdata.tags && rdata.tags.length > 0)) {
+                    $('#video-metadata-empty').hide();
+                } else {
+                    $('#video-metadata-empty').show();
+                }
+                $('#metadata-success-message').text(rdata['success-message'] || 'Saved.').show();
+            },
+            error: function(rdata) {
+                var msg = 'Unable to save description and tags.';
+                if (rdata.responseJSON && rdata.responseJSON['failure-message']) {
+                    msg = rdata.responseJSON['failure-message'];
+                }
+                $('#metadata-failure-message').text(msg).show();
+            },
+            complete: function() {
+                btn.prop('disabled', false).html(origHtml);
+            },
+        });
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}
