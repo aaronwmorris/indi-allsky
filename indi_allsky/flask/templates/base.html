@@ -59,7 +59,7 @@
         }
     </script>
 
-    <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}?v={{ release if release else 'v2026.11.01' }}" rel="stylesheet">
+    <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}?v={{ release if release else 'v2026.11.01' }}-2" rel="stylesheet">
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
 
     <style>
@@ -314,12 +314,13 @@
     <main class="tw:flex-1 tw:h-screen tw:flex tw:flex-col tw:bg-base-100 tw:min-w-0">
         <!-- Sticky page header -->
         <div
-            class="tw:flex-shrink-0 tw:bg-base-100 tw:border-b tw:border-base-content/10 tw:px-8 tw:py-4 tw:flex tw:items-center tw:gap-3 tw:sticky tw:top-0 tw:z-30">
+            class="tw:flex-shrink-0 tw:bg-base-100 tw:border-b tw:border-base-content/10 tw:px-4 tw:sm:px-8 tw:py-4 tw:flex tw:items-center tw:gap-3 tw:sticky tw:top-0 tw:z-30">
             <button id="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar"
                 class="tw:btn tw:btn-sm tw:btn-ghost tw:border tw:border-base-content/10 tw:p-2 tw:flex-shrink-0 hover:tw:bg-base-content/5 tw:cursor-pointer active:tw:scale-95 tw:transition-all">
                 <i class="tw:icon-[lucide--menu] tw:w-[18px] tw:h-[18px]"></i>
             </button>
-            <h1 class="tw:text-3xl tw:font-black tw:tracking-tight">{% block header_title %}{{ page_title }}{% endblock %}</h1>
+            <h1 class="tw:flex-1 tw:min-w-0 tw:text-xl tw:sm:text-3xl tw:font-black tw:tracking-tight">{% block header_title %}{{ page_title }}{% endblock %}</h1>
+            {% block header_actions %}{% endblock %}
         </div>
 
         <!-- Scrollable content -->
