@@ -313,6 +313,7 @@ async function loop() {
                 planetarium = S.virtualsky(sky_options);
                 $('#starmap canvas').on('contextrestored', function() {
                     planetarium.draw();
+                    drawSkyReticleOverlays(img ? img.entry : null);
                 });
             }
             // createSky rounds CSS dimensions; use the same scale on later redraws.
@@ -605,13 +606,14 @@ function drawSkyReticleOverlay(sky, items, toggleSelector, styleSelector, color,
 
     const style = $(styleSelector).val() || 'circle';
     const dpr = canvas.width / Math.max(1, sky.wide);
-    const radius = 12 * dpr;
+    const sizeScale = Math.max(1, sky.wide / 700);
+    const radius = 12 * dpr * sizeScale;
 
     ctx.save();
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
-    ctx.lineWidth = Math.max(1.5, 1.5 * dpr);
-    ctx.font = Math.round(11 * dpr) + 'px sans-serif';
+    ctx.lineWidth = Math.max(1.5, 1.5 * dpr * sizeScale);
+    ctx.font = Math.round(11 * dpr * sizeScale) + 'px sans-serif';
 
     items.forEach(item => {
         const altDeg = Number(item.alt);
