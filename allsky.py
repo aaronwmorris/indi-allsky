@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
-import locale
+import os
 import multiprocessing
 import logging
-import logging.handlers
 import traceback
 import argparse
 
+from indi_allsky.worker_init import configure_worker_logging
 
 
 # the flask context cannot created globally
@@ -16,15 +16,6 @@ import argparse
 
 logger = logging.getLogger('indi_allsky')
 logger.setLevel(logging.INFO)
-
-
-LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s-%(process)d/%(threadName)s %(module)s.%(funcName)s() [%(lineno)d]: %(message)s')
-LOG_HANDLER_STREAM = logging.StreamHandler()
-LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
-
-LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s-%(process)d/%(threadName)s %(module)s.%(funcName)s() [%(lineno)d]: %(message)s')
-LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility=logging.handlers.SysLogHandler.LOG_LOCAL6)
-LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
 
 
 def unhandled_exception(exc_type, exc_value, exc_traceback):
@@ -48,12 +39,10 @@ sys.excepthook = unhandled_exception
 
 
 if __name__ == "__main__":
-    # should be inherited by all of the sub-processes
-    locale.setlocale(locale.LC_ALL, '')
-
     # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+    start_method = 'forkserver' if 'forkserver' in multiprocessing.get_all_start_methods() else 'fork'
     try:
-        multiprocessing.set_start_method('fork', force=True)
+        multiprocessing.set_start_method(start_method, force=True)
     except RuntimeError:
         pass
 
@@ -94,13 +83,9 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
 
-    # log setup
-    if args.log == 'syslog':
-        logger.addHandler(LOG_HANDLER_SYSLOG)
-    elif args.log == 'stderr':
-        logger.addHandler(LOG_HANDLER_STREAM)
-    else:
-        raise Exception('Invalid log output')
+    # log setup (inherited by forkserver/spawn workers via env var)
+    os.environ['INDI_ALLSKY_LOG_TARGET'] = args.log
+    configure_worker_logging(args.log)
 
 
     args_list = list()

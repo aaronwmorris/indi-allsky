@@ -27,7 +27,6 @@ from ..version import __version__
 from .. import constants
 from .. import asi676mc
 from .. import asi676mc_calibration
-from ..processing import ImageProcessor
 from ..lens_solver import IndiAllSkyLensSolver
 from ..lens_solver import parseSolverRequestValues
 from ..lens_solver import applySolvedValuesToConfig
@@ -5126,6 +5125,8 @@ class Fits2JpegView(BaseView):
 
         hdulist.close()
 
+        from ..processing import ImageProcessor
+
         image_processor = ImageProcessor(
             p_config,
             position_av,
@@ -9712,6 +9713,8 @@ class JsonImageProcessingView(JsonView):
         astro_av = Array('f', [0.0, 0.0, 0.0])
 
         hdulist.close()
+
+        from ..processing import ImageProcessor
 
         image_processor = ImageProcessor(
             p_config,

@@ -37,6 +37,7 @@ from .satellite_download import IndiAllskyUpdateSatelliteData
 from .maskProcessing import MaskProcessor
 from .backup import IndiAllskyDatabaseBackup
 
+from .worker_init import configure_worker_logging
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -104,8 +105,6 @@ class VideoWorker(Process):
 
         self.name = 'Video-{0:d}'.format(idx)
 
-        os.nice(19)  # lower priority
-
         self.config = config
 
         self.error_q = error_q
@@ -115,12 +114,8 @@ class VideoWorker(Process):
         self.night_av = night_av
         self.binning_av = binning_av
 
-        self._miscDb = miscDb(self.config)
-        self._miscUpload = miscUpload(
-            self.config,
-            self.upload_q,
-            self.night_av,
-        )
+        self._miscDb = None
+        self._miscUpload = None
 
         self.f_lock = None
 
@@ -165,11 +160,24 @@ class VideoWorker(Process):
 
 
     def run(self):
+        configure_worker_logging()
+        try:
+            os.nice(19)  # lower priority
+        except OSError:
+            pass
+
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
+
+        self._miscDb = miscDb(self.config)
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            self.night_av,
+        )
 
 
         # Calibration has its own serial thread so a long retained-FITS scan

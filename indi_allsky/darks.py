@@ -48,12 +48,6 @@ from .flask.models import IndiAllSkyDbBadPixelMapTable
 from sqlalchemy.orm.exc import NoResultFound
 
 
-try:
-    import rawpy  # not available in all cases
-except ImportError:
-    rawpy = None
-
-
 app = create_app()
 
 logger = logging.getLogger('indi_allsky')
@@ -754,9 +748,11 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.dng']:
-            if not rawpy:
+            try:
+                import rawpy  # lazy import to avoid OpenMP initialization before fork
+            except ImportError as e:
                 filename_p.unlink()
-                raise Exception('*** rawpy module not available ***')
+                raise Exception('*** rawpy module not available ***') from e
 
             # DNG raw
             try:
