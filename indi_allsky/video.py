@@ -2580,6 +2580,17 @@ class VideoWorker(Process):
             (old_panorama_videos, IndiAllSkyDbPanoramaVideoTable),
         ]
 
+        non_detection_expire_days = int(self.config.get('IMAGE_NON_DETECTION_EXPIRE_DAYS', 0) or 0)
+        if non_detection_expire_days > 0:
+            cutoff_non_detection_date = (now - timedelta(days=non_detection_expire_days)).date()
+            old_non_detection_images = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+                .filter(IndiAllSkyDbImageTable.dayDate < cutoff_non_detection_date)\
+                .filter(IndiAllSkyDbImageTable.detections == 0)\
+                .order_by(IndiAllSkyDbImageTable.createDate.asc())
+            asset_lists.insert(1, (old_non_detection_images, IndiAllSkyDbImageTable))
+
 
         delete_count = 0
         for asset_list, asset_table in asset_lists:

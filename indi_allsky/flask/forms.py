@@ -1930,6 +1930,14 @@ def IMAGE_EXPIRE_DAYS_validator(form, field):
         raise ValidationError('Image Expiration must be 1 or greater')
 
 
+def IMAGE_NON_DETECTION_EXPIRE_DAYS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Non-detection image expiration must be 0 or greater')
+
+
 def TIMELAPSE_EXPIRE_DAYS_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -4909,6 +4917,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STACK_DAY                  = BooleanField('Day stacking [debug]')
     BACKUP_DB_PERIOD_DAYS            = IntegerField('DB Backup Frequency (days)', validators=[BACKUP_DB_PERIOD_DAYS_validator])
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
+    IMAGE_NON_DETECTION_EXPIRE_DAYS  = IntegerField('Non-detection image expiration (days)', validators=[IMAGE_NON_DETECTION_EXPIRE_DAYS_validator])
     IMAGE_RAW_EXPIRE_DAYS            = IntegerField('RAW Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     IMAGE_FITS_EXPIRE_DAYS           = IntegerField('FITS Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])

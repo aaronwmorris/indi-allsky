@@ -39,13 +39,19 @@
                     </div>
                 </div>
 
-                <!-- Expire Days (Image, RAW, FITS, Timelapse) -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <!-- Expire Days (Image, Non-Detection, RAW, FITS, Timelapse) -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-5 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum age in days before original timelapse and panorama images are deleted.</span>
                         <div id="IMAGE_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_NON_DETECTION_EXPIRE_DAYS.label.text }}</span>
+                        {{ form_config.IMAGE_NON_DETECTION_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Purge images with 0 detections after this many days (0 = disabled).</span>
+                        <div id="IMAGE_NON_DETECTION_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_RAW_EXPIRE_DAYS.label.text }}</span>
