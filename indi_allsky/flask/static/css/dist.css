@@ -6916,6 +6916,15 @@
       --top-mul: 4;
       --font-size: 0.75rem;
     }
+    .tw\:select-xs {
+      --sl-size-mul: 6;
+      --font-size-min: 0.6875rem;
+      --option-px: 2;
+    }
+    .tw\:floating-label:has(.tw\:select-xs) {
+      --top-mul: 3;
+      --font-size: 0.6875rem;
+    }
     .tw\:btn-neutral {
       --btn-color: var(--color-neutral);
       --btn-fg: var(--color-neutral-content);

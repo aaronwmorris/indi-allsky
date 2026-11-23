@@ -38,6 +38,7 @@ from .utils import IndiAllSkyDateCalcs
 from .overlay.moonOverlay import IndiAllSkyMoonOverlay
 from .overlay.lightgraphOverlay import IndiAllSkyLightgraphOverlay
 from .overlay.imageOverlay import IndiAllSkyImageOverlay
+from .overlay.skyReticleOverlay import draw_sky_reticles_opencv, draw_sky_reticles_pillow, satellite_title_matches_filter
 
 from .flask.miscDb import miscDb
 from .flask.models import IndiAllSkyDbBadPixelMapTable
@@ -183,6 +184,7 @@ class ImageProcessor(object):
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
 
         self._camera_sqm_raw_mag = 0.0
+        self.last_satellites = []
 
         self._wb_mtf_night = 1
         self._wbb_mtf_lut = None
@@ -3556,6 +3558,32 @@ class ImageProcessor(object):
 
             self._text_next_line()
 
+        if self.config.get('ADSB', {}).get('ENABLE') and self.config.get('ADSB', {}).get('OVERLAY_ENABLE') and adsb_aircraft_list:
+            draw_sky_reticles_opencv(
+                self.image,
+                adsb_aircraft_list,
+                self.config.get('ADSB', {}),
+                self.config,
+                binning=i_ref.binmode,
+                label_keys=('id',),
+                default_color=(0, 255, 255),
+            )
+
+        sat_cfg = self.config.get('SATELLITE_TRACK', {})
+        if sat_cfg.get('ENABLE') and (sat_cfg.get('DAYTIME_TRACK') or self.night_av[constants.NIGHT_NIGHT]):
+            obs_midpoint = i_ref.exp_date.astimezone(timezone.utc) + timedelta(seconds=float(i_ref.exposure or 0) / 2.0)
+            satellites = self.get_visible_satellites(obs_time=obs_midpoint)
+            if sat_cfg.get('OVERLAY_ENABLE') and satellites:
+                draw_sky_reticles_opencv(
+                    self.image,
+                    satellites,
+                    sat_cfg,
+                    self.config,
+                    binning=i_ref.binmode,
+                    label_keys=('title',),
+                    default_color=(163, 230, 53),
+                )
+
 
     def drawText_opencv(self, data, text, pt, color_bgr):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
@@ -3650,6 +3678,38 @@ class ImageProcessor(object):
             )
 
             self._text_next_line()
+
+        if self.config.get('ADSB', {}).get('ENABLE') and self.config.get('ADSB', {}).get('OVERLAY_ENABLE') and adsb_aircraft_list:
+            adsb_font = ImageFont.truetype(str(pillow_font_file_p), max(12, int(self.text_size_pillow * 0.6)))
+            draw_sky_reticles_pillow(
+                draw,
+                (image_width, image_height),
+                adsb_aircraft_list,
+                self.config.get('ADSB', {}),
+                self.config,
+                font=adsb_font,
+                binning=i_ref.binmode,
+                label_keys=('id',),
+                default_color=(0, 255, 255),
+            )
+
+        sat_cfg = self.config.get('SATELLITE_TRACK', {})
+        if sat_cfg.get('ENABLE') and (sat_cfg.get('DAYTIME_TRACK') or self.night_av[constants.NIGHT_NIGHT]):
+            obs_midpoint = i_ref.exp_date.astimezone(timezone.utc) + timedelta(seconds=float(i_ref.exposure or 0) / 2.0)
+            satellites = self.get_visible_satellites(obs_time=obs_midpoint)
+            if sat_cfg.get('OVERLAY_ENABLE') and satellites:
+                sat_font = ImageFont.truetype(str(pillow_font_file_p), max(12, int(self.text_size_pillow * 0.6)))
+                draw_sky_reticles_pillow(
+                    draw,
+                    (image_width, image_height),
+                    satellites,
+                    sat_cfg,
+                    self.config,
+                    font=sat_font,
+                    binning=i_ref.binmode,
+                    label_keys=('title',),
+                    default_color=(163, 230, 53),
+                )
 
 
         # convert back to numpy array
@@ -3767,35 +3827,25 @@ class ImageProcessor(object):
         return aircraft_lines
 
 
-    def get_satellite_tracking_text(self):
+    def get_visible_satellites(self, obs_time=None):
         if not self.config.get('SATELLITE_TRACK', {}).get('ENABLE'):
-            return list()
-
-        if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
+            self.last_satellites = []
             return list()
 
         if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_av[constants.NIGHT_NIGHT]:
+            self.last_satellites = []
             return list()
 
-
-        #sat_track_start = time.time()
-
-
-        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-        #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
+        utcnow = obs_time or datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         obs = ephem.Observer()
         obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
         obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
         obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
-
         # disable atmospheric refraction calcs
         obs.pressure = 0
-
-
         obs.date = utcnow
-
 
         # there may be multiple satellites of the same name, usually pieces of the same rocket
         sat_entries = IndiAllSkyDbTleDataTable.query\
@@ -3803,20 +3853,15 @@ class ImageProcessor(object):
             .order_by(IndiAllSkyDbTleDataTable.id.desc())\
             .limit(300)  # 300 is a sanity check
 
-
-        satellite_lines = []
-
-        for line in self.config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
-            satellite_lines.append(line)
-
-
-        alt_deg_min = self.config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20)
-        label_limit = self.config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10)
-        satellite_tmpl = self.config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '')
-
+        sat_cfg = self.config.get('SATELLITE_TRACK', {})
+        alt_deg_min = sat_cfg.get('ALT_DEG_MIN', 20)
+        tle_include = sat_cfg.get('TLE_INCLUDE', '')
+        tle_exclude = sat_cfg.get('TLE_EXCLUDE', '')
 
         sat_list = list()
         for sat_entry in sat_entries:
+            if not satellite_title_matches_filter(sat_entry.title, tle_include, tle_exclude):
+                continue
 
             try:
                 sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
@@ -3824,19 +3869,14 @@ class ImageProcessor(object):
                 logger.error('Satellite TLE data error: %s', str(e))
                 continue
 
-
             sat.compute(obs)
-
 
             if sat.eclipsed:
                 continue
 
-
             sat_alt = math.degrees(sat.alt)
-
             if sat_alt < alt_deg_min:
                 continue
-
 
             sat_sublat = math.degrees(sat.sublat)
             sat_sublong = math.degrees(sat.sublong)
@@ -3855,24 +3895,37 @@ class ImageProcessor(object):
                 'range_velocity' : sat.range_velocity / 1000,
             }
 
-
             try:
                 sat_data['dir'] = self.cardinal_directions[round(sat_data['az'] / 22.5)]
             except IndexError:
-                logger.error('Unable to calculate aircraft direction')
+                logger.error('Unable to calculate satellite direction')
                 sat_data['dir'] = 'Error'
-
 
             sat_list.append(sat_data)
 
-
-        #sat_track_elapsed_s = time.time() - sat_track_start
-        #logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
-
-
-        # sort by highest satellites
         sorted_sat_list = sorted(sat_list, key=lambda x: x['alt'], reverse=True)
+        self.last_satellites = sorted_sat_list
+        return sorted_sat_list
 
+
+    def get_satellite_tracking_text(self):
+        if not self.config.get('SATELLITE_TRACK', {}).get('ENABLE'):
+            return list()
+
+        if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
+            return list()
+
+        if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_av[constants.NIGHT_NIGHT]:
+            return list()
+
+        sorted_sat_list = self.get_visible_satellites()
+
+        satellite_lines = []
+        for line in self.config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
+            satellite_lines.append(line)
+
+        label_limit = self.config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10)
+        satellite_tmpl = self.config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '')
 
         for i in range(label_limit):
             try:
@@ -3881,12 +3934,10 @@ class ImageProcessor(object):
                 # no more satellites
                 break
 
-
             line = satellite_tmpl.format(**sat_data)
 
             for x in line.split('\\n'):  # new line is not an escape character in template
                 satellite_lines.append(x)
-
 
         return satellite_lines
 

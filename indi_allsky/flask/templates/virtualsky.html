@@ -313,6 +313,7 @@ async function loop() {
                 planetarium = S.virtualsky(sky_options);
                 $('#starmap canvas').on('contextrestored', function() {
                     planetarium.draw();
+                    drawSkyReticleOverlays(img ? img.entry : null);
                 });
             }
             // createSky rounds CSS dimensions; use the same scale on later redraws.
@@ -331,6 +332,7 @@ async function loop() {
             VirtualSkyCalibration.maskImage(planetarium, overlayImageMask, [image_width, image_height],
                 this.entry.binmode, [image_circle_diameter, offset_x, offset_y]);
             planetarium.draw();
+            drawSkyReticleOverlays(this.entry);
 
 
             redraw_planetarium = false;
@@ -477,6 +479,26 @@ function loadJS(url, data, onDone, onError) {
                                 </label>
                             </div>
                             {% endfor %}
+                            <div class="virtualsky-layer" role="group" aria-label="Aircraft (ADS-B)">
+                                <label for="ADSB_OVERLAY">
+                                    <input type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" {{ 'checked' if adsb_enable | default(false) else '' }} id="ADSB_OVERLAY"> Aircraft (ADS-B)
+                                </label>
+                                <select id="ADSB_OVERLAY_STYLE" class="tw:select tw:select-bordered tw:select-xs tw:bg-base-100 tw:text-base-content">
+                                    <option value="circle" selected>Circle</option>
+                                    <option value="cross">Crosshair</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
+                            <div class="virtualsky-layer" role="group" aria-label="Satellites">
+                                <label for="SAT_OVERLAY">
+                                    <input type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" {{ 'checked' if satellite_track_enable | default(false) else '' }} id="SAT_OVERLAY"> Satellites
+                                </label>
+                                <select id="SAT_OVERLAY_STYLE" class="tw:select tw:select-bordered tw:select-xs tw:bg-base-100 tw:text-base-content">
+                                    <option value="circle" selected>Circle</option>
+                                    <option value="cross">Crosshair</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
                         </div>
                     </fieldset>
 
@@ -573,6 +595,65 @@ function loadJS(url, data, onDone, onError) {
 </div>
 
 <script>
+function drawSkyReticleOverlay(sky, items, toggleSelector, styleSelector, color, labelKeys) {
+    if (!$(toggleSelector).prop('checked')) return;
+    if (!sky || !Array.isArray(items) || items.length === 0) return;
+
+    const canvas = $('#starmap canvas')[0];
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const style = $(styleSelector).val() || 'circle';
+    const dpr = canvas.width / Math.max(1, sky.wide);
+    const sizeScale = Math.max(1, sky.wide / 700);
+    const radius = 12 * dpr * sizeScale;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(1.5, 1.5 * dpr * sizeScale);
+    ctx.font = Math.round(11 * dpr * sizeScale) + 'px sans-serif';
+
+    items.forEach(item => {
+        const altDeg = Number(item.alt);
+        const azDeg = Number(item.az);
+        if (!Number.isFinite(altDeg) || !Number.isFinite(azDeg)) return;
+
+        const pos = sky.azel2xy(
+            (azDeg * sky.d2r) - (sky.az_off * sky.d2r),
+            altDeg * sky.d2r,
+            sky.wide,
+            sky.tall
+        );
+        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+
+        const cx = pos.x * dpr;
+        const cy = pos.y * dpr;
+        if (cx < 0 || cx >= canvas.width || cy < 0 || cy >= canvas.height) return;
+
+        ctx.beginPath();
+        if (style === 'circle' || style === 'both') {
+            ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        }
+        if (style === 'cross' || style === 'both') {
+            ctx.moveTo(cx - radius, cy);
+            ctx.lineTo(cx + radius, cy);
+            ctx.moveTo(cx, cy - radius);
+            ctx.lineTo(cx, cy + radius);
+        }
+        ctx.stroke();
+
+        const labelKey = (labelKeys || []).find(k => item[k]);
+        if (labelKey) {
+            ctx.fillText(String(item[labelKey]), cx + radius + (4 * dpr), cy + (4 * dpr));
+        }
+    });
+
+    ctx.restore();
+}
+
+
 function forceRedrawPlanetarium() {
     if (img && json_data['image_list'].length > 0) {
         redraw_planetarium = true;
@@ -631,6 +712,10 @@ $("#SHOWSTARLABELS").on("change", function() {
 });
 
 $("#SHOWPLANETS").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#ADSB_OVERLAY, #ADSB_OVERLAY_STYLE, #SAT_OVERLAY, #SAT_OVERLAY_STYLE").on("change", function() {
     forceRedrawPlanetarium();
 });
 
@@ -727,6 +812,12 @@ function getDownloadTimestamp() {
     return last_image_timestamp || Math.floor(Date.now() / 1000);
 }
 
+function drawSkyReticleOverlays(entry) {
+    if (!entry || !planetarium) return;
+    drawSkyReticleOverlay(planetarium, entry.aircraft, '#ADSB_OVERLAY', '#ADSB_OVERLAY_STYLE', '#00ffff', ['id']);
+    drawSkyReticleOverlay(planetarium, entry.satellites, '#SAT_OVERLAY', '#SAT_OVERLAY_STYLE', '#a3e635', ['title', 'id']);
+}
+
 async function downloadImageWithOverlay() {
     const $btn = $('#download_overlay');
     $btn.prop('disabled', true);
@@ -765,6 +856,7 @@ async function downloadImageWithOverlay() {
             if (typeof planetarium.drawImmediate === 'function') {
                 planetarium.drawImmediate();
             }
+            drawSkyReticleOverlays(img ? img.entry : null);
 
             const starmapCanvas = document.querySelector('#starmap canvas');
             if (starmapCanvas) {
@@ -777,6 +869,7 @@ async function downloadImageWithOverlay() {
                 if (typeof planetarium.drawImmediate === 'function') {
                     planetarium.drawImmediate();
                 }
+                drawSkyReticleOverlays(img ? img.entry : null);
             }
         } else {
             const starmapCanvas = document.querySelector('#starmap canvas');
@@ -822,6 +915,7 @@ async function downloadMapData() {
             if (typeof planetarium.drawImmediate === 'function') {
                 planetarium.drawImmediate();
             }
+            drawSkyReticleOverlays(img ? img.entry : null);
 
             const starmapCanvas = document.querySelector('#starmap canvas');
             if (!starmapCanvas) {
@@ -842,6 +936,7 @@ async function downloadMapData() {
                 if (typeof planetarium.drawImmediate === 'function') {
                     planetarium.drawImmediate();
                 }
+                drawSkyReticleOverlays(img ? img.entry : null);
             }
 
             mapCanvas.toBlob(blob => {
