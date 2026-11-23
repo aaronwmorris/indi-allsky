@@ -80,7 +80,12 @@ var json_data = {
 var max_age = 900;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
-var timestamp = {{ timestamp | int }};  // does not really do anything yet
+var timestamp = {{ timestamp | int }};
+var live_mode = (timestamp === 0);
+var loop_timer_id = null;
+var next_poll_timer_id = null;
+var current_entry = null;
+var frame_nav_busy = false;
 var fullscreen = false;  // initial state
 
 var camera_latitude = {{ camera_latitude }};
@@ -177,6 +182,8 @@ async function loop() {
         var image_width = this.naturalWidth;
         var image_height = this.naturalHeight;
         var image_timestamp = this.entry.timestamp;
+        current_entry = this.entry;
+        updateFrameNavUI(this.entry);
         $('#latest-image').attr({
             'src': this.src,
             'width': image_width,
@@ -339,13 +346,18 @@ async function loop() {
     };
 
 
-    showImage(json_data['image_list'][0]);
+    if (json_data['image_list'].length > 0) {
+        showImage(json_data['image_list'][0]);
+    }
 
-    setTimeout(loop, refreshInterval);
+    if (live_mode) {
+        loop_timer_id = setTimeout(loop, refreshInterval);
+    }
 }
 
 
 function showImage(entry) {
+    if (!entry) return;
     console.log('Showing image ' + entry["url"]);
     img.entry = entry;
     img.src = entry["url"];
@@ -355,7 +367,142 @@ function showImage(entry) {
 function loadNextImage() {
     console.log('Loading next image');
     loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 900, 'timestamp' : timestamp}, function() {});
-    setTimeout(loadNextImage, refreshInterval);
+    if (live_mode) {
+        next_poll_timer_id = setTimeout(loadNextImage, refreshInterval);
+    }
+}
+
+function updateFrameNavUI(entry) {
+    if (!entry) return;
+    const ts = Number(entry.timestamp) || 0;
+    const dt = new Date(ts * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    const formatted = dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()) + ' ' +
+        pad(dt.getHours()) + ':' + pad(dt.getMinutes()) + ':' + pad(dt.getSeconds());
+    const localInput = dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()) + 'T' +
+        pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+
+    $('#vs_frame_timestamp').text(formatted + ' (' + ts + ')');
+    if (!$('#vs_jump_time').is(':focus')) {
+        $('#vs_jump_time').val(localInput);
+    }
+
+    if (live_mode) {
+        $('#vs_mode_badge').text('LIVE').removeClass('tw:badge-warning').addClass('tw:badge-success');
+        $('#vs_live_btn').addClass('tw:btn-success').removeClass('tw:btn-outline');
+    } else {
+        $('#vs_mode_badge').text('HISTORICAL').removeClass('tw:badge-success').addClass('tw:badge-warning');
+        $('#vs_live_btn').removeClass('tw:btn-success').addClass('tw:btn-outline');
+    }
+}
+
+function stopLiveTimers() {
+    if (loop_timer_id) {
+        clearTimeout(loop_timer_id);
+        loop_timer_id = null;
+    }
+    if (next_poll_timer_id) {
+        clearTimeout(next_poll_timer_id);
+        next_poll_timer_id = null;
+    }
+}
+
+function updateBrowserTimestampUrl(ts) {
+    if (!window.history || !window.history.replaceState) return;
+    const url = new URL(window.location.href);
+    if (ts > 0) {
+        url.searchParams.set('timestamp', String(ts));
+    } else {
+        url.searchParams.delete('timestamp');
+    }
+    window.history.replaceState({}, '', url.toString());
+}
+
+function displayHistoricalEntry(entry) {
+    live_mode = false;
+    stopLiveTimers();
+    timestamp = Number(entry.timestamp) || 0;
+    json_data['image_list'] = [entry];
+    redraw_planetarium = true;
+    updateBrowserTimestampUrl(timestamp);
+    showImage(entry);
+}
+
+function fetchHistoricalFrame(baseTs, direction, emptyMessage, $buttons) {
+    if (frame_nav_busy) return;
+    frame_nav_busy = true;
+    $buttons.prop('disabled', true);
+
+    $.ajax({
+        type: "GET",
+        url: "{{ url_for(image_loop_view) }}",
+        contentType: "application/json",
+        data: {
+            camera_id: camera_id,
+            limit_s: 14400,
+            limit: 1,
+            timestamp: baseTs,
+            history: direction,
+            virtualsky: 1,
+        },
+        success: function(rdata) {
+            if (rdata && Array.isArray(rdata.image_list) && rdata.image_list.length > 0) {
+                $('#message').html(rdata.message || '');
+                displayHistoricalEntry(rdata.image_list[0]);
+            } else {
+                $('#message').text(emptyMessage);
+            }
+        },
+        error: function() {
+            $('#message').text('Error loading frame.');
+        },
+        complete: function() {
+            frame_nav_busy = false;
+            $buttons.prop('disabled', false);
+        },
+    });
+}
+
+function stepFrame(direction) {
+    const baseTs = (current_entry && Number(current_entry.timestamp)) || timestamp || Math.floor(Date.now() / 1000);
+    const emptyMsg = direction === 'before' ? 'No older frame within 4 hours.' : 'Already at newest frame.';
+    fetchHistoricalFrame(baseTs, direction, emptyMsg, $('#vs_prev_btn, #vs_next_btn'));
+}
+
+function jumpToDateTime() {
+    const val = $('#vs_jump_time').val();
+    if (!val) return;
+    const parsed = new Date(val);
+    if (Number.isNaN(parsed.getTime())) return;
+    const targetTs = Math.floor(parsed.getTime() / 1000) + 1;
+    fetchHistoricalFrame(targetTs, 'before', 'No frame found near selected date/time.', $('#vs_jump_btn'));
+}
+
+function switchToLive() {
+    if (live_mode) return;
+    live_mode = true;
+    timestamp = 0;
+    redraw_planetarium = true;
+    updateBrowserTimestampUrl(0);
+    stopLiveTimers();
+    loadNextImage();
+    loop();
+}
+
+function copyFramePermalink() {
+    const ts = (current_entry && Number(current_entry.timestamp)) || last_image_timestamp || timestamp;
+    if (!ts) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('timestamp', String(ts));
+    url.searchParams.set('camera_id', String(camera_id));
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url.toString()).then(() => {
+            const $btn = $('#vs_copy_link');
+            const orig = $btn.html();
+            $btn.text('Copied!');
+            setTimeout(() => $btn.html(orig), 1500);
+        });
+    }
 }
 
 function sleep(time) {
@@ -548,6 +695,34 @@ function loadJS(url, data, onDone, onError) {
         </div>
     </details>
 
+    <!-- Frame Navigation Bar -->
+    <div id="virtualsky-frame-nav" class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3 tw:shadow-sm">
+        <div class="tw:flex tw:items-center tw:gap-2">
+            <button id="vs_prev_btn" type="button" title="Previous frame (Left Arrow)" class="tw:btn tw:btn-sm tw:btn-outline tw:gap-1 tw:rounded-[var(--radius-box)]">
+                <i class="tw:icon-[lucide--chevron-left] tw:w-4 tw:h-4"></i> Prev
+            </button>
+            <button id="vs_next_btn" type="button" title="Next frame (Right Arrow)" class="tw:btn tw:btn-sm tw:btn-outline tw:gap-1 tw:rounded-[var(--radius-box)]">
+                Next <i class="tw:icon-[lucide--chevron-right] tw:w-4 tw:h-4"></i>
+            </button>
+            <button id="vs_live_btn" type="button" title="Return to live frames" class="tw:btn tw:btn-sm tw:btn-success tw:gap-1 tw:rounded-[var(--radius-box)]">
+                <i class="tw:icon-[lucide--radio] tw:w-4 tw:h-4"></i> Live
+            </button>
+        </div>
+
+        <div class="tw:flex tw:items-center tw:gap-2">
+            <span id="vs_mode_badge" class="tw:badge tw:badge-sm tw:badge-success tw:font-bold">LIVE</span>
+            <span id="vs_frame_timestamp" class="tw:font-mono tw:text-xs tw:text-base-content/80">--</span>
+        </div>
+
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+            <input id="vs_jump_time" type="datetime-local" aria-label="Jump to date and time" class="tw:input tw:input-bordered tw:input-sm tw:bg-base-100 tw:text-xs tw:rounded-[var(--radius-box)]">
+            <button id="vs_jump_btn" type="button" class="tw:btn tw:btn-sm tw:btn-outline tw:rounded-[var(--radius-box)]">Go</button>
+            <button id="vs_copy_link" type="button" title="Copy permalink to current frame" class="tw:btn tw:btn-sm tw:btn-ghost tw:gap-1 tw:rounded-[var(--radius-box)]">
+                <i class="tw:icon-[lucide--link] tw:w-4 tw:h-4"></i> Copy Link
+            </button>
+        </div>
+    </div>
+
     <!-- Planetarium Map Canvas and Download Row -->
     <div class="tw:text-center tw:space-y-4">
         <div id="message" class="tw:flex tw:items-center tw:justify-center tw:gap-2.5 tw:text-xs tw:text-base-content/50">
@@ -704,6 +879,22 @@ $( document ).ready(function() {
     init();
     // Sidebar/layout changes can resize the photo without a window resize.
     new ResizeObserver(forceRedrawPlanetarium).observe(document.getElementById('latest-image'));
+
+    $('#vs_prev_btn').on('click', () => stepFrame('before'));
+    $('#vs_next_btn').on('click', () => stepFrame('after'));
+    $('#vs_live_btn').on('click', switchToLive);
+    $('#vs_jump_btn').on('click', jumpToDateTime);
+    $('#vs_copy_link').on('click', copyFramePermalink);
+    $(document).on('keydown', function(e) {
+        if ($(e.target).is('input, textarea, select')) return;
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            stepFrame('before');
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            stepFrame('after');
+        }
+    });
 });
 
 
@@ -729,7 +920,8 @@ function getDownloadTimestamp() {
 
 async function downloadImageWithOverlay() {
     const $btn = $('#download_overlay');
-    $btn.prop('disabled', true);
+    const origHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Exporting...');
 
     try {
         const imgElem = document.getElementById('latest-image');
@@ -799,14 +991,15 @@ async function downloadImageWithOverlay() {
         console.error('Failed to download composite image:', err);
     } finally {
         setTimeout(() => {
-            $btn.prop('disabled', false);
+            $btn.prop('disabled', false).html(origHtml);
         }, 500);
     }
 }
 
 async function downloadMapData() {
     const $btn = $('#download_map');
-    $btn.prop('disabled', true);
+    const origHtml = $btn.html();
+    $btn.prop('disabled', true).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Exporting...');
 
     try {
         const imgElem = document.getElementById('latest-image');
@@ -862,7 +1055,7 @@ async function downloadMapData() {
         console.error('Failed to download map data:', err);
     } finally {
         setTimeout(() => {
-            $btn.prop('disabled', false);
+            $btn.prop('disabled', false).html(origHtml);
         }, 500);
     }
 }

@@ -44,5 +44,7 @@ def test_calibration_actions_require_config_save_access(login_disabled, authenti
     # Viewing, adjusting and downloading the overlay remain available to everyone.
     for control in ['lens_altitude', 'POINTING_AZIMUTH', 'AZIMUTH_ANGLE', 'LATITUDE_OFFSET',
                     'LONGITUDE_OFFSET', 'IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y',
-                    'MAGNITUDE', 'SHOWSTARS', 'download_overlay', 'download_map']:
+                    'MAGNITUDE', 'SHOWSTARS', 'download_overlay', 'download_map',
+                    'vs_prev_btn', 'vs_next_btn', 'vs_live_btn', 'vs_jump_time',
+                    'vs_jump_btn', 'vs_copy_link']:
         assert f'id="{control}"' in html

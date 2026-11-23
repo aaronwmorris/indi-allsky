@@ -451,7 +451,12 @@ function populate_gallery(gallery_data) {
 
               pswp.on('change', () => {
                 //console.log('change');
-                el.href = "{{ url_for('indi_allsky.virtualsky_view') }}?timestamp=" + pswp.currSlide.data.element.getAttribute("data-ts");
+                var cam_id = fields["CAMERA_ID"] ? fields["CAMERA_ID"].input.val() : '';
+                var vs_url = "{{ url_for('indi_allsky.virtualsky_view') }}?timestamp=" + pswp.currSlide.data.element.getAttribute("data-ts");
+                if (cam_id) {
+                    vs_url += "&camera_id=" + encodeURIComponent(cam_id);
+                }
+                el.href = vs_url;
               });
             }
         });
