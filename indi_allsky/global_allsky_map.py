@@ -56,40 +56,50 @@ class _NoRedirect(request.HTTPRedirectHandler):
         return None
 
 
-def validate_urls(website, image):
-    """URLs may use different hosts; a website still requires an image."""
-    for index, value in enumerate((website, image)):
-        if not isinstance(value, str):
-            raise MapError('Public URLs must be text')
-        if not value:
-            continue
-        if value != value.strip() or any(ord(c) < 33 for c in value):
-            raise MapError('Public URLs must not contain spaces or control characters')
-        try:
-            parts = parse.urlsplit(value)
-            host = parts.hostname
-            parts.port  # Validate the optional port without rewriting the URL.
-        except ValueError as exc:
-            raise MapError('Invalid public URL') from exc
-        if parts.scheme not in ('http', 'https') or not host or parts.username is not None or parts.password is not None or parts.fragment:
-            raise MapError('Use public HTTP(S) URLs without credentials or fragments')
-        policy_host = host.lower().rstrip('.')
-        if index == 1 and (policy_host == 'allsky-map.com' or policy_host.endswith('.allsky-map.com')):
-            raise MapError('allsky-map.com must not be used to host images for the Allsky Map')
-        if policy_host == 'localhost' or policy_host.endswith('.local'):
-            raise MapError('Public URLs must be reachable outside the local network')
-        try:
-            address = ipaddress.ip_address(policy_host)
-        except ValueError:
-            # Reject legacy numeric IPv4 spellings without DNS or platform parsing.
-            # Canonical public IPv4/IPv6 literals remain handled by ipaddress.
-            if re.fullmatch(r'(?:[0-9]+|0x[0-9a-f]+)(?:\.(?:[0-9]+|0x[0-9a-f]+))*', policy_host):
-                raise MapError('Use canonical public IP addresses in map URLs')
-        else:
-            if not address.is_global:
-                raise MapError('Public URLs must not contain private/local IP addresses')
+def validate_url(value, image=False):
+    """Validate one public URL without rewriting it or attributing another field's error."""
+    if not isinstance(value, str):
+        raise MapError('Public URLs must be text')
+    if not value:
+        return
+    if value != value.strip() or any(ord(c) < 33 for c in value):
+        raise MapError('Public URLs must not contain spaces or control characters')
+    try:
+        parts = parse.urlsplit(value)
+        host = parts.hostname
+        parts.port  # Validate the optional port without rewriting the URL.
+    except ValueError as exc:
+        raise MapError('Invalid public URL') from exc
+    if parts.scheme not in ('http', 'https') or not host or parts.username is not None or parts.password is not None or parts.fragment:
+        raise MapError('Use public HTTP(S) URLs without credentials or fragments')
+    policy_host = host.lower().rstrip('.')
+    if image and (policy_host == 'allsky-map.com' or policy_host.endswith('.allsky-map.com')):
+        raise MapError('allsky-map.com must not be used to host images for the Allsky Map')
+    if policy_host == 'localhost' or policy_host.endswith('.local'):
+        raise MapError('Public URLs must be reachable outside the local network')
+    try:
+        address = ipaddress.ip_address(policy_host)
+    except ValueError:
+        # Reject legacy numeric IPv4 spellings without DNS or platform parsing.
+        # Canonical public IPv4/IPv6 literals remain handled by ipaddress.
+        if re.fullmatch(r'(?:[0-9]+|0x[0-9a-f]+)(?:\.(?:[0-9]+|0x[0-9a-f]+))*', policy_host):
+            raise MapError('Use canonical public IP addresses in map URLs')
+    else:
+        if not address.is_global:
+            raise MapError('Public URLs must not contain private/local IP addresses')
+
+
+def validate_url_dependency(website, image):
+    """The missing Image field owns this cross-field requirement."""
     if website and not image:
         raise MapError('Website URL requires an Image URL')
+
+
+def validate_urls(website, image):
+    """Authoritative runtime gate; both single-URL policies and dependency apply."""
+    validate_url(website)
+    validate_url(image, image=True)
+    validate_url_dependency(website, image)
 
 
 def coordinate(value, latitude, private=False):
@@ -193,9 +203,8 @@ def _redact_response(text, identifier):
 
 
 def website_url(config):
-    """Read the integration-owned URL, retaining pre-PR saved-config compatibility."""
-    return config.get('GLOBAL_ALLSKY_MAP', {}).get('WEBSITE_URL',
-        config.get('WEBSITE', {}).get('PUBLIC_URL', ''))
+    """Read only the integration-owned public Website URL."""
+    return config.get('ALLSKYTEAM_MAP', {}).get('WEBSITE_URL', '')
 
 
 def payload(config, camera, identifier, computer=None):
@@ -208,7 +217,7 @@ def payload(config, camera, identifier, computer=None):
     name = metadata.get('detected_name') or camera.name
     if not name:
         raise MapError('Detected camera name is unavailable')
-    options = config.get('GLOBAL_ALLSKY_MAP', {})
+    options = config.get('ALLSKYTEAM_MAP', {})
     website = website_url(config)
     image = options.get('IMAGE_URL', '')
     validate_urls(website, image)
@@ -484,7 +493,7 @@ class GlobalMapService:
         if operation == 'remove':
             self.suppress_publication()
         config = self.config()
-        if operation != 'remove' and not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
+        if operation != 'remove' and not config.get('ALLSKYTEAM_MAP', {}).get('ENABLE', False):
             raise MapError('Allsky Map is disabled')
         if operation == 'remove':
             if self.identifier() is None:
@@ -537,7 +546,7 @@ class GlobalMapService:
 
     def schedule(self):
         config = self.config()
-        if not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
+        if not config.get('ALLSKYTEAM_MAP', {}).get('ENABLE', False):
             return None
         state = self.state()
         if state.get('publication_suppressed') or not state.get('registered') or state.get('needs_review'):
@@ -581,7 +590,7 @@ class GlobalMapService:
             identifier = self.identifier()
             config = self.config()  # Fresh saved config, not the worker's startup snapshot.
             removing = operation == 'remove'
-            if not removing and not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
+            if not removing and not config.get('ALLSKYTEAM_MAP', {}).get('ENABLE', False):
                 raise _Disabled('Disabled before queued publication executed')
             if removing:
                 if identifier is None:

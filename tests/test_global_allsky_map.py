@@ -35,7 +35,7 @@ class GlobalMapTest(unittest.TestCase):
         self.context = APP.app_context(); self.context.push()
         db.create_all()
         self.cfg = copy.deepcopy(IndiAllSkyConfigBase._base_config)
-        self.cfg['GLOBAL_ALLSKY_MAP'] = {'ENABLE': True, 'IMAGE_URL': 'https://images.example.org/latest.jpg', 'EQUIPMENT': ''}
+        self.cfg['ALLSKYTEAM_MAP'] = {'ENABLE': True, 'IMAGE_URL': 'https://images.example.org/latest.jpg', 'EQUIPMENT': ''}
         self.cfg.update(LOCATION_LATITUDE=35.5, LOCATION_LONGITUDE=-.12,
                         LOCATION_NAME='Synthetic site', OWNER='Synthetic owner')
         self.camera = IndiAllSkyDbCameraTable(name='Test CCD', local=True, data={'detected_name': 'Detected CCD'})
@@ -79,7 +79,7 @@ class GlobalMapTest(unittest.TestCase):
 
     def test_equipment_is_duplicated_without_changing_other_payload_fields(self):
         equipment = 'Example heater; quotes " and Unicode ☁'
-        self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'] = equipment
+        self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT'] = equipment
         data = self.s._payload(self.cfg, create=True)
         self.assertEqual(data, {
             'force': False, 'machine_id': self.s.identifier(),
@@ -98,15 +98,15 @@ class GlobalMapTest(unittest.TestCase):
     def test_empty_or_unconfigured_equipment_is_empty_in_both_locations(self):
         for value in ('', None):
             with self.subTest(value=value):
-                self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'] = value
+                self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT'] = value
                 data = self.s._payload(self.cfg, create=True)
                 self.assertEqual(data['equipmentinfo'], '')
                 self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
-        del self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT']
+        del self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT']
         data = self.s._payload(self.cfg)
         self.assertEqual(data['equipmentinfo'], '')
         self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
-        del self.cfg['GLOBAL_ALLSKY_MAP']
+        del self.cfg['ALLSKYTEAM_MAP']
         data = self.s._payload(self.cfg)
         self.assertEqual(data['equipmentinfo'], '')
         self.assertEqual(data['allsky_settings'], {'equipmentinfo': ''})
@@ -119,8 +119,8 @@ class GlobalMapTest(unittest.TestCase):
         for website, image in pairs:
             with self.subTest(website=website, image=image):
                 G.validate_urls(website, image)
-                self.cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = website
-                self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = image
+                self.cfg['ALLSKYTEAM_MAP']['WEBSITE_URL'] = website
+                self.cfg['ALLSKYTEAM_MAP']['IMAGE_URL'] = image
                 data = self.s._payload(self.cfg, True)
                 self.assertEqual(data['website_url'], website)
                 self.assertEqual(data['image_url'], image)
@@ -151,10 +151,10 @@ class GlobalMapTest(unittest.TestCase):
     def test_accuracy_default_is_legacy_with_identical_payload_hash(self):
         self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=-12.654)
         before = self.s._payload(self.cfg, True)
-        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'legacy'
+        self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = 'legacy'
         self.assertEqual(self.s._payload(self.cfg), before)
         self.assertEqual(G.fingerprint(self.s._payload(self.cfg)), G.fingerprint(before))
-        self.assertEqual(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], 'legacy')
+        self.assertEqual(IndiAllSkyConfigBase._base_config['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], 'legacy')
         self.assertEqual(G.publication_coordinates(35.123, -12.654), ('35.12N', '12.65W'))
 
     def test_accuracy_private_branch_preserves_all_legacy_private_outputs(self):
@@ -274,7 +274,7 @@ class GlobalMapTest(unittest.TestCase):
         self.camera.longitude = 12.6001234
         db.session.commit()
         for mode in ['exact', '0.5km', '1km', '2km', '5km']:
-            self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = mode
+            self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = mode
             before = copy.deepcopy(self.cfg)
             manual = self.s._payload(self.cfg, True)
             self.cfg['GPS_ENABLE'] = True
@@ -293,7 +293,7 @@ class GlobalMapTest(unittest.TestCase):
         preview = self.s.preview()
         task_id = self.s.enqueue('update', preview['preview_token'])
         self.s._change(lambda state: state.update(needs_review=True))
-        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+        self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = 'exact'
         with self.assertRaises(G.MapError):
             self.s.enqueue('update', preview['preview_token'])
         task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
@@ -307,7 +307,7 @@ class GlobalMapTest(unittest.TestCase):
     def test_accuracy_dirty_updates_coalesce_and_preview_matches_publication(self):
         self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654)
         self.run_job()
-        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '1km'
+        self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = '1km'
         self.assertTrue(self.s.status()['dirty'])
         self.now += 301
         task_id = self.s.schedule()
@@ -326,7 +326,7 @@ class GlobalMapTest(unittest.TestCase):
         self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654, PRIVACY_MODE=True)
         self.run_job()
         before = self.s._payload(self.cfg)
-        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+        self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = 'exact'
         self.assertEqual(self.s._payload(self.cfg), before)
         self.assertFalse(self.s.status()['dirty'])
         self.now += G.REFRESH_SECONDS - 1
@@ -335,14 +335,14 @@ class GlobalMapTest(unittest.TestCase):
         self.assertTrue(self.s.status()['dirty'])
         self.cfg.update(LOCATION_LATITUDE=35.1, LOCATION_LONGITUDE=.5)
         first = self.s._payload(self.cfg)
-        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '0.5km'
+        self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = '0.5km'
         self.assertEqual(self.s._payload(self.cfg), first)
 
     def test_accuracy_privacy_transitions_stale_queued_payload_and_preserve_review(self):
         for original in [False, True]:
             self.now += 301
             self.cfg.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654, PRIVACY_MODE=original)
-            self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+            self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = 'exact'
             self.run_job()
             self.now += 301
             preview = self.s.preview()
@@ -367,7 +367,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertFalse(self.s.status()['dirty'])
         self.now += 301
         self.assertIsNone(self.s.schedule())
-        self.cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = 'exact'
+        self.cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = 'exact'
         self.assertTrue(self.s.status()['dirty'])
         self.assertIsNotNone(self.s.schedule())
         self.assertIsNone(self.s.schedule())
@@ -385,9 +385,9 @@ class GlobalMapTest(unittest.TestCase):
         with patch('pathlib.Path.read_text',side_effect=AssertionError('Host file must not be read')):
             first=self.s.identifier(True)
             self.assertRegex(first,r'^[0-9a-f]{32}$')
-            self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=False
+            self.cfg['ALLSKYTEAM_MAP']['ENABLE']=False
             self.assertEqual(G.GlobalMapService(lambda:self.cfg).identifier(True),first)
-            self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=True
+            self.cfg['ALLSKYTEAM_MAP']['ENABLE']=True
             self.assertEqual(self.s.identifier(True),first)
         self.assertEqual(IndiAllSkyDbStateTable.query.filter_by(key=G.ID_KEY).count(),1)
 
@@ -398,11 +398,11 @@ class GlobalMapTest(unittest.TestCase):
 
     def test_optional_text_and_version_are_truthful(self):
         self.cfg.update(OWNER='',LOCATION_NAME='',LENS_NAME='')
-        self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT']='quotes " and apostrophe \' / Unicode ☁'
+        self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT']='quotes " and apostrophe \' / Unicode ☁'
         data=self.s._payload(self.cfg,True)
         self.assertEqual(data['owner'],'Unknown');self.assertEqual(data['location'],'Unknown')
         self.assertEqual(data['lens'], '')
-        self.assertEqual(json.loads(json.dumps(data))['equipmentinfo'],self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'])
+        self.assertEqual(json.loads(json.dumps(data))['equipmentinfo'],self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT'])
         with patch.object(G,'__version__','indi_v2026.11.01+development.test'):
             self.assertEqual(self.s._payload(self.cfg)['allsky_version'],'indi_v2026.11.01')
 
@@ -428,7 +428,7 @@ class GlobalMapTest(unittest.TestCase):
     def test_configured_location_owner_text_is_preserved_exactly(self):
         self.cfg.update(LOCATION_NAME='  Synthetic observatory ☁  ', OWNER='  Synthetic group  ',
                         LENS_NAME='')
-        self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'] = ''
+        self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT'] = ''
         original = copy.deepcopy(self.cfg)
         data = self.s._payload(self.cfg, True)
         self.assertEqual(data['location'], original['LOCATION_NAME'])
@@ -473,11 +473,11 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(self.calls,[])
 
     def test_disabled_and_unregistered_startup_make_no_requests(self):
-        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=False
+        self.cfg['ALLSKYTEAM_MAP']['ENABLE']=False
         self.assertIsNone(self.s.schedule())
         with self.assertRaises(G.MapError):self.s.enqueue('force','anything')
         self.assertEqual(self.s.state(),{});self.assertIsNone(self.s.identifier())
-        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=True
+        self.cfg['ALLSKYTEAM_MAP']['ENABLE']=True
         for _ in range(3):self.assertIsNone(G.GlobalMapService(lambda:self.cfg).schedule())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(),0);self.assertEqual(self.calls,[])
 
@@ -512,14 +512,14 @@ class GlobalMapTest(unittest.TestCase):
         self.assertFalse(json.loads(self.calls[-1][0].data)['force']);self.assertIsNone(s.schedule())
 
     def test_metadata_changes_are_dirty_and_coalesce(self):
-        self.run_job();self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT']='new lens heater'
+        self.run_job();self.cfg['ALLSKYTEAM_MAP']['EQUIPMENT']='new lens heater'
         self.assertTrue(self.s.status()['dirty']);self.assertIsNone(self.s.schedule())
         self.now+=301;task_id=self.s.schedule();self.assertIsNotNone(task_id)
         self.assertIsNone(self.s.schedule());self.assertEqual(len(self.calls),1)
 
     def test_queued_update_rechecks_enable(self):
         preview=self.s.preview();task_id=self.s.enqueue('register',preview['preview_token'])
-        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=False
+        self.cfg['ALLSKYTEAM_MAP']['ENABLE']=False
         task=db.session.get(IndiAllSkyDbTaskQueueTable,task_id);task.setRunning()
         self.assertEqual(self.s.execute(task,**task.data['kwargs'])['status'],'DISABLED')
         self.assertEqual(self.calls,[]);self.assertIsNone(self.s.schedule())
@@ -564,7 +564,7 @@ class GlobalMapTest(unittest.TestCase):
         if outcome == 'STALE':
             self.cfg['OWNER'] = 'Changed after manual update was queued'
         else:
-            self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'] = False
+            self.cfg['ALLSKYTEAM_MAP']['ENABLE'] = False
         task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
         task.setRunning()
         result = self.s.execute(task, **task.data['kwargs'])
@@ -579,7 +579,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertTrue(after['last_status'].startswith(outcome + ':'))
         self.assertEqual(len(self.calls), 2)  # Registration and the ambiguous update only.
         # Re-enable and wait until a refresh is due: review, not Disable/cooldown, blocks it.
-        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'] = True
+        self.cfg['ALLSKYTEAM_MAP']['ENABLE'] = True
         self.now += G.REFRESH_SECONDS + 1
         self.assertIsNone(self.s.schedule())
         self.assertTrue(self.s.state()['needs_review'])
@@ -602,7 +602,7 @@ class GlobalMapTest(unittest.TestCase):
         with self.assertRaises(G.MapError):self.s.enqueue('update',preview['preview_token'])
 
     def test_remove_sends_only_delete_fields_and_keeps_identity(self):
-        self.run_job();identifier=self.s.identifier();self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=False
+        self.run_job();identifier=self.s.identifier();self.cfg['ALLSKYTEAM_MAP']['ENABLE']=False
         task_id=self.s.enqueue('remove');task=db.session.get(IndiAllSkyDbTaskQueueTable,task_id);task.setRunning()
         result=self.s.execute(task,**task.data['kwargs']);self.assertTrue(result['ok'])
         self.assertEqual(json.loads(self.calls[-1][0].data),{'machine_id':identifier,'website_url':'DELETE'})
@@ -693,7 +693,7 @@ class GlobalMapTest(unittest.TestCase):
     def test_forbidden_image_is_checked_again_before_queued_post(self):
         preview = self.s.preview()
         task_id = self.s.enqueue('register', preview['preview_token'])
-        self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = 'https://ALLSKY-MAP.COM./image'
+        self.cfg['ALLSKYTEAM_MAP']['IMAGE_URL'] = 'https://ALLSKY-MAP.COM./image'
         with self.assertRaises(G.MapError):
             self.s.preview()
         task = db.session.get(IndiAllSkyDbTaskQueueTable, task_id)
@@ -921,15 +921,13 @@ class GlobalMapTest(unittest.TestCase):
 
 
 
-    def test_website_url_legacy_fallback_and_explicit_new_key_preserve_fingerprint(self):
+    def test_website_url_uses_only_owned_key_not_development_fallback(self):
+        self.cfg['WEBSITE']['PUBLIC_URL'] = 'https://legacy.example.org/'
+        self.assertEqual(self.s._payload(self.cfg, True)['website_url'], '')
         website = 'https://website.example.org/archive/'
-        self.cfg['WEBSITE']['PUBLIC_URL'] = website
-        before = self.s._payload(self.cfg, True)
-        self.cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = website
-        after = self.s._payload(self.cfg)
-        self.assertEqual(before, after)
-        self.assertEqual(G.fingerprint(before), G.fingerprint(after))
-        self.cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = ''
+        self.cfg['ALLSKYTEAM_MAP']['WEBSITE_URL'] = website
+        self.assertEqual(self.s._payload(self.cfg)['website_url'], website)
+        self.cfg['ALLSKYTEAM_MAP']['WEBSITE_URL'] = ''
         self.assertEqual(self.s._payload(self.cfg)['website_url'], '')
         self.assertNotIn('PUBLIC_URL', IndiAllSkyConfigBase._base_config['WEBSITE'])
 
@@ -984,7 +982,7 @@ class GlobalMapTest(unittest.TestCase):
         self.now += G.REFRESH_SECONDS + 1
         self.s.suppress_publication()
         # Simulate stale parent whole-config write-back setting ENABLE true again.
-        self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'] = True
+        self.cfg['ALLSKYTEAM_MAP']['ENABLE'] = True
         restarted = G.GlobalMapService(lambda: self.cfg, lambda: self.now, self.open)
         self.assertIsNone(restarted.schedule())
         self.assertIsNone(restarted.enqueue('update', automatic=True))
@@ -1041,7 +1039,7 @@ class GlobalMapTest(unittest.TestCase):
         with patch.object(G, 'post', side_effect=remove_during_post):
             self.assertTrue(self.s.execute(task, **task.data['kwargs'])['ok'])
         self.assertTrue(self.s.state()['publication_suppressed'])
-        self.assertTrue(self.cfg['GLOBAL_ALLSKY_MAP']['ENABLE'])
+        self.assertTrue(self.cfg['ALLSKYTEAM_MAP']['ENABLE'])
         self.now += G.REFRESH_SECONDS + 1
         self.assertIsNone(self.s.schedule())
 

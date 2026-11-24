@@ -29,7 +29,7 @@ class GlobalMapWebTest(unittest.TestCase):
         db.session.add(self.user);db.session.flush()
         self.cfg=copy.deepcopy(IndiAllSkyConfigBase._base_config)
         self.cfg.update(VARLIB_FOLDER=_TMP.name,IMAGE_FOLDER=_TMP.name,IMAGE_EXPORT_FOLDER=_TMP.name,DETECT_MASK='')
-        self.cfg['GLOBAL_ALLSKY_MAP'].update(ENABLE=True,IMAGE_URL=self.IMAGE_URL)
+        self.cfg['ALLSKYTEAM_MAP'].update(ENABLE=True,IMAGE_URL=self.IMAGE_URL)
         entry=IndiAllSkyDbConfigTable(data=self.cfg,level=__config_level__,user_id=self.user.id,encrypted=False,note='fixture')
         db.session.add(entry);db.session.flush()
         camera=IndiAllSkyDbCameraTable(name='Generic test CCD',uuid=str(uuid.uuid4()),driver='indi_test',
@@ -73,8 +73,10 @@ class GlobalMapWebTest(unittest.TestCase):
             self.assertIsNotNone(tab)
             self.assertEqual(re.sub(r'<[^>]+>', '', tab.group(1)).strip(), label)
             self.assertIn('tw:uppercase', tab.group(0))
-        self.assertIn(b'GLOBAL_ALLSKY_MAP__IMAGE_URL',r.data)
-        self.assertIn(b'GLOBAL_ALLSKY_MAP__WEBSITE_URL',r.data)
+            icon = 'globe' if tab_id == 'nav-global-allsky-map-tab' else 'map'
+            self.assertIn('tw:icon-[lucide--' + icon + ']', tab.group(0))
+        self.assertIn(b'ALLSKYTEAM_MAP__IMAGE_URL',r.data)
+        self.assertIn(b'ALLSKYTEAM_MAP__WEBSITE_URL',r.data)
         with patch.object(G, 'post', side_effect=AssertionError('Status must not POST')) as post, \
                 patch.object(G.GlobalMapService, 'enqueue', side_effect=AssertionError('Status must not enqueue')) as enqueue:
             for _ in range(3):
@@ -111,15 +113,15 @@ class GlobalMapWebTest(unittest.TestCase):
             if 'form_config' in context:captured.append(context['form_config'])
         with template_rendered.connected_to(receive,APP):r=self.client.get('/indi-allsky/config')
         data=copy.deepcopy(captured[-1].data)
-        data.update(GLOBAL_ALLSKY_MAP__ENABLE=True,GLOBAL_ALLSKY_MAP__IMAGE_URL=self.IMAGE_URL,
-                    GLOBAL_ALLSKY_MAP__EQUIPMENT='Synthetic heater',GLOBAL_ALLSKY_MAP__WEBSITE_URL='https://website.other.example/archive/',
+        data.update(ALLSKYTEAM_MAP__ENABLE=True,ALLSKYTEAM_MAP__IMAGE_URL=self.IMAGE_URL,
+                    ALLSKYTEAM_MAP__EQUIPMENT='Synthetic heater',ALLSKYTEAM_MAP__WEBSITE_URL='https://website.other.example/archive/',
                     RELOAD_ON_SAVE=False,CONFIG_NOTE='map test save')
         r=self.client.post('/indi-allsky/ajax/config',json=data)
         self.assertEqual(r.status_code,200,r.get_json())
         latest=IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
-        self.assertEqual(latest.data['GLOBAL_ALLSKY_MAP']['IMAGE_URL'],self.IMAGE_URL)
-        self.assertEqual(latest.data['GLOBAL_ALLSKY_MAP']['EQUIPMENT'],'Synthetic heater')
-        self.assertEqual(latest.data['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'], 'https://website.other.example/archive/')
+        self.assertEqual(latest.data['ALLSKYTEAM_MAP']['IMAGE_URL'],self.IMAGE_URL)
+        self.assertEqual(latest.data['ALLSKYTEAM_MAP']['EQUIPMENT'],'Synthetic heater')
+        self.assertEqual(latest.data['ALLSKYTEAM_MAP']['WEBSITE_URL'], 'https://website.other.example/archive/')
         self.assertIsNone(G.GlobalMapService().identifier())
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(),0)
 
@@ -160,8 +162,8 @@ class GlobalMapWebTest(unittest.TestCase):
         image = 'https://images.example.org/Latest.JPG?raw=1'
         entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
         cfg = copy.deepcopy(entry.data)
-        cfg['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'] = website
-        cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = image
+        cfg['ALLSKYTEAM_MAP']['WEBSITE_URL'] = website
+        cfg['ALLSKYTEAM_MAP']['IMAGE_URL'] = image
         entry.data = cfg
         db.session.commit()
         page = self.client.get('/indi-allsky/config')
@@ -194,18 +196,18 @@ class GlobalMapWebTest(unittest.TestCase):
     def test_accuracy_old_config_defaults_to_legacy_without_publication(self):
         entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
         cfg = copy.deepcopy(entry.data)
-        cfg['GLOBAL_ALLSKY_MAP'].pop('LOCATION_ACCURACY', None)
+        cfg['ALLSKYTEAM_MAP'].pop('LOCATION_ACCURACY', None)
         entry.data = cfg
         db.session.commit()
         data, page = self._accuracy_form_data()
-        self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
+        self.assertEqual(data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'], 'legacy')
         self.assertIn(b'Round to 2 decimal places (default)', page)
         self.assertIn(b'Exact saved location', page)
-        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        data.pop('ALLSKYTEAM_MAP__LOCATION_ACCURACY')
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
         saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], 'legacy')
+        self.assertEqual(saved['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], 'legacy')
         self.assertEqual(saved['LOCATION_LATITUDE'], cfg['LOCATION_LATITUDE'])
         self.assertEqual(saved['LOCATION_LONGITUDE'], cfg['LOCATION_LONGITUDE'])
         self.assertIsNone(G.GlobalMapService().identifier())
@@ -214,16 +216,16 @@ class GlobalMapWebTest(unittest.TestCase):
     def test_accuracy_saving_pre_feature_config_does_not_change_upgrade_default(self):
         # The generic config loader shallow-copies base config. Isolate this feature's
         # default section so this test cannot leak a deliberately mutated template.
-        section = copy.deepcopy(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP'])
-        with patch.dict(IndiAllSkyConfigBase._base_config, GLOBAL_ALLSKY_MAP=section):
+        section = copy.deepcopy(IndiAllSkyConfigBase._base_config['ALLSKYTEAM_MAP'])
+        with patch.dict(IndiAllSkyConfigBase._base_config, ALLSKYTEAM_MAP=section):
             entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
             old = copy.deepcopy(entry.data)
-            old.pop('GLOBAL_ALLSKY_MAP')
+            old.pop('ALLSKYTEAM_MAP')
             entry.data = old
             db.session.commit()
             data, _ = self._accuracy_form_data()
-            self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
-            data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = 'exact'
+            self.assertEqual(data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'], 'legacy')
+            data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'] = 'exact'
             response = self.client.post('/indi-allsky/ajax/config', json=data)
             self.assertEqual(response.status_code, 200, response.get_json())
             self.assertEqual(section['LOCATION_ACCURACY'], 'legacy')
@@ -231,30 +233,30 @@ class GlobalMapWebTest(unittest.TestCase):
             newest.data = copy.deepcopy(old)
             db.session.commit()
             data, _ = self._accuracy_form_data()
-            self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], 'legacy')
+            self.assertEqual(data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'], 'legacy')
 
     def test_accuracy_choices_save_and_omitted_choice_is_preserved(self):
         for mode in ['legacy', 'exact', '0.5km', '1km', '2km', '5km']:
             data, _ = self._accuracy_form_data()
-            data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = mode
+            data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'] = mode
             response = self.client.post('/indi-allsky/ajax/config', json=data)
             self.assertEqual(response.status_code, 200, response.get_json())
             saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-            self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], mode)
+            self.assertEqual(saved['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], mode)
         data, _ = self._accuracy_form_data()
-        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        data.pop('ALLSKYTEAM_MAP__LOCATION_ACCURACY')
         self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
         saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], '5km')
+        self.assertEqual(saved['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], '5km')
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
 
     def test_accuracy_invalid_form_choice_is_rejected(self):
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = 'unknown'
+        data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'] = 'unknown'
         count = IndiAllSkyDbConfigTable.query.count()
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY', response.get_json())
+        self.assertIn('ALLSKYTEAM_MAP__LOCATION_ACCURACY', response.get_json())
         self.assertEqual(IndiAllSkyDbConfigTable.query.count(), count)
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
 
@@ -262,32 +264,32 @@ class GlobalMapWebTest(unittest.TestCase):
         entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
         cfg = copy.deepcopy(entry.data)
         cfg.update(PRIVACY_MODE=True, LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654)
-        cfg['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'] = '1km'
+        cfg['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = '1km'
         entry.data = cfg
         db.session.commit()
         data, page = self._accuracy_form_data()
-        select = re.search(rb'<select[^>]*id="GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY"[^>]*>', page).group()
+        select = re.search(rb'<select[^>]*id="ALLSKYTEAM_MAP__LOCATION_ACCURACY"[^>]*>', page).group()
         self.assertIn(b'disabled', select)
         self.assertIn(b'this setting has no effect', page)
-        self.assertEqual(data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'], '1km')
+        self.assertEqual(data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'], '1km')
         # A crafted supported finer choice cannot bypass or replace the dormant setting.
-        data['GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY'] = 'exact'
+        data['ALLSKYTEAM_MAP__LOCATION_ACCURACY'] = 'exact'
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
         saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], '1km')
+        self.assertEqual(saved['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], '1km')
         preview = self.preview()['metadata']
         self.assertEqual((preview['latitude'], preview['longitude']), ('35N', '13E'))
         self.assertNotIn('35.123', str(preview))
         data, _ = self._accuracy_form_data()
-        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        data.pop('ALLSKYTEAM_MAP__LOCATION_ACCURACY')
         self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
         data, _ = self._accuracy_form_data()
         data['PRIVACY_MODE'] = False
-        data.pop('GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY')
+        data.pop('ALLSKYTEAM_MAP__LOCATION_ACCURACY')
         self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
         saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], '1km')
+        self.assertEqual(saved['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], '1km')
         expected = G.publication_coordinates(saved['LOCATION_LATITUDE'], saved['LOCATION_LONGITUDE'], False, '1km')
         preview = self.preview()['metadata']
         self.assertEqual((preview['latitude'], preview['longitude']), expected)
@@ -307,7 +309,7 @@ let checked = false, disabled = null, visible = null, callback;
 const $ = selector => ({
   prop(name, value) {
     if (selector === '#PRIVACY_MODE') return checked;
-    assert.equal(selector, '#GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY');
+    assert.equal(selector, '#ALLSKYTEAM_MAP__LOCATION_ACCURACY');
     assert.equal(name, 'disabled'); disabled = value;
   },
   toggle(value) { assert.equal(selector, '#global-map-private-location'); visible = value; },
@@ -322,7 +324,7 @@ const $ = selector => ({
     def test_accuracy_preview_and_worker_use_saved_choice_without_extra_payload_fields(self):
         data, _ = self._accuracy_form_data()
         data.update(LOCATION_LATITUDE=35.123, LOCATION_LONGITUDE=12.654,
-                    GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY='exact')
+                    ALLSKYTEAM_MAP__LOCATION_ACCURACY='exact')
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
         preview = self.preview()
@@ -338,7 +340,7 @@ const $ = selector => ({
     def test_worker_uses_fresh_config_after_disable(self):
         preview=self.preview();r=self.client.post(self.endpoint,json={'operation':'register','preview_token':preview['preview_token']})
         entry=IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
-        cfg=copy.deepcopy(entry.data);cfg['GLOBAL_ALLSKY_MAP']['ENABLE']=False;entry.data=cfg;db.session.commit()
+        cfg=copy.deepcopy(entry.data);cfg['ALLSKYTEAM_MAP']['ENABLE']=False;entry.data=cfg;db.session.commit()
         task,call=self.worker(r.get_json()['task_id'])
         self.assertEqual(task.state,TaskQueueState.FAILED);self.assertEqual(call.call_count,0)
 
@@ -426,8 +428,8 @@ const $ = selector => ({
         self.assertIn('limited by the precision of your saved location', text)
         self.assertNotIn('then respect source precision', text)
         for name in ['ENABLE', 'LOCATION_ACCURACY', 'WEBSITE_URL', 'IMAGE_URL', 'EQUIPMENT']:
-            self.assertEqual(text.count('id="GLOBAL_ALLSKY_MAP__' + name + '"'), 1)
-            self.assertEqual(text.count('id="GLOBAL_ALLSKY_MAP__' + name + '-error"'), 1)
+            self.assertEqual(text.count('id="ALLSKYTEAM_MAP__' + name + '"'), 1)
+            self.assertEqual(text.count('id="ALLSKYTEAM_MAP__' + name + '-error"'), 1)
         for op in ['preview', 'register', 'force', 'remove']:
             self.assertIn('data-global-map="' + op + '"', text)
         for op in ['register', 'force']:
@@ -626,16 +628,16 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
     def test_common_form_validator_rejects_proxy_only_when_enabled(self):
         from types import SimpleNamespace
         from wtforms.validators import ValidationError
-        from indi_allsky.flask.forms import GLOBAL_ALLSKY_MAP_urls_validator
-        form = SimpleNamespace(GLOBAL_ALLSKY_MAP__WEBSITE_URL=SimpleNamespace(data=''),
-            GLOBAL_ALLSKY_MAP__IMAGE_URL=SimpleNamespace(data='https://CDN.ALLSKY-MAP.COM./image'),
-            GLOBAL_ALLSKY_MAP__ENABLE=SimpleNamespace(data=True))
+        from indi_allsky.flask.forms import ALLSKYTEAM_MAP_image_validator
+        form = SimpleNamespace(ALLSKYTEAM_MAP__WEBSITE_URL=SimpleNamespace(data=''),
+            ALLSKYTEAM_MAP__IMAGE_URL=SimpleNamespace(data='https://CDN.ALLSKY-MAP.COM./image'),
+            ALLSKYTEAM_MAP__ENABLE=SimpleNamespace(data=True))
         with self.assertRaises(ValidationError):
-            GLOBAL_ALLSKY_MAP_urls_validator(form, None)
-        form.GLOBAL_ALLSKY_MAP__ENABLE.data = False
-        GLOBAL_ALLSKY_MAP_urls_validator(form, None)
+            ALLSKYTEAM_MAP_image_validator(form, form.ALLSKYTEAM_MAP__IMAGE_URL)
+        form.ALLSKYTEAM_MAP__ENABLE.data = False
+        ALLSKYTEAM_MAP_image_validator(form, form.ALLSKYTEAM_MAP__IMAGE_URL)
         # Disabled form saving does not turn a forbidden URL into publishable metadata.
-        self.cfg['GLOBAL_ALLSKY_MAP']['IMAGE_URL'] = form.GLOBAL_ALLSKY_MAP__IMAGE_URL.data
+        self.cfg['ALLSKYTEAM_MAP']['IMAGE_URL'] = form.ALLSKYTEAM_MAP__IMAGE_URL.data
         with self.assertRaises(G.MapError):
             G.payload(self.cfg, IndiAllSkyDbCameraTable.query.first(), 'a' * 32)
 
@@ -807,7 +809,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
             ns['updateConfigLocation'](parent, 40.125, 15.625, 100, IndiAllSkyDbCameraTable.query.first().id)
         else:
             ns['updateConfigPaused'](parent, True)
-        self.assertTrue(IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data['GLOBAL_ALLSKY_MAP']['ENABLE'])
+        self.assertTrue(IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data['ALLSKYTEAM_MAP']['ENABLE'])
 
     def test_disabled_form_save_survives_actual_parent_stale_writeback(self):
         self.preview()
@@ -815,7 +817,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         service._change(lambda state: state.update(registered=True, needs_review=False, last_success=0))
         stale = copy.deepcopy(self.cfg)
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        data['ALLSKYTEAM_MAP__ENABLE'] = False
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
         self._write_stale_config(stale)
@@ -824,7 +826,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
         # Explicit Enable alone is not token-bound resumption.
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = True
+        data['ALLSKYTEAM_MAP__ENABLE'] = True
         self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
         self.assertTrue(service.state()['publication_suppressed'])
         preview = self.preview()
@@ -860,17 +862,17 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         self.preview()
         from indi_allsky.config import IndiAllSkyConfig, ConfigSaveException
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        data['ALLSKYTEAM_MAP__ENABLE'] = False
         with patch.object(IndiAllSkyConfig, 'save', side_effect=ConfigSaveException('synthetic save failure')):
             response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue(G.GlobalMapService().state()['publication_suppressed'])
-        self.assertTrue(G.GlobalMapService().config()['GLOBAL_ALLSKY_MAP']['ENABLE'])
+        self.assertTrue(G.GlobalMapService().config()['ALLSKYTEAM_MAP']['ENABLE'])
 
     def test_suppression_failure_prevents_config_save_or_false_success(self):
         self.preview()
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        data['ALLSKYTEAM_MAP__ENABLE'] = False
         count = IndiAllSkyDbConfigTable.query.count()
         with patch.object(G.GlobalMapService, 'suppress_publication', side_effect=G.MapError('synthetic state busy')):
             response = self.client.post('/indi-allsky/ajax/config', json=data)
@@ -878,49 +880,101 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         self.assertEqual(IndiAllSkyDbConfigTable.query.count(), count)
 
     def test_private_and_nonprivate_pre_feature_saves_leave_all_defaults_unchanged(self):
-        defaults = copy.deepcopy(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP'])
+        defaults = copy.deepcopy(IndiAllSkyConfigBase._base_config['ALLSKYTEAM_MAP'])
         for private in [True, False]:
             entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
             old = copy.deepcopy(self.cfg)
-            old.pop('GLOBAL_ALLSKY_MAP')
+            old.pop('ALLSKYTEAM_MAP')
             old['PRIVACY_MODE'] = private
             entry.data = old
             db.session.commit()
             data, _ = self._accuracy_form_data()
-            data.update(GLOBAL_ALLSKY_MAP__ENABLE=True, GLOBAL_ALLSKY_MAP__IMAGE_URL=self.IMAGE_URL,
-                        GLOBAL_ALLSKY_MAP__EQUIPMENT='Synthetic enclosure',
-                        GLOBAL_ALLSKY_MAP__WEBSITE_URL='https://site.example.org/',
-                        GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY='exact')
+            data.update(ALLSKYTEAM_MAP__ENABLE=True, ALLSKYTEAM_MAP__IMAGE_URL=self.IMAGE_URL,
+                        ALLSKYTEAM_MAP__EQUIPMENT='Synthetic enclosure',
+                        ALLSKYTEAM_MAP__WEBSITE_URL='https://site.example.org/',
+                        ALLSKYTEAM_MAP__LOCATION_ACCURACY='exact')
             response = self.client.post('/indi-allsky/ajax/config', json=data)
             self.assertEqual(response.status_code, 200, response.get_json())
-            self.assertEqual(IndiAllSkyConfigBase._base_config['GLOBAL_ALLSKY_MAP'], defaults)
+            self.assertEqual(IndiAllSkyConfigBase._base_config['ALLSKYTEAM_MAP'], defaults)
             saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-            self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['LOCATION_ACCURACY'], 'legacy' if private else 'exact')
+            self.assertEqual(saved['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'], 'legacy' if private else 'exact')
             self.assertEqual(saved['WEBSITE'], self.cfg['WEBSITE'])
 
-    def test_legacy_website_url_load_save_and_explicit_empty_precedence(self):
+    def test_development_website_fallback_is_ignored_on_load_save(self):
         entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
         old = copy.deepcopy(entry.data)
-        old['GLOBAL_ALLSKY_MAP'].pop('WEBSITE_URL', None)
+        old['ALLSKYTEAM_MAP'].pop('WEBSITE_URL', None)
         old['WEBSITE']['PUBLIC_URL'] = 'https://legacy.example.org/'
         old['WEBSITE']['UNRELATED'] = 'preserve'
         entry.data = old
         db.session.commit()
         before = self.preview()
         data, _ = self._accuracy_form_data()
-        self.assertEqual(data['GLOBAL_ALLSKY_MAP__WEBSITE_URL'], 'https://legacy.example.org/')
+        self.assertEqual(data['ALLSKYTEAM_MAP__WEBSITE_URL'], '')
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
         self.assertEqual(self.preview()['preview_token'], before['preview_token'])
         saved = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first().data
-        self.assertEqual(saved['GLOBAL_ALLSKY_MAP']['WEBSITE_URL'], 'https://legacy.example.org/')
+        self.assertEqual(saved['ALLSKYTEAM_MAP']['WEBSITE_URL'], '')
         self.assertEqual(saved['WEBSITE'], old['WEBSITE'])
+
+    def test_url_errors_belong_only_to_the_responsible_field(self):
+        good_site, good_image = 'https://site.example.org/', self.IMAGE_URL
+        cases = [
+            (True, good_site, '', {'IMAGE_URL'}),
+            (True, 'http://127.0.0.1/', good_image, {'WEBSITE_URL'}),
+            (True, good_site, 'https://allsky-map.com/image', {'IMAGE_URL'}),
+            (True, 'https://user:secret@example.org/', 'http://192.168.1.1/image', {'WEBSITE_URL', 'IMAGE_URL'}),
+            (False, 'not a website', '', set()),
+            (False, 'http://127.0.0.1/', 'https://allsky-map.com/image', set()),
+            (True, '', '', set()),
+            (True, '', good_image, set()),
+        ]
+        for enabled, website, image, expected in cases:
+            with self.subTest(enabled=enabled, expected=expected):
+                data, _ = self._accuracy_form_data()
+                data.update(ALLSKYTEAM_MAP__ENABLE=enabled,
+                            ALLSKYTEAM_MAP__WEBSITE_URL=website, ALLSKYTEAM_MAP__IMAGE_URL=image)
+                response = self.client.post('/indi-allsky/ajax/config', json=data)
+                self.assertEqual(response.status_code, 400 if expected else 200, response.get_json())
+                errors = response.get_json()
+                actual = {key for key in ('WEBSITE_URL', 'IMAGE_URL') if 'ALLSKYTEAM_MAP__' + key in errors}
+                self.assertEqual(actual, expected)
+                if enabled and website == good_site and not image:
+                    self.assertEqual(errors['ALLSKYTEAM_MAP__IMAGE_URL'], ['Website URL requires an Image URL'])
+                if expected:
+                    for key in expected:
+                        messages = errors['ALLSKYTEAM_MAP__' + key]
+                        self.assertNotIn('secret', str(messages))
+                self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
+
+    def test_renamed_namespace_roundtrip_preserves_identity_and_state_keys(self):
+        from indi_allsky.config import IndiAllSkyConfig
+        service = G.GlobalMapService()
+        self.preview()
+        service._change(lambda state: state.update(registered=True, needs_review=True,
+            publication_suppressed=True))
+        # An unknown unreleased section is tolerated, but never treated as the new section.
+        entry = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.id.desc()).first()
+        config = copy.deepcopy(entry.data)
+        config.pop('ALLSKYTEAM_MAP')
+        config['GLOBAL_ALLSKY_MAP'] = {'ENABLE': True, 'WEBSITE_URL': 'https://old.example.org/'}
+        entry.data = config
+        db.session.commit()
+        self.assertFalse(IndiAllSkyConfig().config['ALLSKYTEAM_MAP']['ENABLE'])
+        before = {r.key: r.value for r in IndiAllSkyDbStateTable.query.all() if r.key.startswith('GLOBAL_MAP_')}
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__WEBSITE_URL'] = ''
-        self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
-        self.assertEqual(self.preview()['metadata']['website_url'], '')
-
-
+        data.update(ALLSKYTEAM_MAP__ENABLE=True, ALLSKYTEAM_MAP__WEBSITE_URL='https://new.example.org/',
+                    ALLSKYTEAM_MAP__IMAGE_URL=self.IMAGE_URL, ALLSKYTEAM_MAP__EQUIPMENT='Synthetic enclosure',
+                    ALLSKYTEAM_MAP__LOCATION_ACCURACY='1km')
+        response = self.client.post('/indi-allsky/ajax/config', json=data)
+        self.assertEqual(response.status_code, 200, response.get_json())
+        reloaded = IndiAllSkyConfig().config
+        self.assertEqual(reloaded['ALLSKYTEAM_MAP'], dict(ENABLE=True, WEBSITE_URL='https://new.example.org/',
+            IMAGE_URL=self.IMAGE_URL, EQUIPMENT='Synthetic enclosure', LOCATION_ACCURACY='1km'))
+        self.assertIn('GLOBAL_ALLSKY_MAP', reloaded)
+        self.assertEqual({r.key: r.value for r in IndiAllSkyDbStateTable.query.all() if r.key.startswith('GLOBAL_MAP_')}, before)
+        self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(), 0)
 
     def test_disable_survives_actual_gps_parent_location_writeback(self):
         self.preview()
@@ -928,7 +982,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         service._change(lambda state: state.update(registered=True, needs_review=False, last_success=0))
         stale = copy.deepcopy(self.cfg)
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        data['ALLSKYTEAM_MAP__ENABLE'] = False
         self.assertEqual(self.client.post('/indi-allsky/ajax/config', json=data).status_code, 200)
         self._write_stale_config(stale, relocation=True)
         self.assertTrue(service.state()['publication_suppressed'])
@@ -940,7 +994,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
     def test_never_used_disabled_saves_create_no_map_state_or_identifier(self):
         for _ in range(2):
             data, _ = self._accuracy_form_data()
-            data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+            data['ALLSKYTEAM_MAP__ENABLE'] = False
             with patch.object(G.GlobalMapService, 'suppress_publication',
                               side_effect=AssertionError('Unused feature must not write state')):
                 response = self.client.post('/indi-allsky/ajax/config', json=data)
@@ -954,7 +1008,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         db.session.add(row)
         db.session.commit()
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        data['ALLSKYTEAM_MAP__ENABLE'] = False
         with patch.object(G.GlobalMapService, '_change',
                           side_effect=AssertionError('Unused feature must not depend on state')):
             response = self.client.post('/indi-allsky/ajax/config', json=data)
@@ -967,7 +1021,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
         self.preview()
         identifier = G.GlobalMapService().identifier()
         data, _ = self._accuracy_form_data()
-        data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+        data['ALLSKYTEAM_MAP__ENABLE'] = False
         response = self.client.post('/indi-allsky/ajax/config', json=data)
         self.assertEqual(response.status_code, 200, response.get_json())
         service = G.GlobalMapService()
@@ -988,7 +1042,7 @@ assert.deepEqual(JSON.parse($('#global-map-status').value),response);
                 row.value = raw
             db.session.commit()
             data, _ = self._accuracy_form_data()
-            data['GLOBAL_ALLSKY_MAP__ENABLE'] = False
+            data['ALLSKYTEAM_MAP__ENABLE'] = False
             count = IndiAllSkyDbConfigTable.query.count()
             with self.subTest(raw=raw, action='disable'):
                 response = self.client.post('/indi-allsky/ajax/config', json=data)

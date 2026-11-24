@@ -2903,14 +2903,25 @@ def SYNCAPI__BASEURL_validator(form, field):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
-def GLOBAL_ALLSKY_MAP_urls_validator(form, field):
-    from ..global_allsky_map import validate_urls, MapError
+def ALLSKYTEAM_MAP_website_validator(form, field):
+    if not form.ALLSKYTEAM_MAP__ENABLE.data:
+        return
+    from ..global_allsky_map import validate_url, MapError
     try:
-        validate_urls(form.GLOBAL_ALLSKY_MAP__WEBSITE_URL.data or '', form.GLOBAL_ALLSKY_MAP__IMAGE_URL.data or '')
+        validate_url(field.data or '')
     except MapError as exc:
-        # The Global Map website URL can be saved before this integration is enabled.
-        if form.GLOBAL_ALLSKY_MAP__ENABLE.data:
-            raise ValidationError(str(exc))
+        raise ValidationError(str(exc))
+
+
+def ALLSKYTEAM_MAP_image_validator(form, field):
+    if not form.ALLSKYTEAM_MAP__ENABLE.data:
+        return
+    from ..global_allsky_map import validate_url, validate_url_dependency, MapError
+    try:
+        validate_url(field.data or '', image=True)
+        validate_url_dependency(form.ALLSKYTEAM_MAP__WEBSITE_URL.data or '', field.data or '')
+    except MapError as exc:
+        raise ValidationError(str(exc))
 
 
 def ALLSKYMAP__API_URL_validator(form, field):
@@ -5079,14 +5090,14 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
-    GLOBAL_ALLSKY_MAP__ENABLE       = BooleanField('Enable publication')
-    GLOBAL_ALLSKY_MAP__LOCATION_ACCURACY = SelectField('Location accuracy', default='legacy', choices=[
+    ALLSKYTEAM_MAP__ENABLE       = BooleanField('Enable publication')
+    ALLSKYTEAM_MAP__LOCATION_ACCURACY = SelectField('Location accuracy', default='legacy', choices=[
         ('legacy', 'Round to 2 decimal places (default)'), ('exact', 'Exact saved location'),
         ('0.5km', 'Approximate 0.5 km grid'), ('1km', 'Approximate 1 km grid'),
         ('2km', 'Approximate 2 km grid'), ('5km', 'Approximate 5 km grid')])
-    GLOBAL_ALLSKY_MAP__IMAGE_URL    = StringField('Image URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
-    GLOBAL_ALLSKY_MAP__EQUIPMENT    = StringField('Equipment', validators=[Length(max=512)])
-    GLOBAL_ALLSKY_MAP__WEBSITE_URL            = StringField('Website URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
+    ALLSKYTEAM_MAP__IMAGE_URL    = StringField('Image URL', validators=[ALLSKYTEAM_MAP_image_validator, Length(max=2048)])
+    ALLSKYTEAM_MAP__EQUIPMENT    = StringField('Equipment', validators=[Length(max=512)])
+    ALLSKYTEAM_MAP__WEBSITE_URL            = StringField('Website URL', validators=[ALLSKYTEAM_MAP_website_validator, Length(max=2048)])
     ALLSKYMAP__ENABLE                = BooleanField('Enable Allsky Map Ping')
     ALLSKYMAP__API_URL               = StringField('API URL', validators=[ALLSKYMAP__API_URL_validator])
     ALLSKYMAP__API_KEY               = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[ALLSKYMAP__API_KEY_validator], render_kw={'autocomplete' : 'new-password'})
