@@ -26,6 +26,25 @@ strips, allowing a different plot selection after full exposures expire. Report
 files and their cache are deleted with their keogram. Existing remote/S3-only
 assets are not rendered remotely or exported automatically by this feature.
 
+## Display the latest report in Home Assistant
+
+Use `/indi-allsky/latestnightreport?camera_id=1` as the image URL for camera 1.
+It redirects to the PNG for the most recent observing night with a completed
+report. Add `&format=csv` to download its measurements. While a newer night is
+waiting for its first report, the URL still returns the previous night. If the
+camera has no report available to the caller, the request returns HTTP 404.
+The same media access settings apply as when opening the report from the archive.
+
+A client can connect to `/indi-allsky/ws/events` and fetch the latest report
+when the connection opens. On each `night_report_complete` event for its
+`data.camera_id`, it can fetch that URL again. The worker sends the event after
+publishing both files, including when it regenerates an older report.
+`data.dayDate` identifies the observing night and `data.created_at` gives the
+UTC publication time. To open the specific report that triggered the event,
+use `/indi-allsky/night_report?keogram_id=<data.keogram_id>&format=png`.
+After a disconnect, fetch the latest report again because the stream does not
+replay missed events.
+
 ## CSV interchange format, version 1
 
 UTF-8, comma-separated, a header row, decimal points, no locale-dependent dates.

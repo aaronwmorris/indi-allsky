@@ -12,9 +12,17 @@ import numpy as np
 import pytest
 
 from indi_allsky import night_report_service as reports
+from indi_allsky.events import event_manager
 from indi_allsky.flask import db
 from indi_allsky.flask.models import (IndiAllSkyDbCameraTable as Camera,
                                      IndiAllSkyDbKeogramTable as Keogram)
+
+
+@pytest.fixture(autouse=True)
+def broadcast(monkeypatch):
+    listener = Mock()
+    monkeypatch.setattr(event_manager, 'broadcast', listener)
+    return listener
 
 
 @pytest.fixture
@@ -50,7 +58,7 @@ def station(tmp_path, monkeypatch):
         yield worker, camera, kg, prepare, renderer
 
 
-def test_publishes_validated_pair_once_and_preserves_keogram(station):
+def test_publishes_validated_pair_once_and_preserves_keogram(station, broadcast):
     w, camera, kg, prepare, render = station
     original = kg.getFilesystemPath().read_bytes()
     source = object()
@@ -64,6 +72,35 @@ def test_publishes_validated_pair_once_and_preserves_keogram(station):
     assert render.call_count == 1
     manifest = json.loads(reports.report_paths(kg)['manifest'].read_text())
     assert all(len(file['sha256']) == 64 for file in manifest['files'].values())
+    broadcast.assert_called_once_with('night_report_complete', {
+        'camera_id': camera.id, 'keogram_id': kg.id, 'dayDate': kg.dayDate.isoformat(),
+        'created_at': manifest['created_at'],
+    })
+
+
+def test_failed_notification_keeps_report_ready(station, broadcast):
+    w, camera, kg, _, _ = station
+    broadcast.side_effect = OSError('relay unavailable')
+    assert reports.build_report(w, camera, kg)
+    assert reports.report_ready(kg)
+    assert kg.data['night_report']['status'] == 'ready'
+    assert not reports.build_report(w, camera, kg)
+    broadcast.assert_called_once()
+
+
+def test_uncommitted_publication_sends_no_event(station, broadcast, monkeypatch):
+    w, camera, kg, _, _ = station
+    commit = db.session.commit
+
+    def fail_ready_commit():
+        if (kg.data.get('night_report') or {}).get('status') == 'ready':
+            raise RuntimeError('database write failed')
+        commit()
+
+    monkeypatch.setattr(db.session, 'commit', fail_ready_commit)
+    assert not reports.build_report(w, camera, kg)
+    assert kg.data['night_report']['status'] == 'waiting'
+    broadcast.assert_not_called()
 
 
 def test_changed_or_missing_csv_is_not_ready_and_can_be_rebuilt(station):
@@ -79,7 +116,7 @@ def test_changed_or_missing_csv_is_not_ready_and_can_be_rebuilt(station):
     assert render.call_count == 3
 
 
-def test_failed_renderer_never_publishes_half_a_pair_and_retries_with_backoff(station):
+def test_failed_renderer_never_publishes_half_a_pair_and_retries_with_backoff(station, broadcast):
     w, camera, kg, _, render = station
     original_render = render.side_effect
     def fail(png, csv, **kwargs):
@@ -93,9 +130,11 @@ def test_failed_renderer_never_publishes_half_a_pair_and_retries_with_backoff(st
     assert kg.data['night_report']['next_retry'] > reports.time.time()
     assert not reports.build_report(w, camera, kg)
     assert render.call_count == 1
+    broadcast.assert_not_called()
     render.side_effect = original_render
     assert reports.build_report(w, camera, kg, force=True)
     assert reports.report_ready(kg)
+    broadcast.assert_called_once()
 
 
 def test_failed_forced_refresh_keeps_previous_valid_download(station):
@@ -170,7 +209,7 @@ def test_archive_scan_backfills_existing_keogram_without_rebuilding_movies(stati
     assert render.call_count == 1
 
 
-def test_selection_redraw_reuses_cache_after_source_images_expire(station):
+def test_selection_redraw_reuses_cache_after_source_images_expire(station, broadcast):
     w, camera, kg, prepare, render = station
     assert reports.report_options(camera.id) is None
     reports.save_report_options(camera.id, ['lux'])
@@ -182,6 +221,7 @@ def test_selection_redraw_reuses_cache_after_source_images_expire(station):
     assert prepare.call_count == 1
     assert render.call_args.kwargs['selected_metrics'] == ['air_temperature', 'dew_point']
     assert reports.report_ready(kg)
+    assert broadcast.call_count == 2
 
 
 def test_corrupt_cache_falls_back_to_original_frames(station):

@@ -11466,10 +11466,23 @@ class KeogramImageView(TimelapseImageView):
         return context
 
 
-class NightReportView(BaseView):
-    """Serve completed reports and queue selection changes outside HTTP."""
-    methods = ['GET', 'POST']
-    decorators = [login_optional_media]
+class NightReportAccess:
+    def check_report_camera(self, camera):
+        if camera is None or not camera.local or camera.hidden:
+            abort(404)
+        if camera.web_nonlocal_images and not (
+                camera.web_local_images_admin and self.verify_admin_network()):
+            abort(404)
+
+    @staticmethod
+    def archive_path(path):
+        try:
+            root = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).resolve(strict=True)
+            resolved = Path(path).resolve()
+            resolved.relative_to(root)
+            return resolved
+        except (OSError, RuntimeError, ValueError):
+            return None
 
     def report_entry(self):
         try:
@@ -11479,18 +11492,60 @@ class NightReportView(BaseView):
         if not 0 < keogram_id < 2 ** 63:
             abort(400)
         entry = db.session.get(IndiAllSkyDbKeogramTable, keogram_id)
-        if (entry is None or not entry.night or not entry.success
-                or not entry.camera.local or entry.camera.hidden):
+        if entry is None or not entry.night or not entry.success:
             abort(404)
-        if entry.camera.web_nonlocal_images and not (
-                entry.camera.web_local_images_admin and self.verify_admin_network()):
-            abort(404)
-        try:
-            root = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).resolve(strict=True)
-            Path(entry.getFilesystemPath()).resolve().relative_to(root)
-        except (OSError, ValueError):
+        self.check_report_camera(entry.camera)
+        if self.archive_path(entry.getFilesystemPath()) is None:
             abort(404)
         return entry
+
+    def completed_file(self, entry, fmt):
+        from ..night_report_service import report_paths, report_ready
+        path = self.archive_path(report_paths(entry)[fmt])
+        try:
+            if path is not None and path.is_file() and report_ready(entry):
+                return path
+        except OSError:
+            return None
+        return None
+
+
+class LatestNightReportRedirect(NightReportAccess, BaseView):
+    decorators = [login_optional_media]
+
+    def dispatch_request(self):
+        fmt = request.args.get('format', 'png')
+        if fmt not in ('png', 'csv'):
+            abort(400)
+        camera_arg = request.args.get('camera_id')
+        if camera_arg is None:
+            try:
+                camera = self.getLatestCamera()
+            except NoResultFound:
+                abort(404)
+        else:
+            camera_id = request.args.get('camera_id', type=int)
+            if camera_id is None or not 0 < camera_id < 2 ** 63:
+                abort(400)
+            camera = db.session.get(IndiAllSkyDbCameraTable, camera_id)
+        self.check_report_camera(camera)
+        model = IndiAllSkyDbKeogramTable
+        nights = model.query.filter_by(camera_id=camera.id, night=True, success=True).order_by(
+            model.dayDate.desc(), model.createDate.desc(), model.id.desc(),
+        )
+        for entry in nights.yield_per(50):
+            if self.archive_path(entry.getFilesystemPath()) is None or self.completed_file(entry, fmt) is None:
+                continue
+            response = redirect(url_for('indi_allsky.night_report_view', keogram_id=entry.id, format=fmt), code=302)
+            response.cache_control.no_store = True
+            return response
+        abort(404)
+
+
+class NightReportView(NightReportAccess, BaseView):
+    """Serve completed reports and queue selection changes outside HTTP."""
+    methods = ['GET', 'POST']
+    decorators = [login_optional_media]
 
     def can_edit(self):
         return bool((self.login_disabled or (current_user.is_authenticated and current_user.is_admin))
@@ -11543,7 +11598,6 @@ class NightReportView(BaseView):
         return redirect(url_for('indi_allsky.night_report_view', keogram_id=entry.id), code=303)
 
     def dispatch_request(self):
-        from ..night_report_service import report_paths, report_ready
         fmt = request.args.get('format')
         if fmt is None and request.method != 'POST':
             return NightReportPageView(template_name='night_report.html').dispatch_request()
@@ -11552,14 +11606,8 @@ class NightReportView(BaseView):
             return self.update_report(entry)
         if fmt not in ('png', 'csv'):
             abort(400)
-        try:
-            root = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).resolve(strict=True)
-            # A sidecar symlink must not expose files outside the archive.
-            path = Path(report_paths(entry)[fmt]).resolve(strict=True)
-            path.relative_to(root)
-            if not path.is_file() or not report_ready(entry):
-                abort(404)
-        except (OSError, ValueError):
+        path = self.completed_file(entry, fmt)
+        if path is None:
             abort(404)
         filename = 'allsky-night-report_ccd{}_{}.{}'.format(
             entry.camera_id, entry.dayDate.strftime('%Y%m%d'), fmt,
@@ -11574,9 +11622,8 @@ class NightReportView(BaseView):
         return response
 
 
-class NightReportPageView(TemplateView):
+class NightReportPageView(NightReportAccess, TemplateView):
     page_title = 'Night Report'
-    report_entry = NightReportView.report_entry
     report_catalog = NightReportView.report_catalog
     can_edit = NightReportView.can_edit
     pending_tasks = staticmethod(NightReportView.pending_tasks)
@@ -14476,7 +14523,7 @@ class WsEventsView(BaseView):
     """
     WebSocket Read-Only Event Stream View (/ws/events).
     Allows live event subscribers (Home Assistant, web dashboards) to receive push events
-    (exposure_complete, sensor_update, keogram_complete, timelapse_complete).
+    (exposure_complete, sensor_update, keogram_complete, night_report_complete, timelapse_complete).
     Read-only: Rejects command executions.
     """
     decorators = []
@@ -15086,6 +15133,7 @@ bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.
 # redirects
 bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
 bp_allsky.add_url_rule('/latestkeogram', view_func=LatestKeogramRedirect.as_view('latest_keogram_redirect_view'))
+bp_allsky.add_url_rule('/latestnightreport', view_func=LatestNightReportRedirect.as_view('latest_night_report_redirect_view'))
 bp_allsky.add_url_rule('/lateststartrail', view_func=LatestStartrailRedirect.as_view('latest_startrail_redirect_view'))
 bp_allsky.add_url_rule('/latestpanorama', view_func=LatestPanoramaImageRedirect.as_view('latest_panorama_image_redirect_view'))
 bp_allsky.add_url_rule('/latestraw', view_func=LatestRawImageRedirect.as_view('latest_raw_image_redirect_view'))

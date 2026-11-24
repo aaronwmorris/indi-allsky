@@ -16,6 +16,7 @@ These routes redirect directly to the raw static binary file (JPEG, PNG, MP4, DN
 | `/indi-allsky/latestimage` | Latest processed primary sky image | `camera_id` (int) |
 | `/indi-allsky/latestthumbnail` | Latest image thumbnail | `camera_id` (int) |
 | `/indi-allsky/latestkeogram` | Latest daily or realtime keogram | `camera_id` (int), `night` (0 or 1) |
+| `/indi-allsky/latestnightreport` | Most recent observing night with a completed Night Report | `camera_id` (int), `format` (`png` by default, or `csv`) |
 | `/indi-allsky/lateststartrail` | Latest composite star trail image | `camera_id` (int) |
 | `/indi-allsky/latestpanorama` | Latest unwarped panoramic image | `camera_id` (int) |
 | `/indi-allsky/latestraw` | Latest raw camera frame (DNG/FITS) | `camera_id` (int) |

@@ -34,7 +34,7 @@ def reports(tmp_path, monkeypatch):
         view.indi_allsky_config = {}
         view.template_name = template_name
 
-    for cls in (views.NightReportView, views.NightReportPageView):
+    for cls in (views.NightReportView, views.NightReportPageView, views.LatestNightReportRedirect):
         monkeypatch.setattr(cls, '__init__', initialize)
         monkeypatch.setattr(cls, 'verify_admin_network', lambda self: app.config.get('TRUSTED', False))
     monkeypatch.setattr(views.TemplateView, 'get_context', lambda self: {})
@@ -51,6 +51,7 @@ def reports(tmp_path, monkeypatch):
     (archive / 'report.csv').write_text('time,sky_temperature_c\n2026-11-14T20:00:00+01:00,-25\n')
     app.add_url_rule('/night_report', endpoint='indi_allsky.night_report_view',
                      view_func=views.NightReportView.as_view('report'))
+    app.add_url_rule('/latestnightreport', view_func=views.LatestNightReportRedirect.as_view('latest_report'))
     app.add_url_rule('/view_keogram', endpoint='indi_allsky.keogram_image_view', view_func=lambda: '')
     templates = Path(__file__).resolve().parents[2] / 'indi_allsky' / 'flask' / 'templates'
     app.jinja_loader = ChoiceLoader([DictLoader({'base.html': '{% block head %}{% endblock %}{% block content %}{% endblock %}'}),
@@ -87,6 +88,49 @@ def test_download_completed_report(reports, fmt, download, mime, disposition):
     assert response.headers['X-Content-Type-Options'] == 'nosniff'
 
 
+@pytest.mark.parametrize('query,fmt', [({}, 'png'), ({'camera_id': 1, 'format': 'csv'}, 'csv')])
+def test_latest_redirect_downloads_report(reports, query, fmt):
+    client, _, _, archive = reports
+    response = client.get('/latestnightreport', query_string=query, follow_redirects=True)
+    redirect, = response.history
+    assert redirect.status_code == 302 and redirect.cache_control.no_store
+    assert response.status_code == 200 and response.data == (archive / ('report.' + fmt)).read_bytes()
+
+
+def test_latest_skips_unfinished_nights_and_other_cameras(reports, monkeypatch):
+    client, _, entry, _ = reports
+    other = Camera(id=2, name='other', uuid='other', local=True)
+    db.session.add_all([
+        Keogram(id=2, camera=entry.camera, filename='next.jpg', dayDate=date(2026, 11, 15), night=True, success=True),
+        Keogram(id=3, camera=other, filename='other.jpg', dayDate=date(2026, 11, 16), night=True, success=True),
+    ])
+    db.session.commit()
+    ready = {1, 3}
+    monkeypatch.setattr(night_report_service, 'report_ready', lambda entry: entry.id in ready)
+    def latest(camera_id):
+        return client.get('/latestnightreport', query_string={'camera_id': camera_id}, follow_redirects=True)
+    assert latest(1).request.args['keogram_id'] == '1'
+    assert latest(2).request.args['keogram_id'] == '3'
+    ready.add(2)
+    assert latest(1).request.args['keogram_id'] == '2'
+    ready.clear()
+    assert latest(1).status_code == 404
+
+
+@pytest.mark.parametrize('query', [{'camera_id': 'x'}, {'camera_id': -1}, {'camera_id': 2 ** 63}, {'format': 'html'}])
+def test_latest_rejects_invalid_parameters(reports, query):
+    client, _, _, _ = reports
+    assert client.get('/latestnightreport', query_string=query).status_code == 400
+
+
+def test_latest_without_a_camera(reports):
+    client, _, entry, _ = reports
+    assert client.get('/latestnightreport?camera_id=99').status_code == 404
+    entry.camera.hidden = True
+    db.session.commit()
+    assert client.get('/latestnightreport').status_code == 404
+
+
 @pytest.mark.parametrize('query', [
     {}, {'keogram_id': 'x'}, {'keogram_id': 0}, {'keogram_id': -1},
     {'keogram_id': 2 ** 64}, {'keogram_id': 1, 'format': '../../etc/passwd'},
@@ -104,6 +148,7 @@ def test_ineligible_keograms_are_not_exposed(reports, field, value):
     setattr(target, name, value)
     db.session.commit()
     assert client.get('/night_report?keogram_id=1').status_code == 404
+    assert client.get('/latestnightreport?camera_id=1').status_code == 404
 
 
 def test_missing_or_unfinished_reports_return_404(reports):
@@ -128,6 +173,7 @@ def test_remote_only_policy_honours_both_admin_conditions(reports, allow_admin, 
     db.session.commit()
     app.config['TRUSTED'] = trusted
     assert client.get('/night_report?keogram_id=1').status_code == expected
+    assert client.get('/latestnightreport?camera_id=1', follow_redirects=True).status_code == expected
 
 
 def test_policy_is_taken_from_the_report_camera(reports):
@@ -147,6 +193,7 @@ def test_report_requires_media_login_when_configured(reports, setting):
     client, app, _, _ = reports
     app.config[setting] = True
     assert client.get('/night_report?keogram_id=1').status_code == 401
+    assert client.get('/latestnightreport').status_code == 401
 
 
 def test_sidecar_symlink_cannot_escape_archive(reports):
@@ -158,6 +205,7 @@ def test_sidecar_symlink_cannot_escape_archive(reports):
     response = client.get('/night_report?keogram_id=1&format=csv')
     assert response.status_code == 404
     assert b'not a report' not in response.data
+    assert client.get('/latestnightreport?format=csv').status_code == 404
 
 
 def test_absolute_keogram_outside_archive_cannot_expose_sidecars(reports):
@@ -165,6 +213,7 @@ def test_absolute_keogram_outside_archive_cannot_expose_sidecars(reports):
     entry.filename = str(archive.parent / 'private.jpg')
     db.session.commit()
     assert client.get('/night_report?keogram_id=1').status_code == 404
+    assert client.get('/latestnightreport').status_code == 404
 
 
 def test_archive_links_follow_readiness_and_media_visibility(reports):

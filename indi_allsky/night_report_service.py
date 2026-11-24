@@ -305,8 +305,19 @@ def build_report(worker, camera, keogram, entries=None, *, force=False, keogram_
                 os.replace(manifest_path, paths['manifest'])
                 _record(current, version=REPORT_VERSION, status='ready', failures=0, next_retry=0,
                         created_at=manifest['created_at'], error=None)
+                event_data = {
+                    'camera_id': current.camera_id,
+                    'keogram_id': current.id,
+                    'dayDate': current.dayDate.isoformat(),
+                    'created_at': manifest['created_at'],
+                }
                 db.session.commit()
-            logger.info('Night Report created for camera %s, %s', camera.id, keogram.dayDate)
+            try:
+                from .events import event_manager
+                event_manager.broadcast('night_report_complete', event_data)
+            except Exception:
+                logger.exception('Could not broadcast night_report_complete for keogram %s', identity[0])
+            logger.info('Night Report created for camera %s, %s', event_data['camera_id'], event_data['dayDate'])
             return True
     except Exception as exc:
         db.session.rollback()
