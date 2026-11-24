@@ -7588,6 +7588,28 @@ class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
+def night_report_urls(entry, *, local):
+    """Expose report actions only where the local keogram may be displayed."""
+    if (not local or entry is None or not entry.night or not entry.success
+            or not entry.camera.local or entry.camera.hidden):
+        return {}
+    from ..night_report_service import report_ready
+    urls = {
+        'view': url_for('indi_allsky.night_report_view', keogram_id=entry.id),
+    }
+    try:
+        if not report_ready(entry):
+            return urls
+    except (OSError, ValueError):
+        return urls
+    urls.update({
+        'image': url_for('indi_allsky.night_report_view', keogram_id=entry.id, format='png'),
+        'png': url_for('indi_allsky.night_report_view', keogram_id=entry.id, format='png', download=1),
+        'csv': url_for('indi_allsky.night_report_view', keogram_id=entry.id, format='csv', download=1),
+    })
+    return urls
+
+
 class IndiAllskyVideoViewer(FlaskForm):
     TIMEOFDAY_SELECT_choices = (
         ('all', 'All'),
@@ -8011,6 +8033,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             entry['keogram_id'] = keogram_id
             entry['keogram_thumbnail']  = str(keogram_thumbnail_url)
             entry['keogram_success']  = keogram_success
+            entry['night_report'] = night_report_urls(keogram_entry, local=self.local)
             entry['startrail']  = str(startrail_url)
             entry['startrail_thumbnail']  = str(startrail_thumbnail_url)
             entry['startrail_id']  = startrail_id

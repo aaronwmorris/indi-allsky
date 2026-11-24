@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+.night-report { display: grid; gap: 1.25rem; padding: 1.25rem; max-width: 110rem; margin-inline: auto; }
+.night-report-card { padding: 1.25rem; background: var(--color-base-200); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); min-width: 0; }
+.night-report-heading, .night-report-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.night-report h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 .4rem; }
+.night-report-note { font-size: .875rem; opacity: .75; margin-block: .4rem .9rem; }
+.night-report-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .65rem 1.25rem; margin-block: 1rem 1.25rem; }
+.night-report-options label { display: flex; align-items: center; gap: .65rem; min-height: 2.25rem; overflow-wrap: anywhere; }
+.night-report-options input { flex: none; width: 1.1rem; height: 1.1rem; accent-color: var(--color-primary); }
+.night-report-preview { display: block; width: 100%; height: auto; border-radius: var(--radius-field); }
+.night-report-status { padding: .8rem 1rem; border-left: 3px solid var(--color-primary); background: var(--color-base-100); margin-bottom: 1rem; }
+.night-report-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="night-report">
+    <section class="night-report-card">
+        <div class="night-report-heading">
+            <div>
+                <h2>{{ report_entry.dayDate.strftime('%B %d, %Y') }} · Night Report</h2>
+                <p class="night-report-note">{{ report_entry.camera.friendlyName or report_entry.camera.name }} · Keogram, sensor readings and sky events</p>
+            </div>
+            <div class="night-report-actions">
+                <a class="tw:btn tw:btn-sm tw:btn-ghost" href="{{ url_for('indi_allsky.keogram_image_view', id=report_entry.id) }}">Keogram</a>
+                {% if report_ready %}
+                <a class="tw:btn tw:btn-sm tw:btn-primary" href="{{ report_links.png }}">Download PNG</a>
+                <a class="tw:btn tw:btn-sm tw:btn-outline" href="{{ report_links.csv }}">Download CSV</a>
+                {% endif %}
+            </div>
+        </div>
+        {% if report_pending %}
+        <p class="night-report-status" role="status">{{ 'Generating the updated report…' if report_running else 'Report queued for generation.' }}{% if report_ready %} The previous report remains available until the new one is complete.{% endif %}</p>
+        {% elif report_waiting %}
+        <p class="night-report-status" role="status">The report could not be completed yet. Automatic recovery will retry it.</p>
+        {% endif %}
+        {% if report_ready %}
+        <a href="{{ report_links.image }}" target="_blank" rel="noopener noreferrer" title="Open the full-size Night Report">
+            <img class="night-report-preview" src="{{ report_links.image }}" alt="Night Report with a time-aligned keogram, measurements, astronomical twilight, moonrise and moonset">
+        </a>
+        {% if report_displayed %}<p class="night-report-note">Displayed measurements: {{ report_displayed | join(', ') }}.</p>{% endif %}
+        {% else %}
+        <p class="night-report-note">The report will appear here once generation is complete.</p>
+        {% endif %}
+        <p class="night-report-note">CSV includes all recorded measurements, UTC timestamps and capture metadata for later analysis, regardless of the curves selected below.</p>
+    </section>
+
+    <section class="night-report-card" aria-labelledby="report-measurements-heading">
+        <h2 id="report-measurements-heading">Measurements in the diagram</h2>
+        <p class="night-report-note">Choose the curves you want to see. This selection is saved for future Night Reports from this camera. Clear all measurements for a keogram-only diagram.</p>
+        {% if report_can_edit %}
+        <form id="night-report-options" method="post" action="{{ url_for('indi_allsky.night_report_view', keogram_id=report_entry.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="night-report-options">
+                {% for metric in report_metrics %}
+                <label><input type="checkbox" name="metrics" value="{{ metric.id }}"{% if metric.id in report_selected %} checked{% endif %}><span>{{ metric.label }}{% if metric.unit %} <small>({{ metric.unit }})</small>{% endif %}</span></label>
+                {% endfor %}
+            </div>
+            <div class="night-report-controls">
+                <button type="submit" class="tw:btn tw:btn-sm tw:btn-primary">Save and regenerate</button>
+                <span class="night-report-note">The report is generated in the background.</span>
+            </div>
+        </form>
+        {% else %}
+        <p class="night-report-note">Sign in as an administrator from an admin network to change this camera’s report selection.</p>
+        <div class="night-report-options">
+            {% for metric in report_metrics %}
+            <label><input type="checkbox" disabled{% if metric.id in report_selected %} checked{% endif %}><span>{{ metric.label }}{% if metric.unit %} <small>({{ metric.unit }})</small>{% endif %}</span></label>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+</main>
+{% if report_pending %}
+<script>
+(() => {
+    let edited = false;
+    document.getElementById('night-report-options')?.addEventListener('change', () => { edited = true; });
+    window.setTimeout(() => { if (!edited) window.location.reload(); }, 15000);
+})();
+</script>
+{% endif %}
+{% endblock %}

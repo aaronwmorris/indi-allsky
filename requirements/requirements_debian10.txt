@@ -28,6 +28,7 @@ scikit-image <= 0.19.3
 astroalign
 bottleneck
 python-dateutil
+backports.zoneinfo ; python_version < "3.9"
 ephem
 skyfield
 paramiko
@@ -43,7 +44,8 @@ simplejpeg <= 1.7.2
 #imagecodecs
 #rawpy  # not needed
 pygifsicle
-gunicorn[gthread] >= 22.0.0
+# Gunicorn 24.0.0 breaks file downloads on reused gthread sockets.
+gunicorn[gthread] >= 22.0.0, != 24.0.0
 inotify
 psutil
 # Last version supporting Python 3.7

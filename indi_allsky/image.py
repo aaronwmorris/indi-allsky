@@ -31,6 +31,7 @@ from fractions import Fraction
 
 from . import constants
 from . import asi676mc
+from . import night_report_data
 
 from .processing import ImageProcessor
 from .panorama import panoramaSourceCircleClipped
@@ -908,7 +909,10 @@ class ImageWorker(Process):
             image_add_data['temp_display'] = self.config.get('TEMP_DISPLAY', 'c')
             image_add_data['pressure_display'] = self.config.get('PRESSURE_DISPLAY', 'hPa')
             image_add_data['windspeed_display'] = self.config.get('WINDSPEED_DISPLAY', 'ms')
+            image_add_data['utc_offset'] = image_metadata['utc_offset']
 
+            if image_metadata['night']:
+                image_add_data['night_report_context'] = self._night_report_context(camera)
 
             if self.adsb_aircraft_list:
                 image_add_data['aircraft'] = list()
@@ -1292,6 +1296,28 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def _night_report_context(self, camera):
+        # Record the location on each exposure. A mobile station can move.
+        # Sensor assignments and timezone are constant for this worker.
+        if not hasattr(self, '_night_report_setup'):
+            try:
+                self._night_report_setup = {
+                    'sensors': night_report_data.sensor_slots(self.config),
+                    'metrics': night_report_data.metric_catalog(self.config),
+                    'timezone': getattr(night_report_data.camera_timezone(camera), 'key', None),
+                }
+            except Exception:
+                logger.exception('Could not record night report sensor assignments')
+                self._night_report_setup = {}
+
+        location = [float(self.position_av[index]) for index in
+                    (constants.POSITION_LATITUDE, constants.POSITION_LONGITUDE,
+                     constants.POSITION_ELEVATION)]
+        if self.config.get('PRIVACY_MODE'):
+            location = [round(value) for value in location]
+        return dict(self._night_report_setup, location=location)
 
 
     def getSqmData(self, camera_id):

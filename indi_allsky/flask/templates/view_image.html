@@ -43,6 +43,19 @@ var image_url = "{{ image_url }}";
             </div>
         </div>
 
+        {% if night_report %}
+        <section class="tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]" aria-label="Night Report">
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+                <a href="{{ night_report.view }}" target="_blank" rel="noopener noreferrer" class="tw:btn tw:btn-sm tw:btn-primary tw:btn-outline">Night Report</a>
+                {% if night_report.png %}
+                <a href="{{ night_report.png }}" class="tw:btn tw:btn-sm tw:btn-ghost">Download PNG</a>
+                <a href="{{ night_report.csv }}" class="tw:btn tw:btn-sm tw:btn-ghost">Download CSV</a>
+                {% endif %}
+            </div>
+            <p class="tw:text-xs tw:text-base-content/60 tw:mt-2">Keogram and sensor readings on a shared timeline, with astronomical twilight and moonrise / moonset.</p>
+        </section>
+        {% endif %}
+
         <!-- Image Display Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4 tw:flex tw:items-center tw:justify-center">
             <img id="image" class="fit tw:rounded-[var(--radius-field)] tw:cursor-pointer tw:shadow-lg" title="Click to view full screen">

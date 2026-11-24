@@ -276,6 +276,28 @@ function populate_videos(video_list) {
             'text': 'View Timelapse'
         }).appendTo(keogram_actions);
         
+        if (item['night_report'] && item['night_report']['view']) {
+            $('<a />', {
+                'href': item['night_report']['view'],
+                'target': '_blank',
+                'rel': 'noopener noreferrer',
+                'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full',
+                'text': 'Night Report'
+            }).appendTo(keogram_actions);
+            var report_downloads = $('<div />', {
+                'class': 'tw:flex tw:flex-wrap tw:gap-2'
+            }).appendTo(keogram_actions);
+            ['png', 'csv'].forEach(function(format) {
+                if (!item['night_report'][format]) return;
+                $('<a />', {
+                    'href': item['night_report'][format],
+                    'class': 'tw:btn tw:btn-xs tw:btn-ghost',
+                    'text': 'Download ' + format.toUpperCase(),
+                    'aria-label': 'Download Night Report ' + format.toUpperCase()
+                }).appendTo(report_downloads);
+            });
+        }
+
         if (item['panorama_timelapse'] !== 'None') {
             $('<a />', {
                 'href': "/indi-allsky/watch_panorama?id=" + item['panorama_timelapse_id'],

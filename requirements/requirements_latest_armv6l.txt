@@ -31,7 +31,8 @@ simplejpeg <= 1.7.2
 cython
 #rawpy  # installed later
 pygifsicle
-gunicorn[gthread] >= 23.0.0
+# Gunicorn 24.0.0 breaks file downloads on reused gthread sockets.
+gunicorn[gthread] >= 23.0.0, != 24.0.0
 inotify
 psutil
 Flask >= 3.1.3
