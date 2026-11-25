@@ -31,6 +31,7 @@ from indi_allsky.focus.exposure_search import SHORTEST_FLOOR_S
 from indi_allsky.focus.exposure_search import ExposureSearch
 from indi_allsky.focus.exposure_search import default_ceiling
 from indi_allsky.focus.frame import ISO_CLOCK_FORMAT
+from indi_allsky.focus.gearing import unset_reason
 from indi_allsky.focus.tune import Tune
 from indi_allsky.focus.tune import ladder_exposures
 from indi_allsky.focus.tune import ladder_gains
@@ -146,14 +147,18 @@ class FocusGlue(object):
                  notify: Optional[Callable[[str, str], None]] = None,
                  epoch: Callable[[], float] = time.time,
                  open_focuser: Optional[Callable[[], object]] = None,
-                 travel_limit_degrees: float = 360.0, slack_degrees: float = 30.0,
+                 travel_limit_lens_degrees: float = 0.0, backlash_degrees: float = 30.0,
+                 gear_motor_teeth: int = 0, gear_lens_teeth: int = 0,
                  clock_format: str = ISO_CLOCK_FORMAT):
         """exposure_max: config CCD_EXPOSURE_MAX, the longest exposure the session may pick (at most 15 s).
         notify(key, message): raises an indi-allsky notification; called when a required camera property could not
         be put back.
         open_focuser: opens the configured focus motor's driver (None: no motor is configured). It is opened at each
         session start and deinit at its end; when it fails to open, the session runs without lens controls.
-        travel_limit_degrees, slack_degrees: config FOCUSER TRAVEL_LIMIT_DEGREES and SLACK_DEGREES.
+        travel_limit_lens_degrees: config FOCUSER TRAVEL_LIMIT_LENS_DEGREES, lens-ring degrees each way (0: unset).
+        backlash_degrees: config FOCUSER BACKLASH_DEGREES, motor degrees.
+        gear_motor_teeth, gear_lens_teeth: config FOCUSER GEAR_MOTOR_TEETH and GEAR_LENS_TEETH, the external gears
+        (0: unset). Without them or the travel limit the session runs without lens controls.
         clock_format: the strftime format of the time stamped on the pictures (frame.clock_format)."""
         self.camera = camera
         self.link = link
@@ -166,8 +171,10 @@ class FocusGlue(object):
         self._notify = notify
         self._epoch = epoch
         self._open_focuser = open_focuser
-        self._limit_deg = float(travel_limit_degrees)
-        self._slack_deg = float(slack_degrees)
+        self._limit_lens_deg = float(travel_limit_lens_degrees or 0)
+        self._backlash_deg = float(backlash_degrees or 0)
+        self._motor_teeth = int(gear_motor_teeth or 0)
+        self._lens_teeth = int(gear_lens_teeth or 0)
         self._clock_format = clock_format
         self._driver = None
         self._lens = None
@@ -255,17 +262,28 @@ class FocusGlue(object):
         (None, None) when no motor is configured."""
         if self._open_focuser is None:
             return None, None
+        unset = self._unset_reason()
+        if unset:
+            # the driver stays closed: without the gears the lens degrees cannot become motor steps
+            logger.warning('Focus: the focus motor is not used: %s', unset)
+            return None, unset
         try:
             self._driver = self._open_focuser()
             spt = int(self._driver.STEPS_PER_TURN)
-            self._lens = Lens(self._driver, limit=int(round(self._limit_deg * spt / 360.0)),
-                              slack=int(round(self._slack_deg * spt / 360.0)), clock=self._epoch, on_change=on_change)
+            per_lens_turn = spt * self._lens_teeth / float(self._motor_teeth)
+            self._lens = Lens(self._driver, limit=int(round(self._limit_lens_deg * per_lens_turn / 360.0)),
+                              backlash=int(round(self._backlash_deg * spt / 360.0)),
+                              steps_per_lens_turn=per_lens_turn, clock=self._epoch, on_change=on_change)
         except Exception:
             logger.exception('Focus: the focus motor could not be opened')
             self._close_lens()
             return None, MSG_MOTOR_OPEN
         logger.info('Focus: focus motor %s, %d steps a turn', type(self._driver).__name__, spt)
         return self._lens, None
+
+    def _unset_reason(self) -> Optional[str]:
+        """Why the configured motor cannot be used yet, or None."""
+        return unset_reason(self._motor_teeth, self._lens_teeth, self._limit_lens_deg)
 
     def _close_lens(self):
         """Stop the lens's mover, then let the driver go (it holds GPIO or a serial port)."""

@@ -2041,8 +2041,10 @@ class CaptureWorker(Process):
                 exposure_max=float(self.config.get('CCD_EXPOSURE_MAX', 15.0)),
                 notify=self._focus_notify,
                 open_focuser=self._focus_focuser_opener(),
-                travel_limit_degrees=float(self.config.get('FOCUSER', {}).get('TRAVEL_LIMIT_DEGREES', 360)),
-                slack_degrees=float(self.config.get('FOCUSER', {}).get('SLACK_DEGREES', 30)),
+                travel_limit_lens_degrees=float(self.config.get('FOCUSER', {}).get('TRAVEL_LIMIT_LENS_DEGREES', 0) or 0),
+                backlash_degrees=float(self.config.get('FOCUSER', {}).get('BACKLASH_DEGREES', 30) or 0),
+                gear_motor_teeth=int(self.config.get('FOCUSER', {}).get('GEAR_MOTOR_TEETH', 0) or 0),
+                gear_lens_teeth=int(self.config.get('FOCUSER', {}).get('GEAR_LENS_TEETH', 0) or 0),
                 # the time on the focus pictures reads like the one the overlay prints on the sky pictures
                 clock_format=focus_clock_format(self.config.get('IMAGE_LABEL_SYSTEM', 'pillow'),
                                                 self.config.get('IMAGE_LABEL_TEMPLATE', '')),

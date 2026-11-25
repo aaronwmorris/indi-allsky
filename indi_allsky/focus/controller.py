@@ -154,8 +154,9 @@ PICK_FRAMES = 3
 GRADE_SECONDS = 4.0           # grade over about 4 s of single frames, and at least 3
 GRADE_MIN_FRAMES = 3
 MAX_POINTS = 20000            # graph points kept, oldest dropped
-FINE_DEGREES = 6              # nudge sizes before a fit
-COARSE_DEGREES = 24
+FINE_LENS_DEGREES = 0.8       # step sizes in lens-ring degrees; a good fit replaces fine and medium
+MEDIUM_LENS_DEGREES = 3.5
+COARSE_LENS_DEGREES = 13.0
 AF_TAIL_S = 2.0               # after the scan, wait this long (plus two exposures) for its last frames
 MIN_SNR_RANGE = (3.0, 60.0)
 MAX_EXPOSURE_S = 3600.0
@@ -208,6 +209,20 @@ SESSION_TURN_S = 0.05         # capture's loop sleep while a session runs, and p
 STATUS_EVERY_S = 1.0          # WATCHDOG and STATUS writes during a session, at most this often
 
 OPEN_COMMANDS = ('ping', 'hello')
+
+
+def step_sizes(steps_per_lens_turn: float, fit: Optional[dict]) -> dict:
+    """The Fine, Medium and Coarse step sizes in motor steps. Fixed lens-degree sizes until a good fit; then Fine
+    is a quarter of the fit's band and Medium the whole band. Coarse stays fixed."""
+    def steps(lens_deg):
+        return max(1, int(round(lens_deg * steps_per_lens_turn / 360.0)))
+    sizes = {'fine': steps(FINE_LENS_DEGREES), 'medium': steps(MEDIUM_LENS_DEGREES),
+             'coarse': steps(COARSE_LENS_DEGREES)}
+    if fit is not None and fit.get('ok'):
+        band = fit['band'][1] - fit['band'][0]
+        sizes['fine'] = max(1, int(round(band / 4.0)))
+        sizes['medium'] = max(1, int(round(band)))
+    return sizes
 
 
 @dataclass(frozen=True)
@@ -1203,14 +1218,8 @@ class FocusController(object):
         with self._lock:
             fit = self._fit
             cmd_id = self._lens_cmd
-        spt = st.steps_per_turn
-        if fit is not None and fit['ok']:
-            band = fit['band'][1] - fit['band'][0]
-            fine, coarse = max(1, int(round(band / 4.0))), max(1, int(round(band)))
-        else:
-            fine = max(1, int(round(FINE_DEGREES * spt / 360.0)))
-            coarse = max(1, int(round(COARSE_DEGREES * spt / 360.0)))
-        msg.update(kind='lens', cmd_id=cmd_id, reachable=list(self.lens.reachable()), fine=fine, coarse=coarse)
+        msg.update(kind='lens', cmd_id=cmd_id, reachable=list(self.lens.reachable()),
+                   **step_sizes(st.steps_per_lens_turn, fit))
         return msg
 
     def _graph_msg(self) -> dict:
@@ -1222,7 +1231,7 @@ class FocusController(object):
         af = self._af
         st = self.lens.state
         return {'kind': 'progress', 'what': 'autofocus', 'stage': af.stage, 'stages': list(STAGES),
-                'message': af.words, 'done': af.done, 'estimate_s': af.estimate_s(st.position, st.slack),
+                'message': af.words, 'done': af.done, 'estimate_s': af.estimate_s(st.position, st.backlash),
                 'columns': af.columns()}
 
     def _mode_msg(self):

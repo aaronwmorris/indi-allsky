@@ -206,6 +206,41 @@
         return {disabled: !open || starting, busy: starting && mine, label: starting && mine ? 'Starting\u2026' : label};
     }
 
+    // The Step size list's words: the size in lens degrees ("Fine \u00b7 0.8\u00b0"). `steps` and `perLensTurn` come
+    // from a `lens` message; without them the fixed sizes capture starts from (controller.py) stand in.
+    var STEP_NAMES = {fine: 'Fine', medium: 'Medium', coarse: 'Coarse'};
+    var STEP_DEGREES = {fine: 0.8, medium: 3.5, coarse: 13};
+
+    function stepLabel(name, steps, perLensTurn) {
+        var deg = known(steps) && known(perLensTurn) && perLensTurn > 0 ? steps * 360 / perLensTurn : STEP_DEGREES[name];
+        var txt = deg < 10 ? deg.toFixed(1) : String(Math.round(deg));
+        return STEP_NAMES[name] + ' \u00b7 ' + txt + '\u00b0';
+    }
+
+    // The page's questions. `lens`: this rig moves the lens, so ending the session puts it back.
+    // n: the safe answer (first, focused, and what Esc or a tap outside means); y: the other.
+    var TAKEOVER = 'Live Focus takes over the camera for a while, so sky pictures pause. When the session ends, the ' +
+        'camera goes back to how it is now.';
+    var TAKEOVER_LENS = ' Cancel also brings the lens back to where it is now.';
+
+    function confirmText(kind, lens) {
+        var takeover = TAKEOVER + (lens ? TAKEOVER_LENS : '');
+        if (kind === 'start') {
+            return {t: 'Take over the camera?', b: takeover, n: 'Not now', y: 'Start Live Preview', danger: false};
+        }
+        if (kind === 'start_af') {
+            return {t: 'Take over the camera?', b: takeover + ' Autofocus starts right away.', n: 'Not now',
+                    y: 'Autofocus', danger: false};
+        }
+        if (kind === 'again') {
+            return {t: 'Autofocus again?', b: 'The lens leaves best focus and the scan starts over.', n: 'Keep focus',
+                    y: 'Autofocus', danger: false};
+        }
+        return {t: 'End without saving?',
+                b: lens ? 'The lens goes back to where it was at the start, and sky pictures resume.' : 'Sky pictures resume.',
+                n: 'Keep going', y: 'End session', danger: true};
+    }
+
     function pendingAdd(list, id, kind, btn) {
         var p = {id: id, kind: kind};
         if (btn) {
@@ -435,12 +470,12 @@
         }
         var here = lens.position;
         var reach = Array.isArray(lens.reachable) && lens.reachable.length === 2 ? lens.reachable :
-            [-lens.limit + (lens.slack || 0), lens.limit];
+            [-lens.limit + (lens.backlash || 0), lens.limit];
         var window_ = Math.round(lens.limit / 2);
         var start = Math.max(reach[0], here - window_);
         var end = Math.min(reach[1], here + window_);
         var rate = Math.min(lens.speed, FRAME_SPAN_STEPS / exposure);
-        var s = (Math.abs(here - start) + (lens.slack || 0)) / lens.speed + (end - start) / rate + 3 +
+        var s = (Math.abs(here - start) + (lens.backlash || 0)) / lens.speed + (end - start) / rate + 3 +
             Math.abs(end - here) / lens.speed;
         return Math.ceil(s);
     }
@@ -573,6 +608,7 @@
         signed: signed, fitModel: fitModel, drawableFit: drawableFit, motorInfo: motorInfo,
         autofocusEstimate: autofocusEstimate, autofocusLabel: autofocusLabel, graphTarget: graphTarget,
         graphTop: graphTop, fadeColor: fadeColor, sessionSteps: sessionSteps, stepHelp: stepHelp, stepBar: stepBar, tuneHoldsLens: tuneHoldsLens, stepRunning: stepRunning, startButton: startButton, autofocusRows: autofocusRows,
+        stepLabel: stepLabel, confirmText: confirmText,
         secondsLeft: secondsLeft, stageWords: stageWords,
         pendingDropKind: pendingDropKind, pendingPicture: pendingPicture, pendingSpins: pendingSpins,
         pendingAnswered: pendingAnswered,
@@ -611,7 +647,7 @@
     var MOTOR_SHOWN_MS = 3000;      // after the lens rests, "not in the picture yet" gives up after at least this
     var SNAP_PX = 6;                // a graph release this near best focus snaps to it
     var GRAPH_POINTS_MAX = 20000;   // the page's cap on graph points, like capture's
-    var MSG_SLACK = 'taking up gear slack';
+    var MSG_BACKLASH = 'taking up the backlash';
     var MSG_NEEDS_STARS = 'Autofocus needs stars';
     var MSG_FIRST = 'Waiting for the first picture';
     var MSG_STALLED = 'No new picture · check the camera';
@@ -625,16 +661,10 @@
     var $id = function (id) { return document.getElementById(id); };
     var phone = window.matchMedia('(max-width: 767px)');
 
-    var MSG_AF_AGAIN = 'Autofocus again? The lens leaves best focus and the scan starts over.';
-    var MSG_START = 'Start a preview? Sky pictures pause until you save or cancel. Cancel brings the lens back to ' +
-        'where it is now.';
-    var MSG_START_AF = 'Start autofocus? Sky pictures pause until you save or cancel. Cancel brings the lens back to ' +
-        'where it is now.';
+    var MSG_PLAY_HINT = 'Press Play to move the lens and watch the stars.';
     var PLAN_PREVIEW = 'preview';
     var PLAN_AUTOFOCUS = 'autofocus';
     var ADVANCED_KEY = 'indi-allsky.focus.advanced';
-    var MSG_CANCEL = 'Cancel? The lens goes back to where it was at Start, and the session ends without saving.';
-    var MSG_CANCEL_HAND = 'Cancel? The session ends.';
 
     var S = {
         ws: null, retry: 0, retryTimer: null, rejoined: false,
@@ -658,7 +688,10 @@
         stretch: {mode: 'auto', black: null, white: null},
         stretchHeldUntil: 0,        // ms: this page's slider input wins over incoming levels until then
         stretchSentAt: 0, stretchTimer: null,
-        motor: motorInfo(root.getAttribute('data-motor-configured') === '1'),
+        // the first guess, from Config, until capture says (`state.motor`)
+        motor: motorInfo({configured: root.getAttribute('data-motor-configured') === '1',
+                          ok: root.getAttribute('data-motor-configured') === '1' && !root.getAttribute('data-motor-reason'),
+                          reason: root.getAttribute('data-motor-reason')}),
         lens: null,                 // the last `lens` message
         graph: {measure: null, points: [], fit: null},  // points [x, star_id, size, born ms (0: old)]
         drag: null,                 // the step under the pointer while dragging on the graph
@@ -1637,10 +1670,20 @@
 
     // ==== lens, graph and autofocus ==============================================================================
 
-    var NUDGES = {'fs-coarse-in': [-1, 'coarse'], 'fs-fine-in': [-1, 'fine'], 'fs-fine-out': [1, 'fine'],
-                  'fs-coarse-out': [1, 'coarse']};
-    var MOVE_BTNS = ['fs-coarse-in', 'fs-fine-in', 'fs-fine-out', 'fs-coarse-out', 'fs-graph', 'fs-bestfit',
-                     'fs-back'];
+    var NUDGES = {'fs-lens-in': -1, 'fs-lens-out': 1};   // the direction; the size is the Step size list's
+    var MOVE_BTNS = ['fs-lens-in', 'fs-lens-out', 'fs-graph', 'fs-bestfit', 'fs-back'];
+
+    // The Step size list's labels, in lens degrees from the last `lens` message.
+    function renderStepSizes() {
+        var sel = $id('fs-lens-size');
+        if (!sel) {
+            return;
+        }
+        var L = S.lens;
+        Array.prototype.forEach.call(sel.options, function (o) {
+            setText(o, stepLabel(o.value, L ? L[o.value] : null, L ? L.steps_per_lens_turn : null));
+        });
+    }
 
     function lensOk() {
         return S.motor.ok && S.lens !== null;
@@ -1754,9 +1797,13 @@
         if (msg.done === true || msg.stage === 'done') {
             af.running = false;
             af.failed = typeof msg.message === 'string' ? msg.message : '';
+            var wasDone = af.done;
             af.done = !af.failed;
             if (af.done) {
                 S.checking = true;
+                if (!wasDone && $id('fs-lens-size')) {
+                    $id('fs-lens-size').value = 'fine';  // at best focus the small steps are the useful ones
+                }
             }
             list = pendingDropKind(list, 'stop');
         } else {
@@ -1827,7 +1874,7 @@
             }
         }
         setText($id('fs-g-lens'), lens);
-        setText($id('fs-g-note'), L && L.moving && L.phase === 'slack' ? MSG_SLACK : '');
+        setText($id('fs-g-note'), L && L.moving && L.phase === 'backlash' ? MSG_BACKLASH : '');
         var fit = S.graph.fit;
         var label = (contrast ? 'Contrast score' : 'Star size') + ' against lens position' +
             (L && known(L.position) ? ', lens at ' + signed(L.position) + ' steps' : '') +
@@ -1870,6 +1917,7 @@
             b.disabled = !ready || busy || waitMove;
             spin(b, pendingSpins(S.pending, id));
         });
+        renderStepSizes();
         var stopping = pendingSpins(S.pending, 'fs-af-btn');
         var saved = !busy && S.af.done;  // after a good run, Save is the big button and Autofocus a plain one
         af.classList.toggle('tw:btn-error', busy);
@@ -1916,11 +1964,12 @@
 
     function nudge(btn) {
         var L = S.lens;
-        var n = NUDGES[btn];
-        if (!L || !known(L[n[1]])) {
+        var sel = $id('fs-lens-size');
+        var size = sel ? sel.value : 'medium';
+        if (!L || !known(L[size])) {
             return;
         }
-        lensCommand({kind: 'nudge', steps: n[0] * Math.max(1, Math.round(L[n[1]]))}, btn);
+        lensCommand({kind: 'nudge', steps: NUDGES[btn] * Math.max(1, Math.round(L[size]))}, btn);
     }
 
     function onAutofocusButton() {
@@ -1942,11 +1991,75 @@
             renderLens();
             return;
         }
-        if (S.af.done && !window.confirm(MSG_AF_AGAIN)) {
+        if (!S.af.done) {
+            runAutofocus();
             return;
         }
+        askConfirm(confirmText('again', true)).then(function (yes) {
+            // the answer can come after the session moved on
+            if (yes && S.session === 'active' && lensOk() && !lensBusy() && S.af.done) {
+                runAutofocus();
+            }
+        });
+    }
+
+    function runAutofocus() {
         S.af.failed = '';
         command({kind: 'autofocus'}, 'autofocus', 'fs-af-btn');
+    }
+
+    // ---- the confirm dialog -------------------------------------------------------------------------------------
+
+    var confirmDone = null;  // resolves the open question
+
+    // Ask one of confirmText's questions: a promise of true for the second button. A question already open
+    // answers no to this one.
+    function askConfirm(q) {
+        var dlg = $id('fs-confirm');
+        if (!dlg || confirmDone) {
+            return Promise.resolve(false);
+        }
+        setText($id('fs-confirm-t'), q.t);
+        setText($id('fs-confirm-b'), q.b);
+        setText($id('fs-confirm-no'), q.n);
+        var yes = $id('fs-confirm-yes');
+        setText(yes, q.y);
+        yes.className = 'tw:btn tw:btn-sm ' + (q.danger ? 'tw:btn-error' : 'tw:btn-primary');
+        dlg.returnValue = '';
+        return new Promise(function (resolve) {
+            confirmDone = resolve;
+            dlg.showModal();
+            $id('fs-confirm-no').focus();
+        });
+    }
+
+    // The session started or ended under an open question: it no longer applies.
+    function dropConfirm() {
+        var dlg = $id('fs-confirm');
+        if (dlg && dlg.open) {
+            dlg.close('no');
+        }
+    }
+
+    function bindConfirm() {
+        var dlg = $id('fs-confirm');
+        if (!dlg) {
+            return;
+        }
+        dlg.addEventListener('close', function () {
+            var done = confirmDone;
+            confirmDone = null;
+            if (done) {
+                done(dlg.returnValue === 'yes');
+            }
+        });
+        dlg.addEventListener('click', function (e) {
+            if (e.target === dlg) {
+                dlg.close('outside');  // a tap outside the box
+            }
+        });
+        on('fs-confirm-yes', 'click', function () { dlg.close('yes'); });
+        on('fs-confirm-no', 'click', function () { dlg.close('no'); });
     }
 
     function bindLens() {
@@ -2084,7 +2197,7 @@
         var yOf = function (v) { return G.yb - Math.min(1.02, v / G.top) * (G.yb - G.yt); };
         var clampX = function (px) { return Math.min(G.x1, Math.max(G.x0, px)); };
 
-        // frame, the inward end the lens cannot reach (the slack take-up), axes
+        // frame, the inward end the lens cannot reach (the backlash take-up), axes
         ctx.lineWidth = 1;
         ctx.strokeStyle = ink;
         ctx.globalAlpha = 0.25;
@@ -2444,6 +2557,7 @@
     // ==== live and idle views ====================================================================================
 
     function enterLive() {
+        dropConfirm();
         if (S.session !== 'active') {
             // a new session: the lens count starts again. A rejoin keeps the graph; capture's `graph` and `lens`
             // replace it on joining.
@@ -2479,6 +2593,7 @@
     }
 
     function leaveLive() {
+        dropConfirm();
         S.session = 'idle';
         S.warnUntil = null;
         S.pending = [];
@@ -2509,7 +2624,7 @@
         show($id('fs-idle-reason'), !!reason);
     }
 
-    var START_BUTTONS = [['focus-start', PLAN_PREVIEW, 'Start preview'], ['focus-start-af', PLAN_AUTOFOCUS, 'Autofocus']];
+    var START_BUTTONS = [['focus-start', PLAN_PREVIEW, 'Start Live Preview'], ['focus-start-af', PLAN_AUTOFOCUS, 'Autofocus']];
 
     function setStartEnabled() {
         var open = !!S.ws && S.ws.readyState === WebSocket.OPEN;
@@ -2517,21 +2632,29 @@
             var b = $id(sb[0]);
             if (b) {
                 var look = startButton(open, S.starting !== false, S.starting === sb[1], sb[2]);
-                b.disabled = look.disabled;
+                // Autofocus needs a motor that can move the lens
+                b.disabled = look.disabled || (sb[1] === PLAN_AUTOFOCUS && !S.motor.ok);
                 spin(b, look.busy);
                 setLabel(b, look.label);
             }
         });
-        show($id('focus-start-af'), S.motor.ok);
+        show($id('fs-idle-lens'), S.motor.configured);
+        setText($id('fs-idle-hint'), S.motor.reason || MSG_PLAY_HINT);
     }
 
     function startSession(plan) {
         if (S.starting !== false) {
             return;
         }
-        if (!window.confirm(plan === PLAN_PREVIEW ? MSG_START : MSG_START_AF)) {
-            return;
-        }
+        askConfirm(confirmText(plan === PLAN_PREVIEW ? 'start' : 'start_af', S.motor.ok)).then(function (yes) {
+            // the answer can come after another page started a session
+            if (yes && S.starting === false && S.session !== 'active') {
+                sendStart(plan);
+            }
+        });
+    }
+
+    function sendStart(plan) {
         if (!send({kind: 'start', plan: plan})) {
             toast(MSG_NOT_CONNECTED);
             return;
@@ -2593,14 +2716,17 @@
         on('fs-advanced', 'change', function () { setAdvanced(this.checked, true); });
         setAdvanced(storedAdvanced(), false);
         on('fs-save', 'click', function () { send({kind: 'done'}); });
+        bindConfirm();
         on('fs-cancel', 'click', function () {
-            if (S.cancelling || !window.confirm(lensOk() ? MSG_CANCEL : MSG_CANCEL_HAND)) {
+            if (S.cancelling) {
                 return;
             }
-            if (send({kind: 'cancel'})) {
-                S.cancelling = true;
-                renderExit();
-            }
+            askConfirm(confirmText('cancel', lensOk())).then(function (yes) {
+                if (yes && !S.cancelling && S.session === 'active' && send({kind: 'cancel'})) {
+                    S.cancelling = true;
+                    renderExit();
+                }
+            });
         });
         on('fs-keep-going', 'click', function () { keepGoing(true); });
         on('fs-repick', 'click', function () { send({kind: 'pick_stars'}); show($id('fs-stars-pop'), false); });

@@ -599,14 +599,14 @@ def test_preview_sends_whole_frame(session, source):
     assert msg['jpeg']
 
 
-def _lens_session(connect, source, link, closers, limit=400, slack=20, speed=100.0, exposure=2.0):
+def _lens_session(connect, source, link, closers, limit=400, backlash=20, speed=100.0, exposure=2.0):
     """A begun controller with a real Lens on a fake driver; the lens clock is the controller's epoch."""
     cid, page = connect()
     page.cid = cid
     clock = LensClock()
     driver = FakeDriver(clock, speed=speed)
     holder = []
-    lens = Lens(driver, limit=limit, slack=slack, clock=clock,
+    lens = Lens(driver, limit=limit, backlash=backlash, clock=clock,
                 on_change=lambda st: holder[0].on_lens_change(st) if holder else None, sleep=clock.sleep)
     ctrl = FocusController(source, link, FakeClock(), RIG, lens, epoch=clock, exposure=exposure, gain=100.0)
     holder.append(ctrl)
@@ -674,7 +674,7 @@ def test_join_gets_lens_and_graph(connect, source, link, closers):
     cid2, page2 = connect(controls=False)
     lens_msg = page2.json('lens', pump=ctrl.service)
     assert list(lens_msg['reachable']) == [-380, 400]
-    assert 1 <= lens_msg['fine'] <= lens_msg['coarse']
+    assert 1 <= lens_msg['fine'] <= lens_msg['medium'] <= lens_msg['coarse']
     graph = page2.json('graph', pump=ctrl.service)
     assert graph['points'] == [] and graph['fit'] is None
 
@@ -880,7 +880,7 @@ def test_a_motor_preview_stops_after_the_tune(connect, make, source, closers):
     # with a motor, Autofocus picks the stars when it is pressed
     cid, page = connect()
     clock = LensClock()
-    lens = Lens(FakeDriver(clock), limit=400, slack=20, clock=clock, sleep=clock.sleep)
+    lens = Lens(FakeDriver(clock), limit=400, backlash=20, clock=clock, sleep=clock.sleep)
     closers.append(_LensCloser(lens))
     ctrl = _tuned(make, lens=lens, epoch=clock)
     _preview_tune(page, ctrl, source, cid)
@@ -1554,3 +1554,13 @@ def test_a_command_bug_logs_the_kind_and_type_only(session, monkeypatch, caplog)
     assert not [r for r in caplog.records if r.levelname in ('ERROR', 'CRITICAL')]
     assert SECRET_BODY not in caplog.text
     assert all(r.exc_info is None for r in caplog.records)
+
+
+def test_step_sizes_are_lens_degrees_until_a_good_fit():
+    from indi_allsky.focus.controller import step_sizes
+    per_lens_turn = 512 * 82 / 12.0          # 28BYJ-48 through 82:12 gears
+    assert step_sizes(per_lens_turn, None) == {'fine': 8, 'medium': 34, 'coarse': 126}
+    assert step_sizes(per_lens_turn, {'ok': False, 'band': [100, 140]}) == {'fine': 8, 'medium': 34, 'coarse': 126}
+    # a good fit: Fine is a quarter of the band, Medium the band; Coarse stays fixed
+    assert step_sizes(per_lens_turn, {'ok': True, 'band': [100, 140]}) == {'fine': 10, 'medium': 40, 'coarse': 126}
+    assert step_sizes(512, {'ok': True, 'band': [0, 1]}) == {'fine': 1, 'medium': 1, 'coarse': 18}

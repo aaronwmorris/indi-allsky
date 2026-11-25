@@ -25,10 +25,10 @@ class FocuserSimulator(FocuserBase):
         super(FocuserSimulator, self).__init__(*args, **kwargs)
 
         self.position = 0  # true shaft position, steps, positive is outward
-        self.slack_steps = 26  # gear backlash
+        self.backlash_steps = 26  # gear backlash
 
-        # The lens is the shaft position plus the play (0 to slack_steps).  After a reversal the
-        # shaft moves slack_steps through the play before the lens follows it.
+        # The lens is the shaft position plus the play (0 to backlash_steps).  After a reversal the
+        # shaft moves backlash_steps through the play before the lens follows it.
         self._play = 0
 
         SIMULATED_LENS = self
@@ -65,7 +65,7 @@ class FocuserSimulator(FocuserBase):
                 if self._play > 0:
                     self._play -= 1
             else:
-                if self._play < self.slack_steps:
+                if self._play < self.backlash_steps:
                     self._play += 1
 
             moved += sign

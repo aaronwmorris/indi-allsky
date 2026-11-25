@@ -64,11 +64,11 @@ class FakeDriver:
         return d * n
 
 
-def make(limit=200, slack=20, **kw):
+def make(limit=200, backlash=20, **kw):
     clock = FakeClock()
     driver = FakeDriver(clock, **kw)
     changes = []
-    lens = Lens(driver, limit=limit, slack=slack, clock=clock, on_change=changes.append, sleep=clock.sleep)
+    lens = Lens(driver, limit=limit, backlash=backlash, clock=clock, on_change=changes.append, sleep=clock.sleep)
     return lens, driver, clock, changes
 
 
@@ -95,14 +95,14 @@ def rig():
 
 # --- outward finish ----------------------------------------------------------------------------
 
-def test_inward_target_passes_by_the_slack_then_comes_back_outward(rig):
+def test_inward_target_passes_by_the_backlash_then_comes_back_outward(rig):
     lens, driver, clock, changes = rig
     s = go(lens, -100)
     assert s.position == -100 and driver.shaft == -100
     assert min(driver.path) == -120
     assert driver.path[-1] > driver.path[-2]          # last step outward
     assert driver.calls == [-120, 20]
-    assert phases(changes) == ['slack', 'move', 'rest']
+    assert phases(changes) == ['backlash', 'move', 'rest']
     assert s.moving is False and s.target is None and s.phase == 'rest'
 
 
@@ -117,30 +117,30 @@ def test_outward_target_after_outward_travel_goes_straight(rig):
     assert phases(changes) == ['move', 'rest']
 
 
-def test_outward_target_after_inward_travel_takes_up_slack_first(rig):
+def test_outward_target_after_inward_travel_takes_up_backlash_first(rig):
     lens, driver, clock, changes = rig
-    # Stop during the slack leg: the last travel was inward.
+    # Stop during the backlash leg: the last travel was inward.
     driver.hook = lambda n: lens.stop() if n == 10 else None
     s = go(lens, -50)
     assert s.position == -10
     driver.hook = None
     driver.calls.clear()
-    s = go(lens, -5)                                  # outward by less than the slack
+    s = go(lens, -5)                                  # outward by less than the backlash
     assert driver.calls == [-15, 20]
     assert s.position == -5 and min(driver.path) == -25
 
 
-def test_outward_target_further_than_the_slack_after_inward_travel_is_one_leg(rig):
+def test_outward_target_further_than_the_backlash_after_inward_travel_is_one_leg(rig):
     lens, driver, clock, changes = rig
     driver.hook = lambda n: lens.stop() if n == 10 else None
     go(lens, -50)
     driver.hook = None
     driver.calls.clear()
     changes.clear()
-    s = go(lens, 30)                                  # 40 outward >= slack: the run itself takes it up
+    s = go(lens, 30)                                  # 40 outward >= backlash: the run itself takes it up
     assert driver.calls == [40]
     assert s.position == 30
-    assert 'slack' not in phases(changes)
+    assert 'backlash' not in phases(changes)
 
 
 def test_same_position_after_outward_travel_does_nothing(rig):
@@ -169,7 +169,7 @@ def test_same_position_after_inward_travel_reapproaches(rig):
 def test_scan_phase_names_the_outward_leg(rig):
     lens, driver, clock, changes = rig
     go(lens, -30, scan=True)
-    assert phases(changes) == ['slack', 'scan', 'rest']
+    assert phases(changes) == ['backlash', 'scan', 'rest']
 
 
 # --- limits, Back --------------------------------------------------------------------------------
@@ -189,7 +189,7 @@ def test_state_carries_the_settings(rig):
     s = lens.state
     assert isinstance(s, LensState)
     assert (s.position, s.target, s.moving, s.phase, s.previous) == (0, None, False, 'rest', None)
-    assert (s.limit, s.slack, s.steps_per_turn, s.speed, s.error) == (200, 20, 512, 100.0, None)
+    assert (s.limit, s.backlash, s.steps_per_turn, s.speed, s.error) == (200, 20, 512, 100.0, None)
 
 
 def test_back_returns_to_the_last_resting_position(rig):
@@ -237,7 +237,7 @@ def test_stop_mid_move_keeps_the_steps_actually_moved(rig):
     assert s.previous == 0
 
 
-def test_stop_during_the_slack_leg_skips_the_outward_leg(rig):
+def test_stop_during_the_backlash_leg_skips_the_outward_leg(rig):
     lens, driver, clock, changes = rig
     driver.hook = lambda n: lens.stop() if n == 5 else None
     s = go(lens, -50)
@@ -283,7 +283,7 @@ def test_on_change_failure_does_not_kill_the_mover():
     def boom(state):
         raise RuntimeError('callback broke')
 
-    lens = Lens(driver, limit=200, slack=20, clock=clock, on_change=boom, sleep=clock.sleep)
+    lens = Lens(driver, limit=200, backlash=20, clock=clock, on_change=boom, sleep=clock.sleep)
     try:
         assert go(lens, 10).position == 10
         assert go(lens, 20).position == 20
@@ -388,11 +388,11 @@ def test_still_between_is_false_while_a_move_runs():
 def test_inside_move_true_only_inside_one_outward_leg(rig):
     lens, driver, clock, changes = rig
     clock.t += 10
-    go(lens, -40, scan=True)                          # slack: T0+10 .. T0+10.6 (60 in), scan: .. T0+10.8
+    go(lens, -40, scan=True)                          # backlash: T0+10 .. T0+10.6 (60 in), scan: .. T0+10.8
     assert lens.inside_move(T0 + 10.65, T0 + 10.75) is True
     assert lens.inside_move(T0 + 10.615, T0 + 10.795) is True  # first step .. last step
     assert lens.inside_move(T0 + 10.6, T0 + 10.7) is False    # before the scan leg's first step
-    assert lens.inside_move(T0 + 10.2, T0 + 10.4) is False    # inside the slack (inward) leg
+    assert lens.inside_move(T0 + 10.2, T0 + 10.4) is False    # inside the backlash (inward) leg
     assert lens.inside_move(T0 + 10.7, T0 + 10.9) is False    # runs past the last step
     clock.t += 1
     go(lens, 0)                                       # T0+11.8 .. T0+12.2
@@ -453,7 +453,7 @@ def test_the_step_log_is_bounded(monkeypatch):
     from indi_allsky.focus import lens as lens_mod
     monkeypatch.setattr(lens_mod, 'LOG_CAP', 100)
     monkeypatch.setattr(lens_mod, 'LOG_TRIM', 10)
-    lens, driver, clock, changes = make(limit=1000, slack=20)
+    lens, driver, clock, changes = make(limit=1000, backlash=20)
     try:
         go(lens, 500)
         assert len(lens._log_t) <= 110
@@ -463,10 +463,10 @@ def test_the_step_log_is_bounded(monkeypatch):
         lens.close()
 
 
-def test_first_small_outward_move_takes_up_the_slack():
+def test_first_small_outward_move_takes_up_the_backlash():
     # at the session start nobody knows which way the gears last turned
     lens, driver, clock, changes = make()
     s = go(lens, 5)
     assert s.position == 5
     assert min(driver.path) == 5 - 20
-    assert phases(changes)[:2] == ['slack', 'move']
+    assert phases(changes)[:2] == ['backlash', 'move']

@@ -4,13 +4,13 @@ Steps are driver steps, counted from the session start (position 0, positive out
 written to disk: a new session starts a new count.
 
 Every move finishes travelling outward. A target below the current position, or any target after the last
-travel was inward, is approached from target - slack (phase 'slack'), so the gear slack is always taken up
+travel was inward, is approached from target - backlash (phase 'backlash'), so the backlash is always taken up
 in the outward direction before the lens stops.
 
 The mover runs moves on its own thread so pictures keep flowing and Stop can be heard. The step log records
 one (t, position) sample per completed step (per ~1 s piece for drivers that cannot stop part-way), plus one at
 construction and one at the start of every leg. A *leg* is one direction of travel inside one `move_to`: the
-'slack' leg is inward, the 'move' or 'scan' leg is outward. `position_at`, `still_between` and `inside_move`
+'backlash' leg is inward, the 'move' or 'scan' leg is outward. `position_at`, `still_between` and `inside_move`
 answer from that log, so a frame's timing can be matched to where the lens was.
 """
 
@@ -43,11 +43,12 @@ class LensState:
     position: int            # steps from the session start; positive outward
     target: Optional[int]    # the move's final target, or None at rest
     moving: bool
-    phase: str               # 'rest' | 'move' | 'slack' (the extra inward leg) | 'scan'
+    phase: str               # 'rest' | 'move' | 'backlash' (the extra inward leg) | 'scan'
     previous: Optional[int]  # where Back goes (the last resting position before the last move), or None
     limit: int               # travel limit, steps each side
-    slack: int               # take-up, steps
-    steps_per_turn: int
+    backlash: int            # take-up, steps
+    steps_per_turn: int      # motor steps per motor turn
+    steps_per_lens_turn: float  # motor steps per turn of the lens ring, through the external gears
     speed: float             # steps/s, the driver's stated speed
     error: Optional[str]     # the last move's failure in plain words, or None
 
@@ -70,13 +71,14 @@ class _Leg:
 class Lens:
     SETTLE_S = 0.5           # a fixed allowance, not measured
 
-    def __init__(self, driver, *, limit: int, slack: int, clock=time.time,
-                 on_change: Callable[[LensState], None] = lambda s: None,
+    def __init__(self, driver, *, limit: int, backlash: int, steps_per_lens_turn: Optional[float] = None,
+                 clock=time.time, on_change: Callable[[LensState], None] = lambda s: None,
                  sleep: Optional[Callable[[float], None]] = None):
         """`sleep` paces `max_rate` moves; None waits on the stop signal (so Stop cuts a pause short).
-        Tests pass a fake `clock` and `sleep` together."""
-        if limit < 1 or slack < 0 or slack >= 2 * limit:
-            raise ValueError('bad travel limit {0!r} or slack {1!r}'.format(limit, slack))
+        `steps_per_lens_turn` only rides along in the state so the page can show lens degrees; None means
+        the motor turns the lens directly. Tests pass a fake `clock` and `sleep` together."""
+        if limit < 1 or backlash < 0 or backlash >= 2 * limit:
+            raise ValueError('bad travel limit {0!r} or backlash {1!r}'.format(limit, backlash))
 
         self._driver = driver
         self._clock = clock
@@ -84,8 +86,9 @@ class Lens:
         self._sleep = sleep
 
         self._limit = int(limit)
-        self._slack = int(slack)
+        self._backlash = int(backlash)
         self._steps_per_turn = int(driver.STEPS_PER_TURN)
+        self._steps_per_lens_turn = float(steps_per_lens_turn or self._steps_per_turn)
         self._speed = float(driver.STEPS_PER_SECOND)
         self._can_stop = bool(driver.CAN_STOP)
 
@@ -124,12 +127,13 @@ class Lens:
 
     def _snapshot(self) -> LensState:
         return LensState(position=self._position, target=self._target, moving=self._moving, phase=self._phase,
-                         previous=self._previous, limit=self._limit, slack=self._slack,
-                         steps_per_turn=self._steps_per_turn, speed=self._speed, error=self._error)
+                         previous=self._previous, limit=self._limit, backlash=self._backlash,
+                         steps_per_turn=self._steps_per_turn, steps_per_lens_turn=self._steps_per_lens_turn,
+                         speed=self._speed, error=self._error)
 
     def reachable(self) -> tuple[int, int]:
         """What a target may be: the inward limit less the take-up, out to the outward limit."""
-        return (-self._limit + self._slack, self._limit)
+        return (-self._limit + self._backlash, self._limit)
 
     def position_at(self, t: float) -> Optional[float]:
         """Lens position at time t, interpolated between logged samples; None before the first sample."""
@@ -190,9 +194,9 @@ class Lens:
             pos = self._position
             outward_phase = 'scan' if scan else 'move'
             plan: list[tuple[int, str]] = []
-            # unknown (session start) counts as inward: the slack may sit either way, so take it up
-            if target < pos or (self._last_dir <= 0 and target - pos < self._slack):
-                plan.append((target - self._slack, 'slack'))
+            # unknown (session start) counts as inward: the backlash may sit either way, so take it up
+            if target < pos or (self._last_dir <= 0 and target - pos < self._backlash):
+                plan.append((target - self._backlash, 'backlash'))
             if target != pos or plan:
                 plan.append((target, outward_phase))
 
@@ -213,7 +217,7 @@ class Lens:
                 self._wake.set()
                 return True
 
-            # Already there with the slack taken up outward: nothing to do.
+            # Already there with the backlash taken up outward: nothing to do.
             snap = self._snapshot()
         self._emit(snap)
         return True

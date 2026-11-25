@@ -16,8 +16,19 @@
     .fs-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
     .fs-adv-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; }
 
-    /* idle */
-    .fs-idle-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    /* idle: the last sky picture with Play on it, and the lens controls waiting for a session */
+    .fs-idle { max-width: 640px; }
+    .fs-poster { position: relative; min-height: 240px; background: #000; border: 1px solid var(--color-base-300); border-radius: 8px; overflow: hidden; }
+    .fs-poster img { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: contain; }
+    .fs-tag { position: absolute; left: 8px; top: 8px; z-index: 3; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #ddd; pointer-events: none; }
+    .fs-tag-live { background: #b91c1c; color: #fff; font-weight: 700; letter-spacing: 0.05em; }
+    .fs-play { position: absolute; inset: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+               background: rgba(0, 0, 0, 0.35); border: 0; color: #fff; cursor: pointer; }
+    .fs-play:disabled { cursor: default; opacity: 0.6; }
+    .fs-play:focus-visible { outline: 3px solid var(--color-primary); outline-offset: -3px; }
+    .fs-disc { width: 76px; height: 76px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); border: 2px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; }
+    .fs-play .fs-label { font-size: 0.85rem; font-weight: 600; text-shadow: 0 1px 2px #000; }
+    .fs-hint { margin: 0; font-size: 0.75rem; text-align: center; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); }
 
     /* live: one set of boxes, arranged by grid areas (desktop two columns, phone) */
     .fs-live { display: grid; gap: 8px 16px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
@@ -51,7 +62,12 @@
     /* the lens: graph, nudges, buttons */
     .fs-ghead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
     .fs-graph { width: 100%; height: 220px; display: block; background: var(--color-base-100); border-radius: 6px; touch-action: none; cursor: crosshair; }
-    .fs-nudge { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .fs-size { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+    .fs-size select { flex: 1; }
+    .fs-nudge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .fs-nudge .tw\:btn { height: auto; min-height: 3.2rem; padding: 6px 2px; display: flex; flex-direction: column; gap: 2px; }
+    .fs-nudge svg { width: 22px; height: 22px; }
+    .fs-nudge .fs-label { font-size: 0.75rem; font-weight: 500; line-height: 1.1; }
     .fs-lens-btns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
     .fs-lens-btns #fs-af-btn, .fs-lens-btns #fs-af-save { grid-column: 1 / -1; }
     .fs-lens-btns .tw\:btn { white-space: nowrap; }
@@ -110,11 +126,31 @@
 </style>
 {% endblock %}
 
+{# The lens step buttons and the Step size list. `prefix` names the ids (prefix-in, prefix-out, prefix-size); the idle
+   copy is all disabled until a session starts. Sizes are lens degrees: capture sends their steps in each `lens` message,
+   and the script rewrites the labels from those. #}
+{% macro step_controls(prefix, idle) %}
+<label class="fs-size"><span>Step size</span>
+    <select id="{{ prefix }}-size" class="tw:select tw:select-sm" {% if idle %}disabled{% endif %}>
+        <option value="fine">Fine &middot; 0.8&deg;</option>
+        <option value="medium" selected>Medium &middot; 3.5&deg;</option>
+        <option value="coarse">Coarse &middot; 13&deg;</option>
+    </select>
+</label>
+<div class="fs-nudge" role="group" aria-label="Move the lens">
+    <button type="button" id="{{ prefix }}-in" class="tw:btn tw:btn-sm" {% if idle %}disabled{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="fs-label">Step in</span></button>
+    <button type="button" id="{{ prefix }}-out" class="tw:btn tw:btn-sm" {% if idle %}disabled{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span class="fs-label">Step out</span></button>
+</div>
+{% endmacro %}
+
 {% block content %}
 <div id="focus-session" class="fs"
      data-focus-session
      data-ws-url="{{ focus_ws_url }}"
      data-motor-configured="{{ '1' if motor_configured else '0' }}"
+     data-motor-reason="{{ motor_reason or '' }}"
      data-reason="{{ focus_decision.reason }}">
 
     <div class="fs-top">
@@ -125,20 +161,30 @@
     <div id="fs-toast" class="fs-toast tw:alert tw:alert-error" role="status" aria-live="polite" hidden></div>
 
     {# ---- idle: no session is running ------------------------------------------------------------------------- #}
-    <section id="fs-idle" class="tw:flex tw:flex-col tw:gap-3">
-        <div class="fs-panel fs-idle-head">
+    <section id="fs-idle" class="fs-idle tw:flex tw:flex-col tw:gap-3">
+        <div class="fs-poster">
+            {% if poster_url %}<img src="{{ poster_url }}" alt="The last sky picture">{% endif %}
+            <span class="fs-tag">{% if poster_time %}Last picture &middot; {{ poster_time }}{% else %}No recent picture{% endif %}</span>
             {% if can_start %}
-            <button type="button" id="focus-start" class="tw:btn tw:btn-primary">Start preview</button>
-            {# whether this rig has a motor is capture's word (`state.motor.ok`); motor_configured is the first guess #}
-            <button type="button" id="focus-start-af" class="tw:btn tw:btn-primary" {% if not motor_configured %}hidden{% endif %}>Autofocus</button>
-            <span>Normal pictures pause while you focus.</span>
-            {% else %}
-            <span id="fs-no-session">No focus session is running. An admin can start one.</span>
+            <button type="button" id="focus-start" class="fs-play" aria-label="Start Live Preview">
+                <span class="fs-disc" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span>
+                <span class="fs-label">Start Live Preview</span>
+            </button>
             {% endif %}
         </div>
+        {% if can_start %}
+        {# whether this rig has a motor is capture's word (`state.motor`); motor_configured is the first guess #}
+        <div id="fs-idle-lens" class="fs-panel fs-ctl" {% if not motor_configured %}hidden{% endif %}>
+            <h3 class="fs-ctl-h">Focus controls</h3>
+            {{ step_controls('fs-idle', true) }}
+            <p id="fs-idle-hint" class="fs-hint">{{ motor_reason or 'Press Play to move the lens and watch the stars.' }}</p>
+            <button type="button" id="focus-start-af" class="tw:btn tw:btn-primary" {% if motor_reason %}disabled{% endif %}><span class="fs-label">Autofocus</span></button>
+        </div>
+        {% else %}
+        <p id="fs-no-session" class="fs-panel">No focus session is running. An admin can start one.</p>
+        {% endif %}
         <p id="fs-ended" class="fs-panel" role="status" hidden></p>
         <p id="fs-idle-reason" class="fs-muted" {% if not focus_decision.reason %}hidden{% endif %}>{{ focus_decision.reason }}</p>
-
     </section>
 
     {# ---- live: a session is running ------------------------------------------------------------------------- #}
@@ -165,6 +211,7 @@
 
         <div id="fs-pic" class="fs-pic">
             <canvas id="fs-canvas" width="512" height="512" aria-label="Live picture of the focus region"></canvas>
+            <span class="fs-tag fs-tag-live">LIVE</span>
             <div id="fs-pic-wait" class="fs-wait" role="status"><span class="tw:loading tw:loading-spinner tw:loading-md" aria-hidden="true"></span> Starting live video&hellip;</div>
             <svg id="fs-rings" class="fs-adv" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" preserveAspectRatio="none" aria-hidden="true"></svg>
             <button type="button" id="fs-shrink" class="fs-close tw:btn tw:btn-sm tw:btn-circle" aria-label="Close the large picture" hidden>&#x2715;</button>
@@ -265,12 +312,7 @@
                 {% if can_start %}
                 <div class="fs-ctl" role="group" aria-labelledby="fs-ctl-h">
                 <h3 id="fs-ctl-h" class="fs-ctl-h">Focus controls</h3>
-                <div class="fs-nudge" role="group" aria-label="Move the lens">
-                    <button type="button" id="fs-coarse-in" class="tw:btn tw:btn-sm" aria-label="Inward, a big step" title="Inward, a big step">&#x25C0;&#x25C0;</button>
-                    <button type="button" id="fs-fine-in" class="tw:btn tw:btn-sm" aria-label="Inward, a small step" title="Inward, a small step">&#x25C0;</button>
-                    <button type="button" id="fs-fine-out" class="tw:btn tw:btn-sm" aria-label="Outward, a small step" title="Outward, a small step">&#x25B6;</button>
-                    <button type="button" id="fs-coarse-out" class="tw:btn tw:btn-sm" aria-label="Outward, a big step" title="Outward, a big step">&#x25B6;&#x25B6;</button>
-                </div>
+                {{ step_controls('fs-lens', false) }}
                 <div class="fs-lens-btns">
                     <button type="button" id="fs-af-save" class="tw:btn tw:btn-primary" hidden>Save autofocus results</button>
                     <button type="button" id="fs-af-btn" class="tw:btn tw:btn-primary" disabled><span class="fs-label">Autofocus</span></button>
@@ -294,6 +336,18 @@
     </section>
 
     {% if can_start %}
+    {# the page's questions (start, autofocus again, cancel): Esc, a tap outside or the first button is the safe answer #}
+    <dialog id="fs-confirm" class="tw:modal" aria-labelledby="fs-confirm-t" aria-describedby="fs-confirm-b">
+        <div class="tw:modal-box tw:border tw:border-base-content/10 tw:shadow-2xl tw:bg-base-200">
+            <h3 id="fs-confirm-t" class="tw:text-base tw:font-bold tw:m-0"></h3>
+            <p id="fs-confirm-b" class="tw:text-sm tw:leading-relaxed tw:opacity-80 tw:mt-3"></p>
+            <div class="tw:modal-action">
+                <button type="button" id="fs-confirm-no" class="tw:btn tw:btn-sm tw:btn-ghost"></button>
+                <button type="button" id="fs-confirm-yes" class="tw:btn tw:btn-sm"></button>
+            </div>
+        </div>
+    </dialog>
+
     <div id="fs-region" class="fs-region" role="dialog" aria-label="Move region" hidden>
         <div id="fs-region-wait" class="fs-muted"><span class="tw:loading tw:loading-spinner tw:loading-sm"></span> Taking a whole-sensor picture&hellip;</div>
         <div id="fs-region-pic" class="fs-region-pic" hidden>

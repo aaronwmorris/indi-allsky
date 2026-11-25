@@ -262,7 +262,7 @@ def test_fit_model_has_its_plateau_and_needs_numbers_to_draw():
 def test_autofocus_estimate_follows_the_contract_formula():
     # here 0, limit 400: window 200, start -200, end 200; rate min(50, 8 / 0.5) = 16
     # (200 + 20) / 50 + 400 / 16 + 3 + 200 / 50 = 4.4 + 25 + 3 + 4 = 36.4, so 37
-    lens = {'position': 0, 'limit': 400, 'speed': 50, 'slack': 20, 'reachable': [-380, 400]}
+    lens = {'position': 0, 'limit': 400, 'speed': 50, 'backlash': 20, 'reachable': [-380, 400]}
     got = run('const l = {0:s}; console.log(JSON.stringify([h.autofocusEstimate(l, 0.5),'
               ' h.autofocusEstimate(l, null), h.autofocusLabel(37), h.autofocusLabel(null)]));'.format(json.dumps(lens)))
 
@@ -378,6 +378,38 @@ def test_start_button_is_busy_until_capture_answers():
     assert out[2]['disabled'] is True and out[2]['busy'] is False
     assert out[3]['disabled'] is True
     assert out[4] == {'disabled': True, 'busy': False, 'label': 'Autofocus'}  # the other button waits, still
+
+
+def test_step_labels_are_lens_degrees():
+    # A 512-step motor through 82:12 gears turns the lens once in 3498.67 steps
+    per = 512 * 82 / 12.0
+    got = run('console.log(JSON.stringify([h.stepLabel("fine", 8, {0}), h.stepLabel("medium", 34, {0}),'
+              ' h.stepLabel("coarse", 126, {0}), h.stepLabel("fine", 2, {0}), h.stepLabel("medium", null, null),'
+              ' h.stepLabel("coarse", 10, 0)]));'.format(per))
+
+    # without a lens message (or with no gearing) the fixed sizes stand in
+    assert got == ['Fine · 0.8°', 'Medium · 3.5°', 'Coarse · 13°', 'Fine · 0.2°',
+                   'Medium · 3.5°', 'Coarse · 13°']
+
+
+def test_the_questions_say_what_each_answer_does():
+    got = run('var f = h.confirmText; console.log(JSON.stringify([f("start", true), f("start", false),'
+              ' f("start_af", true), f("again", true), f("cancel", true), f("cancel", false)]));')
+    start, hand, start_af, again, cancel, cancel_hand = got
+
+    assert start == {'t': 'Take over the camera?',
+                     'b': 'Live Focus takes over the camera for a while, so sky pictures pause. When the session ends, '
+                          'the camera goes back to how it is now. Cancel also brings the lens back to where it is now.',
+                     'n': 'Not now', 'y': 'Start Live Preview', 'danger': False}
+    assert 'lens' not in hand['b']  # a hand rig: nothing moves the lens
+    assert start_af['b'] == start['b'] + ' Autofocus starts right away.'
+    assert (start_af['n'], start_af['y']) == ('Not now', 'Autofocus')
+    assert again == {'t': 'Autofocus again?', 'b': 'The lens leaves best focus and the scan starts over.',
+                     'n': 'Keep focus', 'y': 'Autofocus', 'danger': False}
+    assert cancel == {'t': 'End without saving?',
+                      'b': 'The lens goes back to where it was at the start, and sky pictures resume.',
+                      'n': 'Keep going', 'y': 'End session', 'danger': True}
+    assert cancel_hand['b'] == 'Sky pictures resume.'
 
 
 def test_autofocus_label_says_again_after_a_good_run():

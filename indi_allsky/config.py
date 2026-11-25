@@ -710,8 +710,10 @@ class IndiAllSkyConfigBase(object):
             "GPIO_PIN_3"             : "D27",
             "GPIO_PIN_4"             : "D22",
             "I2C_ADDRESS"            : "0x60",
-            "TRAVEL_LIMIT_DEGREES"   : 360,
-            "SLACK_DEGREES"          : 30,
+            "GEAR_MOTOR_TEETH"       : 0,
+            "GEAR_LENS_TEETH"        : 0,
+            "TRAVEL_LIMIT_LENS_DEGREES" : 0,
+            "BACKLASH_DEGREES"       : 30,
         },
         "DEW_HEATER" : {
             "CLASSNAME"              : "",

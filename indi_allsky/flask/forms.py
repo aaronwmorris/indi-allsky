@@ -3226,27 +3226,39 @@ def CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER_validator(form, field):
         raise ValidationError('Value must be 100 or greater')
 
 
-def FOCUSER__TRAVEL_LIMIT_DEGREES_validator(form, field):
+def FOCUSER__GEAR_TEETH_validator(form, field):
+    # 0 means unset; the focuser block in validate() requires a value when a focuser is chosen
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter a valid number')
+        raise ValidationError('Please enter a whole number')
 
-    if field.data < 10:
-        raise ValidationError('Value must be 10 or greater')
+    if field.data < 0:
+        raise ValidationError('Value must be 0 or greater')
+
+    if field.data > 1000:
+        raise ValidationError('Value must be 1000 or less')
+
+
+def FOCUSER__TRAVEL_LIMIT_LENS_DEGREES_validator(form, field):
+    # 0 means unset; the focuser block in validate() requires a value when a focuser is chosen
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a whole number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0 or greater')
 
     if field.data > 3600:
         raise ValidationError('Value must be 3600 or less')
 
 
-def FOCUSER__SLACK_DEGREES_validator(form, field):
+def FOCUSER__BACKLASH_DEGREES_validator(form, field):
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter a valid number')
+        raise ValidationError('Please enter a whole number')
 
     if field.data < 0:
         raise ValidationError('Value must be 0 or greater')
 
-    limit = form.FOCUSER__TRAVEL_LIMIT_DEGREES.data
-    if isinstance(limit, int) and field.data >= limit:
-        raise ValidationError('Slack must be less than the travel limit')
+    if field.data > 3600:
+        raise ValidationError('Value must be 3600 or less')
 
 
 def FOCUSER__CLASSNAME_validator(form, field):
@@ -5189,8 +5201,10 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__I2C_ADDRESS             = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
-    FOCUSER__TRAVEL_LIMIT_DEGREES    = IntegerField('Lens Travel Limit (degrees each way)', validators=[FOCUSER__TRAVEL_LIMIT_DEGREES_validator])
-    FOCUSER__SLACK_DEGREES           = IntegerField('Gear Slack (degrees)', validators=[FOCUSER__SLACK_DEGREES_validator])
+    FOCUSER__GEAR_MOTOR_TEETH        = IntegerField('Motor Gear Teeth', validators=[FOCUSER__GEAR_TEETH_validator])
+    FOCUSER__GEAR_LENS_TEETH         = IntegerField('Lens Gear Teeth', validators=[FOCUSER__GEAR_TEETH_validator])
+    FOCUSER__TRAVEL_LIMIT_LENS_DEGREES = IntegerField('Lens Travel Limit (lens degrees each way)', validators=[FOCUSER__TRAVEL_LIMIT_LENS_DEGREES_validator])
+    FOCUSER__BACKLASH_DEGREES        = IntegerField('Backlash (motor degrees)', validators=[FOCUSER__BACKLASH_DEGREES_validator])
     DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__I2C_ADDRESS          = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
@@ -5663,6 +5677,26 @@ class IndiAllskyConfigForm(FlaskForm):
 
         # focuser
         if self.FOCUSER__CLASSNAME.data:
+            # Live Focus turns lens degrees into motor steps through the external gears,
+            # so a focuser needs both gear counts and a travel limit
+            gear_ok = True
+            for gear_field in (self.FOCUSER__GEAR_MOTOR_TEETH, self.FOCUSER__GEAR_LENS_TEETH):
+                if not isinstance(gear_field.data, int) or gear_field.data < 1:
+                    gear_field.errors.append('Count the teeth on this gear; a focuser needs it')
+                    gear_ok = False
+                    result = False
+
+            limit = self.FOCUSER__TRAVEL_LIMIT_LENS_DEGREES.data
+            if not isinstance(limit, int) or limit < 1:
+                self.FOCUSER__TRAVEL_LIMIT_LENS_DEGREES.errors.append('Set how far the lens may turn each way; a focuser needs it')
+                result = False
+            elif gear_ok and isinstance(self.FOCUSER__BACKLASH_DEGREES.data, int):
+                # backlash is motor degrees; the whole travel in motor degrees is 2 x limit x lens/motor
+                travel_motor = 2 * limit * self.FOCUSER__GEAR_LENS_TEETH.data / self.FOCUSER__GEAR_MOTOR_TEETH.data
+                if self.FOCUSER__BACKLASH_DEGREES.data >= travel_motor:
+                    self.FOCUSER__BACKLASH_DEGREES.errors.append('Backlash must be less than the whole lens travel in motor degrees ({0:d})'.format(int(travel_motor)))
+                    result = False
+
             if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
                 try:
                     import board

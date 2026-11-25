@@ -11,6 +11,9 @@ import pytest
 
 from indi_allsky import constants
 from indi_allsky.focus.capture_session import FocusGlue
+from indi_allsky.focus.gearing import MSG_GEAR_LIMIT_UNSET
+from indi_allsky.focus.gearing import MSG_GEAR_UNSET
+from indi_allsky.focus.gearing import MSG_LIMIT_UNSET
 from indi_allsky.focus.capture_session import MSG_MOTOR_OPEN
 from indi_allsky.focus.capture_session import open_link
 from indi_allsky.focus.capture_session import state_path_for
@@ -622,6 +625,9 @@ def test_a_second_session_keeps_the_settings_the_first_could_not_put_back(rig):
     assert not os.path.exists(rig.state_path)
 
 
+GEARS = dict(gear_motor_teeth=12, gear_lens_teeth=82, travel_limit_lens_degrees=30.0, backlash_degrees=30.0)
+
+
 class _Driver(FakeDriver):
     def __init__(self):
         super().__init__(LensClock())
@@ -638,12 +644,15 @@ def test_a_focus_motor_opens_with_the_session_and_closes_with_it(sock_path, clos
         drivers.append(_Driver())
         return drivers[-1]
 
-    r = _make_rig(sock_path, closers, open_focuser=opener, travel_limit_degrees=360.0, slack_degrees=30.0)
+    r = _make_rig(sock_path, closers, open_focuser=opener, **GEARS)
     page = start_session(r)
     state = page.json('state', session='active', pump=lambda: run_session_pass(r.worker))
     assert state['motor'] == {'configured': True, 'ok': True, 'reason': None}
     lens = page.json('lens', pump=lambda: run_session_pass(r.worker))
-    assert lens['limit'] == 512 and lens['slack'] == round(30 * 512 / 360)
+    # the limit is lens degrees through the 82:12 gears; the backlash is motor degrees
+    per_lens_turn = 512 * 82 / 12.0
+    assert lens['steps_per_lens_turn'] == per_lens_turn
+    assert lens['limit'] == round(30 * per_lens_turn / 360) and lens['backlash'] == round(30 * 512 / 360)
     r.worker.focus.stop('done')
     assert len(drivers) == 1 and drivers[0].deinits == 1
 
@@ -652,7 +661,7 @@ def test_a_focus_motor_that_will_not_open_leaves_focus_by_hand(sock_path, closer
     def opener():
         raise OSError('no I2C device')
 
-    r = _make_rig(sock_path, closers, open_focuser=opener)
+    r = _make_rig(sock_path, closers, open_focuser=opener, **GEARS)
     page = start_session(r)
     state = page.json('state', session='active', pump=lambda: run_session_pass(r.worker))
     assert state['motor'] == {'configured': True, 'ok': False, 'reason': MSG_MOTOR_OPEN}
@@ -666,3 +675,23 @@ def test_no_focus_motor_configured(rig):
     page = start_session(rig)
     assert page.json('state', session='active', pump=lambda: run_session_pass(rig.worker))['motor'] == {'configured': False, 'ok': False, 'reason': None}
     rig.worker.focus.stop('done')
+
+
+@pytest.mark.parametrize('settings, reason', [
+    (dict(GEARS, gear_motor_teeth=0), MSG_GEAR_UNSET),
+    (dict(GEARS, travel_limit_lens_degrees=0), MSG_LIMIT_UNSET),
+    (dict(GEARS, gear_lens_teeth=0, travel_limit_lens_degrees=0), MSG_GEAR_LIMIT_UNSET),
+])
+def test_a_focus_motor_without_its_gears_or_limit_stays_closed(sock_path, closers, settings, reason):
+    opened = []
+
+    def opener():
+        opened.append(1)
+        return _Driver()
+
+    r = _make_rig(sock_path, closers, open_focuser=opener, **settings)
+    page = start_session(r)
+    state = page.json('state', session='active', pump=lambda: run_session_pass(r.worker))
+    assert state['motor'] == {'configured': True, 'ok': False, 'reason': reason}
+    assert opened == []
+    r.worker.focus.stop('done')

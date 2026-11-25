@@ -141,6 +141,7 @@ from .focus_views import WsFocusView
 from .focus_views import focus_address
 from .focus_views import focus_session_running
 
+from ..focus.gearing import config_unset_reason
 from ..focus.link import probe as focus_link_probe
 from ..focus.rigs import decide
 
@@ -3089,8 +3090,10 @@ class ConfigView(FormView):
             'FOCUSER__GPIO_PIN_3'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_3', 'D27'),
             'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
             'FOCUSER__I2C_ADDRESS'           : self.indi_allsky_config.get('FOCUSER', {}).get('I2C_ADDRESS', '0x60'),
-            'FOCUSER__TRAVEL_LIMIT_DEGREES'  : self.indi_allsky_config.get('FOCUSER', {}).get('TRAVEL_LIMIT_DEGREES', 360),
-            'FOCUSER__SLACK_DEGREES'         : self.indi_allsky_config.get('FOCUSER', {}).get('SLACK_DEGREES', 30),
+            'FOCUSER__GEAR_MOTOR_TEETH'      : self.indi_allsky_config.get('FOCUSER', {}).get('GEAR_MOTOR_TEETH', 0),
+            'FOCUSER__GEAR_LENS_TEETH'       : self.indi_allsky_config.get('FOCUSER', {}).get('GEAR_LENS_TEETH', 0),
+            'FOCUSER__TRAVEL_LIMIT_LENS_DEGREES' : self.indi_allsky_config.get('FOCUSER', {}).get('TRAVEL_LIMIT_LENS_DEGREES', 0),
+            'FOCUSER__BACKLASH_DEGREES'      : self.indi_allsky_config.get('FOCUSER', {}).get('BACKLASH_DEGREES', 30),
             'DEW_HEATER__CLASSNAME'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('CLASSNAME', ''),
             'DEW_HEATER__I2C_ADDRESS'        : self.indi_allsky_config.get('DEW_HEATER', {}).get('I2C_ADDRESS', '0x10'),
             'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
@@ -4182,8 +4185,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_3']                = str(request.json['FOCUSER__GPIO_PIN_3'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
         self.indi_allsky_config['FOCUSER']['I2C_ADDRESS']               = str(request.json['FOCUSER__I2C_ADDRESS'])
-        self.indi_allsky_config['FOCUSER']['TRAVEL_LIMIT_DEGREES']      = int(request.json['FOCUSER__TRAVEL_LIMIT_DEGREES'])
-        self.indi_allsky_config['FOCUSER']['SLACK_DEGREES']             = int(request.json['FOCUSER__SLACK_DEGREES'])
+        self.indi_allsky_config['FOCUSER']['GEAR_MOTOR_TEETH']          = int(request.json['FOCUSER__GEAR_MOTOR_TEETH'])
+        self.indi_allsky_config['FOCUSER']['GEAR_LENS_TEETH']           = int(request.json['FOCUSER__GEAR_LENS_TEETH'])
+        self.indi_allsky_config['FOCUSER']['TRAVEL_LIMIT_LENS_DEGREES'] = int(request.json['FOCUSER__TRAVEL_LIMIT_LENS_DEGREES'])
+        self.indi_allsky_config['FOCUSER']['BACKLASH_DEGREES']          = int(request.json['FOCUSER__BACKLASH_DEGREES'])
+        # the old motor-degree keys are replaced by the lens-degree limit and backlash above
+        self.indi_allsky_config['FOCUSER'].pop('TRAVEL_LIMIT_DEGREES', None)
+        self.indi_allsky_config['FOCUSER'].pop('SLACK_DEGREES', None)
         self.indi_allsky_config['DEW_HEATER']['CLASSNAME']              = str(request.json['DEW_HEATER__CLASSNAME'])
         self.indi_allsky_config['DEW_HEATER']['I2C_ADDRESS']            = str(request.json['DEW_HEATER__I2C_ADDRESS'])
         self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
@@ -7888,6 +7896,8 @@ class FocusView(TemplateView):
         # same rule as /ws/focus
         context['can_start'] = bool(current_user.is_authenticated and current_user.is_admin and self.verify_admin_network())
         context['motor_configured'] = bool(self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME'))
+        # why the configured motor cannot move the lens yet (no gear teeth or lens travel limit), or None
+        context['motor_reason'] = config_unset_reason(self.indi_allsky_config.get('FOCUSER', {}))
         context['focus_ws_url'] = ws_url
         # the script's address changes with the file: static files are served with no Cache-Control, so a browser
         # could otherwise keep running the old script after a deploy
@@ -7913,8 +7923,31 @@ class FocusLiveView(FocusView):
         if context['focus_decision'].page != 'new':
             return redirect(url_for('indi_allsky.focus_view'))  # the Focus page says why
 
+        context.update(self._poster())
         self.template_name = 'focus_session.html'
         return self.render_template(context)
+
+    def _poster(self):
+        """The last sky picture (from the past 15 minutes) for the idle page; no picture leaves a black box."""
+        entry = getattr(self, 'latest_image_entry', None)  # set by TemplateView's camera lookup
+        if entry is None:
+            return {'poster_url': None, 'poster_time': None}
+
+        local = True
+        if getattr(self, 'web_nonlocal_images', False):
+            if not (getattr(self, 'web_local_images_admin', False) and self.verify_admin_network()):
+                local = False
+
+        try:
+            url = str(entry.getUrl(s3_prefix=getattr(self, 's3_prefix', ''), local=local))
+        except ValueError as e:
+            app.logger.error('Focus: no URL for the last picture: %s', str(e))
+            return {'poster_url': None, 'poster_time': None}
+
+        if not url.startswith(('http://', 'https://', '/')):
+            url = url_for('indi_allsky.index_view') + url  # a path under the app, like the other pages use
+
+        return {'poster_url': url, 'poster_time': entry.createDate.strftime('%H:%M')}
 
 
 class JsonFocusView(JsonView):

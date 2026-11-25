@@ -322,7 +322,7 @@ def test_simulator_constants_and_module_handle():
     b = focuserSimulator.FocuserSimulator({})
     assert focuserSimulator.SIMULATED_LENS is b
     assert (b.STEPS_PER_TURN, b.STEPS_PER_SECOND, b.CAN_STOP) == (512, 200, True)
-    assert (b.position, b.slack_steps, b.lens_position) == (0, 26, 0.0)
+    assert (b.position, b.backlash_steps, b.lens_position) == (0, 26, 0.0)
 
 
 def test_simulator_counts_sleeps_and_stops(fast):
@@ -350,19 +350,19 @@ def test_simulator_backlash_after_reversal():
     s.move_steps(100)
     assert s.lens_position == 100.0
 
-    s.move_steps(-26)  # takes up the slack, the lens stays put
+    s.move_steps(-26)  # takes up the backlash, the lens stays put
     assert s.position == 74
     assert s.lens_position == 100.0
     s.move_steps(-10)  # now it follows
     assert s.lens_position == 90.0
 
-    s.move_steps(26)  # reversed again, slack again
+    s.move_steps(26)  # reversed again, backlash again
     assert s.lens_position == 90.0
     s.move_steps(5)
     assert s.lens_position == 95.0
 
 
-def test_simulator_first_move_inward_has_slack_too():
+def test_simulator_first_move_inward_has_backlash_too():
     s = focuserSimulator.FocuserSimulator({})
     s.move_steps(-26)
     assert s.lens_position == 0.0

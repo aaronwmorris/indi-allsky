@@ -68,10 +68,10 @@ class Autofocus:
         """The page's words for the stage; the outcome message once done."""
         return (self.message or '') if self.done else STAGE_WORDS[self.stage]
 
-    def estimate_s(self, position: int, slack: int) -> float:
-        """Seconds for the whole run from `position`, rounded up: to the start (with the slack leg), the paced
+    def estimate_s(self, position: int, backlash: int) -> float:
+        """Seconds for the whole run from `position`, rounded up: to the start (with the backlash leg), the paced
         scan, the fit, and back from the end to a best focus guessed at `here`."""
-        t = ((abs(position - self.start) + slack) / self.speed
+        t = ((abs(position - self.start) + backlash) / self.speed
              + (self.end - self.start) / self.max_rate
              + FIT_ALLOWANCE_S
              + abs(self.end - self.here) / self.speed)
