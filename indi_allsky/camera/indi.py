@@ -1430,8 +1430,8 @@ class IndiClient(PyIndi.BaseClient):
         ]:
             logger.warning('indi_gphoto_ccd does not support bin settings')
             return fake_binning_info
-        elif indi_exec in ['indi_webcam_ccd']:
-            logger.warning('indi_webcam_ccd does not support bin settings')
+        elif indi_exec in ['indi_webcam_ccd', 'indi_v4l2_ccd']:
+            logger.warning('%s does not support bin settings', indi_exec)
             return fake_binning_info
 
 
@@ -1479,8 +1479,8 @@ class IndiClient(PyIndi.BaseClient):
             self.binning = new_bin_value[0]
 
             return
-        elif indi_exec in ['indi_webcam_ccd']:
-            logger.warning('indi_webcam_ccd does not support bin settings')
+        elif indi_exec in ['indi_webcam_ccd', 'indi_v4l2_ccd']:
+            logger.warning('%s does not support bin settings', indi_exec)
 
             # Update shared bin value
             self._expUtils.BINNING_CURRENT = new_bin_value[0]
