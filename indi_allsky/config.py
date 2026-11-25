@@ -586,6 +586,13 @@ class IndiAllSkyConfigBase(object):
             "CERT_BYPASS"            : True,
             "PUBLISH_IMAGE"          : True,
         },
+        "ALLSKYTEAM_MAP" : {
+            "WEBSITE_URL" : "",
+            "LOCATION_ACCURACY" : "legacy",
+            "ENABLE" : False,
+            "IMAGE_URL" : "",
+            "EQUIPMENT" : "",
+        },
         "ALLSKYMAP" : {
             "ENABLE"                 : False,
             "API_URL"                : "https://allsky-map.com",

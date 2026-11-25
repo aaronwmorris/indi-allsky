@@ -1,0 +1,278 @@
+<div class="tab-pane fade" id="nav-global-allsky-map" role="tabpanel" aria-labelledby="nav-global-allsky-map-tab">
+<div class="tw:flex tw:flex-col tw:gap-6">
+<section id="global-map-introduction" class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+<div class="tw:card-body tw:p-6">
+<p class="tw:text-sm"><strong>AllskyTeam Map</strong> is the global camera map created by Thomas Jacquin for the Allsky project. This integration allows your indi-allsky camera to publish its location and details to the map. You can optionally provide a publicly accessible URL for your latest image.</p>
+</div>
+</section>
+<section class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+<div class="tw:card-body tw:p-6 tw:gap-4">
+<div class="tw:flex tw:items-center tw:justify-between">
+<h2 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Allsky Map (Allsky project)</h2>
+<div class="tw:flex tw:flex-wrap tw:justify-end tw:gap-3">
+<a href="https://github.com/aaronwmorris/indi-allsky/wiki/AllskyTeam-Map" target="_blank" rel="noopener" class="tw:link tw:link-info tw:text-xs">Documentation</a>
+<a href="https://www.thomasjacquin.com/allsky-map/" target="_blank" rel="noopener" class="tw:link tw:link-info tw:text-xs">View Allsky Map</a>
+</div>
+</div>
+<p class="tw:text-sm">Lists this camera on the Allsky project's Allsky Map. This is separate from indi-allsky's Allsky Map (allsky-map.com) integration.</p>
+<div  class="tw:alert tw:alert-info tw:py-2.5 tw:text-xs">
+<span class="tw:icon-[lucide--info] tw:w-4 tw:h-4" aria-hidden="true">
+</span>
+<span>Listings are public. First listings are normally created with Register / Update. Preview shows exactly what will be published; an existing active listing can update automatically.</span>
+</div>
+<div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+<div>
+<label for="ALLSKYTEAM_MAP__ENABLE" class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">{{ form_config.ALLSKYTEAM_MAP__ENABLE.label.text }}</label>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Allows registration and automatic updates. Turning this off stops updates but does not delete an existing listing.</p>
+</div>{{ form_config.ALLSKYTEAM_MAP__ENABLE(class="tw:toggle tw:toggle-primary tw:toggle-sm") }}</div>
+<div id="ALLSKYTEAM_MAP__ENABLE-error" class="tw:text-error" style="display:none">
+</div>
+</div>
+</section>
+<section class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+<div class="tw:card-body tw:p-6 tw:gap-4">
+<div class="tw:flex tw:items-center tw:justify-between">
+<h2 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Public location</h2>
+</div>
+<div id="global-map-private-location" {% if not form_config.PRIVACY_MODE.data %}style="display:none"{% endif %} class="tw:alert tw:alert-info tw:py-2.5 tw:text-xs">
+<span class="tw:icon-[lucide--info] tw:w-4 tw:h-4" aria-hidden="true">
+</span>
+<span>Privacy Mode is on, so whole-degree coordinates are published and this setting has no effect. Your choice is kept for when Privacy Mode is turned off.</span>
+</div>
+<div class="tw:flex tw:flex-col tw:gap-2">
+<label for="ALLSKYTEAM_MAP__LOCATION_ACCURACY" class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Location accuracy</label>{{ form_config.ALLSKYTEAM_MAP__LOCATION_ACCURACY(class='tw:select tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full', disabled=form_config.PRIVACY_MODE.data) }}<div id="ALLSKYTEAM_MAP__LOCATION_ACCURACY-error" class="tw:text-error tw:text-xs" style="display:none">
+</div>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">How precisely your saved location appears on the public map. Uses the location from the Location settings; GPS is not read directly.</p>
+</div>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Grid options snap to fixed points; results are limited by the precision of your saved location. Spacing is approximate, not a guaranteed privacy radius. Exact can reveal your home.</p>
+</div>
+</section>
+<section class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+<div class="tw:card-body tw:p-6 tw:gap-4">
+<div class="tw:flex tw:items-center tw:justify-between">
+<h2 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Listing details</h2>
+</div>
+<div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:pb-4 tw:border-b tw:border-base-300/60">
+<div class="tw:flex tw:flex-col tw:gap-2">
+<label for="ALLSKYTEAM_MAP__WEBSITE_URL" class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Website URL</label>{{ form_config.ALLSKYTEAM_MAP__WEBSITE_URL(class='tw:input tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full', placeholder='https://example.org/') }}<div id="ALLSKYTEAM_MAP__WEBSITE_URL-error" class="tw:text-error tw:text-xs" style="display:none">
+</div>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Optional. Link shown on the map. Needs an Image URL.</p>
+</div>
+<div class="tw:flex tw:flex-col tw:gap-2">
+<label for="ALLSKYTEAM_MAP__IMAGE_URL" class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image URL</label>{{ form_config.ALLSKYTEAM_MAP__IMAGE_URL(class='tw:input tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full', placeholder='https://example.org/latest.jpg') }}<div id="ALLSKYTEAM_MAP__IMAGE_URL-error" class="tw:text-error tw:text-xs" style="display:none">
+</div>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Optional. A public image (no login). May be on a different domain from the website. allsky-map.com links are not accepted.</p>
+</div>
+</div>
+<div class="tw:flex tw:flex-col tw:gap-2">
+<label for="ALLSKYTEAM_MAP__EQUIPMENT" class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Equipment</label>{{ form_config.ALLSKYTEAM_MAP__EQUIPMENT(class='tw:input tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full', placeholder='e.g. enclosure, dew heater, lens') }}<div id="ALLSKYTEAM_MAP__EQUIPMENT-error" class="tw:text-error tw:text-xs" style="display:none">
+</div>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Optional free text shown on the map.</p>
+</div>
+<div class="tw:py-4 tw:border-t tw:border-base-300/60">
+<h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Also published</h3>
+<p class="tw:text-sm">Location name · Owner · Lens · Camera · Computer · INDI-AllSky version</p>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Taken from your existing settings and detected hardware. Change them in their own settings.</p>
+</div>
+</div>
+</section>
+<section class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+<div class="tw:card-body tw:p-6 tw:gap-4">
+<div class="tw:flex tw:items-center tw:justify-between">
+<h2 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Publish</h2>
+</div>
+<p class="tw:text-xs tw:text-base-content/60">① Save configuration　② Preview　③ Register</p>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Preview uses saved settings — save first.</p>
+<div class="tw:flex tw:flex-wrap tw:gap-2">
+<button type="button" class="tw:btn tw:btn-sm tw:btn-outline tw:btn-primary" data-global-map="preview">Preview saved metadata</button>
+<button type="button" class="tw:btn tw:btn-sm tw:btn-primary" data-global-map="register" disabled>Register / Update</button>
+<button type="button" class="tw:btn tw:btn-sm tw:btn-ghost tw:ml-auto" id="global-map-refresh">
+<span class="tw:icon-[lucide--refresh-cw] tw:w-4 tw:h-4" aria-hidden="true">
+</span>Refresh status</button>
+</div>
+<div aria-live="polite">
+<h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Status</h3>
+<p id="global-map-error" class="tw:text-error tw:text-sm">
+</p>
+<div id="global-map-badges" class="tw:flex tw:flex-wrap tw:gap-2">
+</div>
+<div id="global-map-summary" class="tw:text-xs tw:flex tw:flex-col tw:gap-2 tw:mt-3">
+</div>
+</div>
+<div id="global-map-preview-panel" style="display:none">
+<h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50" id="global-map-preview-heading">Publication preview</h3>
+<table class="tw:table tw:table-xs" style="table-layout:fixed; width:100%; overflow-wrap:anywhere">
+<colgroup><col style="width:min(10rem, 40%)"><col></colgroup>
+<tbody id="global-map-preview-rows">
+</tbody>
+</table>
+<p id="global-map-preview-note" class="tw:text-[0.625rem] tw:text-base-content/50">Preview sends nothing. Register submits these saved details if they are still current.</p>
+</div>
+<div class="tw:collapse tw:collapse-arrow tw:bg-base-100">
+<input type="checkbox" aria-label="Show technical details">
+<div class="tw:collapse-title tw:text-sm">Technical details</div>
+<div class="tw:collapse-content">
+<h4>Status / response evidence</h4>
+<pre id="global-map-status" class="tw:text-xs" style="white-space:pre-wrap; overflow-wrap:anywhere">
+</pre>
+<h4>Preview metadata</h4>
+<pre id="global-map-preview" class="tw:text-xs" style="white-space:pre-wrap; overflow-wrap:anywhere">
+</pre>
+</div>
+</div>
+<div class="tw:py-4 tw:border-t tw:border-base-300/60">
+<h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Other actions</h3>
+<div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
+<button type="button" class="tw:btn tw:btn-sm tw:btn-outline tw:btn-warning" data-global-map="force" disabled>Force update…</button>
+<button type="button" class="tw:btn tw:btn-sm tw:btn-outline tw:btn-error" data-global-map="remove">Remove and disable…</button>
+</div>
+<p class="tw:text-[0.625rem] tw:text-base-content/50">Force explicitly overrides ordinary quota limits, but still requires a Preview and a minute between publication attempts. Remove turns publication off and asks the map to delete this listing.</p>
+</div>
+</div>
+</section>
+<section class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:collapse tw:collapse-arrow">
+<input type="checkbox" aria-label="Show how publishing works">
+<h2 class="tw:collapse-title tw:text-sm">How publishing works</h2>
+<div class="tw:collapse-content tw:text-xs tw:flex tw:flex-col tw:gap-3">
+<p>
+<strong>Automatic updates</strong> — While registered and enabled, with no suppression or review hold, the listing refreshes about every 48 hours and soon after any published detail changes: location or coordinates, Owner, Lens, Privacy Mode, these URLs, Equipment, detected camera or computer, or an INDI-AllSky upgrade that changes the published version.</p>
+<p>
+<strong>Limits</strong> — The client allows up to 5 ordinary attempts in a rolling 24 hours, at least a minute apart. Failed or uncertain attempts count. Server update counts use the server’s own accounting window. Force bypasses the ordinary client cap and requests a server-limit override; the one-minute guard and single-flight protection still apply. Force is never automatic. Remove does not consume the ordinary local budget.</p>
+<p>
+<strong>Turning publication off</strong> — Disabling stops future updates but leaves the listing on the map. Remove and disable also asks the map to delete it. Either way, publication stays paused until you Preview and Register again. An already-sent request cannot be recalled.</p>
+<p>
+<strong>Uncertain results</strong> — If a request may or may not have reached the server, it is never retried automatically. Automatic updates pause until you review and Register again.</p>
+<p>
+<strong>Privacy Mode</strong> — Privacy Mode only reduces coordinates to whole degrees in this listing. Owner, location name, URLs and images are still public as shown in Preview, and images or text can reveal where you are.</p>
+<p>
+<strong>Location precision</strong> — Published coordinates are limited by the precision of your saved location. Rounding can change or eliminate the intended grid spacing. Choosing a coarser setting later does not remove locations that were already public.</p>
+<p>
+<strong>Installation identifier</strong> — A random ID, created at first Preview, identifies this listing to the map. Keep it private. Anyone with it could change or remove your listing. It is not your host machine ID and is not used to log in to indi-allsky. It survives disable, re-enable and upgrades; it is kept in the database backup. No image bytes or full configuration are sent.</p>
+<p>More detail in the <a class="tw:link tw:link-info" href="https://github.com/aaronwmorris/indi-allsky/wiki/AllskyTeam-Map" target="_blank" rel="noopener">AllskyTeam Map wiki page</a>.</p>
+</div>
+</section>
+</div>
+</div>
+<script>
+$(function () {
+  function updateLocationPrivacy() {
+    const privateMode = $('#PRIVACY_MODE').prop('checked');
+    $('#ALLSKYTEAM_MAP__LOCATION_ACCURACY').prop('disabled', privateMode);
+    $('#global-map-private-location').toggle(privateMode);
+  }
+  $('#PRIVACY_MODE').on('change', updateLocationPrivacy);
+  updateLocationPrivacy();
+  let previewToken = null;
+  const endpoint = {{ url_for('indi_allsky.global_allsky_map_view') | tojson }};
+  const buttons = $('[data-global-map]');
+  let savedEnabled = {{ form_config.ALLSKYTEAM_MAP__ENABLE.data | tojson }};
+  function globalMapLastResult(value) {
+    const text = String(value);
+    const match = /^([A-Z_]+)(?::|$)/.exec(text);
+    const labels = {
+      INSERTED: 'Registered', UPDATED: 'Updated', DELETED: 'Removed',
+      ALREADY_UPDATED: 'Server update limit reached', ERROR: 'Server error',
+      FAILED: 'Failed', STALE: 'Not sent — saved details changed',
+      DISABLED: 'Not sent — publication disabled or paused', NOT_SENT: 'Not sent'
+    };
+    if (match && Object.prototype.hasOwnProperty.call(labels, match[1])) return labels[match[1]];
+    if (/^Queued (register|update|force|remove)$/.test(text)) return 'Request queued';
+    if (/^Sending (register|update|force|remove)$/.test(text)) return 'Sending request';
+    if (text === 'Interrupted request; manual review required, not retried') return 'Interrupted request — review required';
+    return text;
+  }
+  function renderGlobalMapStatus(data) {
+    if (typeof data.enabled === 'boolean') savedEnabled = data.enabled;
+    $('#global-map-status').text(JSON.stringify(data, (key, value) =>
+      key === 'preview_token' ? '(preview fingerprint hidden)' : value, 2));
+    $('#global-map-error').text(data.error || '');
+    if (!data.status) return;
+    const status = data.status;
+    const badges = $('#global-map-badges').empty();
+    const summary = $('#global-map-summary').empty();
+    function badge(label, style) { $('<span>').addClass('tw:badge tw:badge-sm ' + style).text(label).appendTo(badges); }
+    function line(value, style) { $('<p>').addClass(style || '').text(value).appendTo(summary); }
+    badge(status.registered ? 'Registered' : (status.registered === false && (status.last_status || '').startsWith('DELETED') ? 'Removed' : 'Not registered'), status.registered ? 'tw:badge-success' : 'tw:badge-neutral');
+    const active = savedEnabled && status.registered && !status.publication_suppressed && !status.needs_review;
+    if (status.publication_suppressed) badge('Publishing paused', 'tw:badge-warning');
+    else if (!savedEnabled) badge('Publishing off', 'tw:badge-neutral');
+    else if (active) badge('Publishing active', 'tw:badge-success');
+    if (status.needs_review) badge('Needs review', 'tw:badge-error');
+    if (status.pending) badge('Request pending', 'tw:badge-info');
+    if (status.dirty && status.registered) badge('Changes not yet published', 'tw:badge-info');
+    for (const [key, label] of [['last_success', 'Last successful update'], ['last_attempt', 'Last attempt']]) {
+      if (status[key] != null) line(label + ': ' + new Date(status[key] * 1000).toLocaleString());
+    }
+    if (status.quota && status.quota.updates != null && status.quota.maximum != null) line('Server updates used: ' + status.quota.updates + ' of ' + status.quota.maximum + ' (at last response)');
+    if (status.last_status) line('Last result: ' + globalMapLastResult(status.last_status));
+    if (status.publication_notice) line(status.publication_notice, 'tw:alert tw:alert-info tw:py-2.5');
+    if (status.metadata_error) line('Cannot build listing: ' + status.metadata_error, 'tw:text-error');
+    if (status.needs_review) line('The last request needs review. Check its result and the public map, then Preview and Register to continue. Automatic updates are paused.');
+    if (status.dirty) line(active ? 'Your saved settings differ from the listing. An update will be sent automatically when eligible.' : 'Your saved settings differ from the listing. Preview and Register to publish them.');
+  }
+  function renderGlobalMapPreview(metadata) {
+    const rows = $('#global-map-preview-rows').empty();
+    const fields = [['coordinates', 'Coordinates'], ['location', 'Location name'], ['owner', 'Owner'], ['website_url', 'Website'], ['image_url', 'Image'], ['camera', 'Camera'], ['lens', 'Lens'], ['computer', 'Computer'], ['equipmentinfo', 'Equipment'], ['allsky_version', 'Version']];
+    for (const [key, label] of fields) {
+      const row = $('<tr>').appendTo(rows);
+      if (key === 'coordinates') row.addClass('tw:bg-base-300/40');
+      $('<th>').text(label).appendTo(row);
+      const value = key === 'coordinates' ? metadata.latitude + ', ' + metadata.longitude : metadata[key];
+      $('<td>').text(value == null || value === '' ? '—' : value).appendTo(row);
+    }
+    $('#global-map-preview-panel').show();
+    $('#global-map-preview-heading').text('Publication preview');
+    $('#global-map-preview-note').text('Preview sends nothing. Register submits these saved details if they are still current.');
+  }
+  function show(data) {
+    renderGlobalMapStatus(data);
+  }
+  function loadGlobalMapStatus() {
+    $.getJSON(endpoint).done(show).fail(function (xhr) { show(xhr.responseJSON || {error: 'Unable to read status'}); });
+  }
+  $('#global-map-refresh').on('click', loadGlobalMapStatus);
+  // Native config tabs change this panel's class/style, including programmatic opens.
+  const statusPanel = document.getElementById('nav-global-allsky-map');
+  let statusPanelWasVisible = false;
+  function loadGlobalMapStatusOnOpen() {
+    const visible = statusPanel.classList.contains('active') && statusPanel.style.display !== 'none';
+    if (visible && !statusPanelWasVisible) loadGlobalMapStatus();
+    statusPanelWasVisible = visible;
+  }
+  new MutationObserver(loadGlobalMapStatusOnOpen).observe(statusPanel, {
+    attributes: true, attributeFilter: ['class', 'style']
+  });
+  loadGlobalMapStatusOnOpen();
+  buttons.on('click', function () {
+    const operation = $(this).data('global-map');
+    if (operation === 'force' && !window.confirm('Send an update now using the explicit quota override?\n\nUse only after reviewing a normal refusal. The one-minute guard still applies.')) return;
+    if (operation === 'remove' && !window.confirm('Turn off publication and ask the map to delete this listing?\n\nPublication stays off even if deletion fails. You can register again later.')) return;
+    buttons.prop('disabled', true);
+    $.ajax({url: endpoint, method: 'POST', contentType: 'application/json',
+      data: JSON.stringify({operation: operation, preview_token: previewToken, confirm: true})
+    }).done(function (data) {
+      if (operation === 'preview') {
+        previewToken = data.preview_token;
+        $('#global-map-preview').text(JSON.stringify(data.metadata, null, 2));
+        renderGlobalMapPreview(data.metadata);
+      }
+      if (operation !== 'preview') {
+        $('#global-map-preview-heading').text('Publication preview');
+        $('#global-map-preview-note').text('Request queued. Refresh status to check the result.');
+      }
+      if (operation === 'remove') {
+        $('#ALLSKYTEAM_MAP__ENABLE').prop('checked', false);
+        previewToken = null;
+      }
+      show(data);
+    }).fail(function (xhr) {
+      const data = xhr.responseJSON || {error: 'Request failed; refresh status before retrying'};
+      if (operation === 'remove' && data.enabled === false) $('#ALLSKYTEAM_MAP__ENABLE').prop('checked', false);
+      show(data);
+    }).always(function () {
+      buttons.prop('disabled', false);
+      $('[data-global-map="register"], [data-global-map="force"]').prop('disabled', !previewToken);
+    });
+  });
+});
+</script>

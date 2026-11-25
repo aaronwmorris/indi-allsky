@@ -2998,6 +2998,11 @@ class ConfigView(FormView):
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
             'SYNCAPI__CONNECT_TIMEOUT'       : self.indi_allsky_config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0),
             'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 60.0),
+            'ALLSKYTEAM_MAP__LOCATION_ACCURACY' : self.indi_allsky_config.get('ALLSKYTEAM_MAP', {}).get('LOCATION_ACCURACY', 'legacy'),
+            'ALLSKYTEAM_MAP__ENABLE'      : self.indi_allsky_config.get('ALLSKYTEAM_MAP', {}).get('ENABLE', False),
+            'ALLSKYTEAM_MAP__IMAGE_URL'   : self.indi_allsky_config.get('ALLSKYTEAM_MAP', {}).get('IMAGE_URL', ''),
+            'ALLSKYTEAM_MAP__EQUIPMENT'   : self.indi_allsky_config.get('ALLSKYTEAM_MAP', {}).get('EQUIPMENT', ''),
+            'ALLSKYTEAM_MAP__WEBSITE_URL' : self.indi_allsky_config.get('ALLSKYTEAM_MAP', {}).get('WEBSITE_URL', ''),
             'ALLSKYMAP__ENABLE'              : self.indi_allsky_config.get('ALLSKYMAP', {}).get('ENABLE', False),
             'ALLSKYMAP__API_URL'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com'),
             'ALLSKYMAP__API_KEY'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_KEY', ''),
@@ -3517,6 +3522,39 @@ class ConfigView(FormView):
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
 
         return context
+
+
+class GlobalAllskyMapView(BaseView):
+    methods = ['GET', 'POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        from ..global_allsky_map import GlobalMapService, MapError
+        if not current_user.is_admin:
+            return jsonify(error='Administrator access required'), 403
+        service = GlobalMapService()
+        if request.method == 'GET':
+            return jsonify(status=service.status(), enabled=bool(service.config().get('ALLSKYTEAM_MAP', {}).get('ENABLE')))
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify(error='Expected a JSON object'), 400
+        operation = data.get('operation')
+        try:
+            if operation == 'preview':
+                return jsonify(service.preview())
+            if operation in ('force', 'remove') and data.get('confirm') is not True:
+                raise MapError('Explicit confirmation is required')
+            if operation == 'remove':
+                # Disable first, even if removal subsequently fails. No capture reload.
+                from ..config import IndiAllSkyConfig
+                service.suppress_publication()
+                config_obj = IndiAllSkyConfig()
+                config_obj.config['ALLSKYTEAM_MAP'] = dict(config_obj.config.get('ALLSKYTEAM_MAP', {}), ENABLE=False)
+                config_obj.save(current_user.username, 'Disable Allsky Map and remove listing')
+            task_id = service.enqueue(operation, data.get('preview_token'))
+            return jsonify(task_id=task_id, status=service.status(), enabled=bool(service.config().get('ALLSKYTEAM_MAP', {}).get('ENABLE')))
+        except (MapError, ConfigSaveException) as exc:
+            return jsonify(error=str(exc), enabled=bool(service.config().get('ALLSKYTEAM_MAP', {}).get('ENABLE'))), 400
 
 
 class AjaxConfigView(BaseView):
@@ -4079,6 +4117,17 @@ class AjaxConfigView(BaseView):
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
         self.indi_allsky_config['SYNCAPI']['CONNECT_TIMEOUT']           = float(request.json['SYNCAPI__CONNECT_TIMEOUT'])
         self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
+        # Both private and non-private saves must detach shared shallow defaults.
+        self.indi_allsky_config['ALLSKYTEAM_MAP'] = dict(self.indi_allsky_config.get('ALLSKYTEAM_MAP', {}))
+        if not self.indi_allsky_config.get('PRIVACY_MODE'):
+            self.indi_allsky_config['ALLSKYTEAM_MAP']['LOCATION_ACCURACY'] = request.json.get(
+                'ALLSKYTEAM_MAP__LOCATION_ACCURACY', self.indi_allsky_config['ALLSKYTEAM_MAP'].get('LOCATION_ACCURACY', 'legacy'))
+        self.indi_allsky_config['ALLSKYTEAM_MAP']['ENABLE']          = bool(request.json.get('ALLSKYTEAM_MAP__ENABLE', self.indi_allsky_config['ALLSKYTEAM_MAP'].get('ENABLE', False)))
+        self.indi_allsky_config['ALLSKYTEAM_MAP']['IMAGE_URL']       = str(request.json.get('ALLSKYTEAM_MAP__IMAGE_URL', self.indi_allsky_config['ALLSKYTEAM_MAP'].get('IMAGE_URL', '')))
+        self.indi_allsky_config['ALLSKYTEAM_MAP']['EQUIPMENT']       = str(request.json.get('ALLSKYTEAM_MAP__EQUIPMENT', self.indi_allsky_config['ALLSKYTEAM_MAP'].get('EQUIPMENT', '')))
+        self.indi_allsky_config['ALLSKYTEAM_MAP']['WEBSITE_URL'] = str(request.json.get(
+            'ALLSKYTEAM_MAP__WEBSITE_URL', self.indi_allsky_config['ALLSKYTEAM_MAP'].get(
+                'WEBSITE_URL', '')))
         self.indi_allsky_config['ALLSKYMAP']['ENABLE']                  = bool(request.json['ALLSKYMAP__ENABLE'])
         self.indi_allsky_config['ALLSKYMAP']['API_URL']                 = str(request.json['ALLSKYMAP__API_URL'])
         self.indi_allsky_config['ALLSKYMAP']['API_KEY']                 = str(request.json['ALLSKYMAP__API_KEY'])
@@ -4483,10 +4532,16 @@ class AjaxConfigView(BaseView):
             username = 'system'
 
 
+        from ..global_allsky_map import MapError
         try:
+            if 'ALLSKYTEAM_MAP__ENABLE' in request.json and not self.indi_allsky_config['ALLSKYTEAM_MAP']['ENABLE']:
+                from ..global_allsky_map import GlobalMapService
+                service = GlobalMapService()
+                if service.identifier() is not None:
+                    service.suppress_publication()
             self._indi_allsky_config_obj.save(username, config_note)
             app.logger.info('Saved new config')
-        except ConfigSaveException as e:
+        except (ConfigSaveException, MapError) as e:
             error_data = {
                 'form_global' : [str(e)],
             }
@@ -14835,6 +14890,7 @@ bp_allsky.add_url_rule('/minigenerate', view_func=MiniTimelapseGeneratorView.as_
 bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGeneratorView.as_view('ajax_mini_generate_view'))
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
+bp_allsky.add_url_rule('/ajax/global_allsky_map', view_func=GlobalAllskyMapView.as_view('global_allsky_map_view'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp_allsky.add_url_rule('/config/list', view_func=ConfigListView.as_view('config_list_view', template_name='config_list.html'))
 bp_allsky.add_url_rule('/config/download', view_func=ConfigDownloadView.as_view('config_download_view'))
