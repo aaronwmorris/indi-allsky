@@ -41,7 +41,7 @@ var camera_id = {{ camera_id }};
                 
                 <!-- File Upload Field -->
                 <div class="tw:flex tw:flex-col tw:gap-2">
-                    <label class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                    <label for="{{ form_config_restore.CONFIG_UPLOAD.id }}" class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
                         {{ form_config_restore.CONFIG_UPLOAD.label.text }}
                     </label>
                     {{ form_config_restore.CONFIG_UPLOAD(class='tw:file-input tw:file-input-bordered tw:file-input-primary tw:w-full tw:bg-base-100') }}

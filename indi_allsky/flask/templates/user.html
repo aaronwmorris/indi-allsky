@@ -33,24 +33,24 @@
                     <i class="tw:icon-[lucide--id-card] tw:w-4 tw:h-4 tw:text-primary"></i> Identity Configuration
                 </h4>
 
-                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:flex-col tw:gap-1.5">
+                    <label for="{{ form_userinfo.USERNAME.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.USERNAME.label.text }}
                     </label>
                     {{ form_userinfo.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                     <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                 </div>
 
-                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:flex-col tw:gap-1.5">
+                    <label for="{{ form_userinfo.NAME.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.NAME.label.text }}
                     </label>
                     {{ form_userinfo.NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                     <div id="NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                 </div>
 
-                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:flex-col tw:gap-1.5">
+                    <label for="{{ form_userinfo.EMAIL.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.EMAIL.label.text }}
                     </label>
                     {{ form_userinfo.EMAIL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-300 tw:text-base-content/70 tw:w-full tw:cursor-not-allowed', readonly=true) }}
@@ -58,8 +58,8 @@
                     <div id="EMAIL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                 </div>
 
-                <div class="tw:form-control tw:flex tw:items-center tw:justify-between tw:pt-2">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:items-center tw:justify-between tw:pt-2">
+                    <label for="{{ form_userinfo.ADMIN.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.ADMIN.label.text }}
                     </label>
                     <div class="tw:flex tw:items-center">
@@ -75,24 +75,24 @@
                     <i class="tw:icon-[lucide--key-round] tw:w-4 tw:h-4 tw:text-primary"></i> Authentication Credentials
                 </h4>
 
-                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:flex-col tw:gap-1.5">
+                    <label for="{{ form_userinfo.CURRENT_PASSWORD.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.CURRENT_PASSWORD.label.text }}
                     </label>
                     {{ form_userinfo.CURRENT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
                     <div id="CURRENT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                 </div>
 
-                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:flex-col tw:gap-1.5">
+                    <label for="{{ form_userinfo.NEW_PASSWORD.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.NEW_PASSWORD.label.text }}
                     </label>
                     {{ form_userinfo.NEW_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
                     <div id="NEW_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                 </div>
 
-                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <div class="tw:fieldset tw:flex tw:flex-col tw:gap-1.5">
+                    <label for="{{ form_userinfo.NEW_PASSWORD2.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         Confirm Password
                     </label>
                     {{ form_userinfo.NEW_PASSWORD2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
@@ -126,8 +126,8 @@
 
         <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
             <!-- Light Theme Dropdown -->
-            <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
-                <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+            <div class="tw:fieldset tw:flex tw:flex-col tw:gap-2">
+                <label for="select_light_theme" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                     Light Theme Preset
                 </label>
                 <select id="select_light_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
@@ -154,8 +154,8 @@
             </div>
 
             <!-- Dark Theme Dropdown -->
-            <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
-                <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+            <div class="tw:fieldset tw:flex tw:flex-col tw:gap-2">
+                <label for="select_dark_theme" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                     Dark Theme Preset
                 </label>
                 <select id="select_dark_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">

@@ -52,8 +52,8 @@ var camera_id = {{ camera_id }};
                     <form id="form_drives" onSubmit="return false;" autocomplete="off">
                         
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
-                            <div class="tw:form-control tw:flex-1 tw:min-w-[200px]">
-                                <label class="tw:label tw:pb-1">
+                            <div class="tw:fieldset tw:flex-1 tw:min-w-[200px]">
+                                <label for="{{ form_drives.DRIVES_SELECT.id }}" class="tw:label tw:pb-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_drives.DRIVES_SELECT.label.text }}</span>
                                 </label>
                                 {{ form_drives.DRIVES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -94,8 +94,8 @@ var camera_id = {{ camera_id }};
             <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <div class="tw:card-body tw:p-6">
                     <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
-                        <div class="tw:form-control tw:flex-1 tw:min-w-[200px]">
-                            <label class="tw:label tw:pb-1">
+                        <div class="tw:fieldset tw:flex-1 tw:min-w-[200px]">
+                            <label for="{{ form_drives.DEVICES_SELECT.id }}" class="tw:label tw:pb-1">
                                 <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_drives.DEVICES_SELECT.label.text }}</span>
                             </label>
                             {{ form_drives.DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}

@@ -160,9 +160,9 @@
 
                 <li class="tw:w-full">
                     <a href="{{ url_for('indi_allsky.index_view') }}"
-                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:rounded-[var(--radius-selector)] tw:border tw:transition-all tw:duration-200 {% if request.endpoint == 'indi_allsky.index_view' %}tw:bg-primary/15 tw:text-primary tw:font-semibold tw:border-primary/30{% else %}tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content{% endif %}">
                         <div class="tw:flex tw:items-center tw:gap-3">
-                            <i class="tw:icon-[lucide--home] tw:w-4 tw:h-4 tw:opacity-50"></i>
+                            <i class="tw:icon-[lucide--home] tw:w-4 tw:h-4 {% if request.endpoint == 'indi_allsky.index_view' %}tw:opacity-100{% else %}tw:opacity-50{% endif %}"></i>
                             <span class="tw:font-medium tw:text-[0.875rem]">Latest</span>
                         </div>
                     </a>
@@ -170,9 +170,9 @@
 
                 <li class="tw:w-full">
                     <a href="{{ url_for('indi_allsky.image_loop_view') }}"
-                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:rounded-[var(--radius-selector)] tw:border tw:transition-all tw:duration-200 {% if request.endpoint == 'indi_allsky.image_loop_view' %}tw:bg-primary/15 tw:text-primary tw:font-semibold tw:border-primary/30{% else %}tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content{% endif %}">
                         <div class="tw:flex tw:items-center tw:gap-3">
-                            <i class="tw:icon-[lucide--infinity] tw:w-4 tw:h-4 tw:opacity-50"></i>
+                            <i class="tw:icon-[lucide--infinity] tw:w-4 tw:h-4 {% if request.endpoint == 'indi_allsky.image_loop_view' %}tw:opacity-100{% else %}tw:opacity-50{% endif %}"></i>
                             <span class="tw:font-medium tw:text-[0.875rem]">Loop</span>
                         </div>
                     </a>
@@ -226,7 +226,8 @@
                 {% if group_id != 'system' or (current_user.is_authenticated or login_disabled) %}
                 <li class="tw:w-full">
                     <details class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden"
-                        id="menu-group-{{ group_id }}" name="sidebar-nav">
+                        id="menu-group-{{ group_id }}" name="sidebar-nav"
+                        {% if request.endpoint in (group_items | map(attribute=0) | list) or (group_id == 'tools' and request.endpoint == 'indi_allsky.asi676mc_calibration_view') %}open{% endif %}>
                         <summary
                             class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                             <div class="tw:flex tw:items-center tw:gap-3">
@@ -240,7 +241,7 @@
                             {% if not needs_auth or (current_user.is_authenticated or login_disabled) %}
                             <li>
                                 <a href="{{ url_for(endpoint) }}"
-                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">
+                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:rounded-[var(--radius-selector)] tw:transition-all {% if request.endpoint == endpoint %}tw:bg-primary/15 tw:text-primary tw:font-semibold{% else %}tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5{% endif %}">
                                     {{ label }}
                                 </a>
                             </li>
@@ -251,7 +252,7 @@
                             {% if group_id == 'tools' and asi676mc_calibration_available %}
                             <li>
                                 <a href="{{ url_for('indi_allsky.asi676mc_calibration_view') }}"
-                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">
+                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:rounded-[var(--radius-selector)] tw:transition-all {% if request.endpoint == 'indi_allsky.asi676mc_calibration_view' %}tw:bg-primary/15 tw:text-primary tw:font-semibold{% else %}tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5{% endif %}">
                                     Fix ASI676MC purple frames
                                 </a>
                             </li>
@@ -304,7 +305,7 @@
                 <label class="tw:flex tw:cursor-pointer tw:gap-2 tw:items-center">
                     <i class="tw:icon-[lucide--moon] tw:w-4 tw:h-4 tw:opacity-40"></i>
                     <input type="checkbox" value="light" class="tw:toggle tw:toggle-sm tw:theme-controller"
-                        id="theme-toggle" />
+                        id="theme-toggle" aria-label="Toggle light or dark theme" />
                     <i class="tw:icon-[lucide--sun] tw:w-4 tw:h-4 tw:opacity-40"></i>
                 </label>
             </div>
@@ -336,8 +337,8 @@
                     <i class="tw:icon-[lucide--bell] tw:w-5 tw:h-5"></i>
                 </div>
                 <div>
-                    <h3 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:m-0" id="notificationLabel">
-                    </h3>
+                    <h2 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:m-0" id="notificationLabel">
+                    </h2>
                     <div id="notification_date" class="tw:text-[0.625rem] tw:opacity-40 tw:font-mono tw:mt-0.5"></div>
                 </div>
             </div>
@@ -347,9 +348,11 @@
             </p>
 
             <div class="tw:modal-action">
-                <form method="dialog" class="tw:w-full">
+                <form method="dialog" class="tw:flex tw:gap-2 tw:w-full">
+                    <button type="submit"
+                        class="tw:btn tw:btn-ghost tw:btn-sm tw:font-semibold tw:uppercase tw:text-xs">Close</button>
                     <button id="ack_button"
-                        class="tw:btn tw:btn-primary tw:btn-sm tw:btn-block  tw:font-bold tw:uppercase tw:text-xs">Acknowledge</button>
+                        class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:font-bold tw:uppercase tw:text-xs">Acknowledge</button>
                 </form>
             </div>
         </div>
@@ -521,16 +524,8 @@
                                 other.open = false;
                             }
                         });
-                        if (statusAccordion && statusAccordion.open) {
-                            statusAccordion.open = false;
-                        }
                         if (cameraAccordion && cameraAccordion.open) {
                             cameraAccordion.open = false;
-                        }
-                    } else {
-                        const anyNavOpen = Array.from(navMenus).some(m => m.open);
-                        if (!anyNavOpen && statusAccordion && !statusAccordion.open) {
-                            statusAccordion.open = true;
                         }
                     }
                 });

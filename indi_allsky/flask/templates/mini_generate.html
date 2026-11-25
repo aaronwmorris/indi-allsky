@@ -1454,7 +1454,7 @@ $( document ).ready(function() {
 
             <div id="generation-controls" class="tw:flex tw:flex-col tw:gap-4">
                 <div id="panorama-mode-control" class="tw:pt-2 tw:border-t tw:border-base-300" style="display: none;">
-                    <div class="tw:form-control tw:w-full tw:max-w-md">
+                    <div class="tw:fieldset tw:w-full tw:max-w-md">
                         <label for="PAN_MODE" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">View movement</span></label>
                         <select id="PAN_MODE" class="tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:w-full tw:text-sm">
                             <option value="static">Keep the view still</option>
@@ -1467,8 +1467,8 @@ $( document ).ready(function() {
                 </div>
 
                 <div id="timing-controls" class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4 tw:gap-3 tw:items-end">
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
+                    <div class="tw:fieldset tw:w-full">
+                        <label for="{{ form_mini_timelapse.PRE_SECONDS_SELECT.id }}" class="tw:label tw:pb-1">
                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
                                 {{ form_mini_timelapse.PRE_SECONDS_SELECT.label.text }}
                             </span>
@@ -1476,8 +1476,8 @@ $( document ).ready(function() {
                         {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
                     </div>
 
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
+                    <div class="tw:fieldset tw:w-full">
+                        <label for="{{ form_mini_timelapse.POST_SECONDS_SELECT.id }}" class="tw:label tw:pb-1">
                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
                                 {{ form_mini_timelapse.POST_SECONDS_SELECT.label.text }}
                             </span>
@@ -1485,8 +1485,8 @@ $( document ).ready(function() {
                         {{ form_mini_timelapse.POST_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
                     </div>
 
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
+                    <div class="tw:fieldset tw:w-full">
+                        <label for="{{ form_mini_timelapse.FRAMERATE_SELECT.id }}" class="tw:label tw:pb-1">
                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
                                 {{ form_mini_timelapse.FRAMERATE_SELECT.label.text }}
                             </span>
@@ -1494,8 +1494,8 @@ $( document ).ready(function() {
                         {{ form_mini_timelapse.FRAMERATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
                     </div>
 
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
+                    <div class="tw:fieldset tw:w-full">
+                        <label for="{{ form_mini_timelapse.BITRATE_SELECT.id }}" class="tw:label tw:pb-1">
                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
                                 {{ form_mini_timelapse.BITRATE_SELECT.label.text }}
                             </span>
@@ -1510,7 +1510,7 @@ $( document ).ready(function() {
 
                 <div id="panorama-controls" class="tw:flex tw:flex-col tw:gap-3 tw:pt-2 tw:border-t tw:border-base-300" style="display: none;">
                     <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3 tw:items-end">
-                        <div class="tw:form-control">
+                        <div class="tw:fieldset">
                             <label for="ASPECT_RATIO" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Aspect ratio</span></label>
                             <select id="ASPECT_RATIO" class="tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:w-full tw:text-sm">
                                 <option value="free">Free size</option>
@@ -1537,7 +1537,7 @@ $( document ).ready(function() {
                             </select>
                         </div>
 
-                        <div id="panorama-direction-control" class="tw:form-control" style="display: none;">
+                        <div id="panorama-direction-control" class="tw:fieldset" style="display: none;">
                             <label for="PAN_DIRECTION" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Horizontal route</span></label>
                             <select id="PAN_DIRECTION" class="tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:w-full tw:text-sm">
                                 <option value="shortest">Shortest route</option>
@@ -1594,19 +1594,19 @@ $( document ).ready(function() {
                             These values adjust the <span id="panorama-manual-target-name" class="tw:font-bold">first frame</span>. Click or drag either image to switch frames.
                         </div>
                         <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4 tw:gap-3 tw:mt-3">
-                            <div class="tw:form-control">
+                            <div class="tw:fieldset">
                                 <label for="CROP_X" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Horizontal position</span></label>
                                 <input id="CROP_X" type="number" min="0" step="2" value="0" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
                             </div>
-                            <div class="tw:form-control">
+                            <div class="tw:fieldset">
                                 <label for="CROP_Y" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Vertical position</span></label>
                                 <input id="CROP_Y" type="number" min="0" step="2" value="0" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
                             </div>
-                            <div class="tw:form-control">
+                            <div class="tw:fieldset">
                                 <label for="CROP_WIDTH" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Selected width</span></label>
                                 <input id="CROP_WIDTH" type="number" min="2" step="2" value="{{ panorama.width if panorama.width >= 2 else 2 }}" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
                             </div>
-                            <div class="tw:form-control">
+                            <div class="tw:fieldset">
                                 <label for="CROP_HEIGHT" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Selected height</span></label>
                                 <input id="CROP_HEIGHT" type="number" min="2" step="2" value="{{ panorama.height if panorama.height >= 2 else 2 }}" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
                             </div>
@@ -1619,7 +1619,7 @@ $( document ).ready(function() {
                     <ul id="panorama-notices-list" class="tw:list-disc tw:pl-4 tw:space-y-1"></ul>
                 </div>
 
-                <div class="tw:form-control tw:pt-2 tw:border-t tw:border-base-300">
+                <div class="tw:fieldset tw:pt-2 tw:border-t tw:border-base-300">
                     <label for="NOTE" class="tw:label tw:pb-1">
                         <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
                             {{ form_mini_timelapse.NOTE.label.text }} <span class="tw:text-error" aria-hidden="true">*</span>

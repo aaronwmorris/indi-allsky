@@ -45,8 +45,9 @@ function showImage(entry) {
 
     var img = new Image();
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
+        var container = canvas.parentElement;
+        canvas.setAttribute("width", (container && container.clientWidth) || window.innerWidth);
+        canvas.setAttribute("height", (container && container.clientHeight) || window.innerHeight);
 
         var hRatio = canvas.width  / this.width;
         var vRatio = canvas.height / this.height;

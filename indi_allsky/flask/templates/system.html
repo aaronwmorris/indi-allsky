@@ -72,10 +72,10 @@ var camera_id = {{ camera_id }};
                             <div class="tw:flex tw:flex-col tw:gap-2">
                                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">CPU Usage</span>
                                 <div class="tw:w-full tw:h-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:flex">
-                                    <div id="cpu-bar-user" class="tw:bg-primary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-primary-content" style="width: {{cpu_usage.user|int}}%">{% if cpu_usage.user|int >= 10 %}{{cpu_usage.user|int}}%{% endif %}</div>
-                                    <div id="cpu-bar-system" class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-error-content" style="width: {{cpu_usage.system|int}}%">{% if cpu_usage.system|int >= 10 %}{{cpu_usage.system|int}}%{% endif %}</div>
-                                    <div id="cpu-bar-nice" class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-success-content" style="width: {{cpu_usage.nice|int}}%">{% if cpu_usage.nice|int >= 10 %}{{cpu_usage.nice|int}}%{% endif %}</div>
-                                    <div id="cpu-bar-iowait" class="tw:bg-warning tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-warning-content" style="width: {{cpu_usage.iowait|int}}%">{% if cpu_usage.iowait|int >= 10 %}{{cpu_usage.iowait|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-user" class="tw:bg-primary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-primary-content" style="width: {{cpu_usage.user|int}}%">{% if cpu_usage.user|int >= 10 %}{{cpu_usage.user|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-system" class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-error-content" style="width: {{cpu_usage.system|int}}%">{% if cpu_usage.system|int >= 10 %}{{cpu_usage.system|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-nice" class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-success-content" style="width: {{cpu_usage.nice|int}}%">{% if cpu_usage.nice|int >= 10 %}{{cpu_usage.nice|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-iowait" class="tw:bg-warning tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-warning-content" style="width: {{cpu_usage.iowait|int}}%">{% if cpu_usage.iowait|int >= 10 %}{{cpu_usage.iowait|int}}%{% endif %}</div>
                                 </div>
                                 <div class="tw:flex tw:flex-wrap tw:gap-2 tw:mt-1">
                                     <span id="cpu-badge-user" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[0.625rem] tw:bg-primary/20 tw:border-0">User ({{cpu_usage.user|int}}%)</span>
@@ -91,15 +91,15 @@ var camera_id = {{ camera_id }};
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Load Average</span>
                             <div class="tw:grid tw:grid-cols-3 tw:gap-4">
                                 <div class="tw:flex tw:flex-col">
-                                    <span class="tw:text-[0.5625rem] tw:opacity-50 tw:font-bold">5 MIN</span>
+                                    <span class="tw:text-xs tw:opacity-50 tw:font-bold">5 MIN</span>
                                     <span id="cpu-load5" class="tw:text-lg tw:font-mono tw:font-bold tw:text-base-content">{{"%.2f"|format(cpu_load5)}}</span>
                                 </div>
                                 <div class="tw:flex tw:flex-col">
-                                    <span class="tw:text-[0.5625rem] tw:opacity-50 tw:font-bold">10 MIN</span>
+                                    <span class="tw:text-xs tw:opacity-50 tw:font-bold">10 MIN</span>
                                     <span id="cpu-load10" class="tw:text-lg tw:font-mono tw:font-bold tw:text-base-content">{{"%.2f"|format(cpu_load10)}}</span>
                                 </div>
                                 <div class="tw:flex tw:flex-col">
-                                    <span class="tw:text-[0.5625rem] tw:opacity-50 tw:font-bold">15 MIN</span>
+                                    <span class="tw:text-xs tw:opacity-50 tw:font-bold">15 MIN</span>
                                     <span id="cpu-load15" class="tw:text-lg tw:font-mono tw:font-bold tw:text-base-content">{{"%.2f"|format(cpu_load15)}}</span>
                                 </div>
                             </div>
@@ -115,8 +115,8 @@ var camera_id = {{ camera_id }};
                                         <span class="tw:text-xs tw:font-mono tw:font-bold tw:text-base-content">{{mem_total}} MB</span>
                                     </div>
                                     <div class="tw:w-full tw:h-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:flex">
-                                        <div id="ram-bar-user" class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-success-content" style="width: {{mem_usage.user_percent|int}}%">{% if mem_usage.user_percent|int >= 10 %}{{mem_usage.user_percent|int}}%{% endif %}</div>
-                                        <div id="ram-bar-cached" class="tw:bg-secondary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-secondary-content" style="width: {{mem_usage.cached_percent|int}}%">{% if mem_usage.cached_percent|int >= 10 %}{{mem_usage.cached_percent|int}}%{% endif %}</div>
+                                        <div id="ram-bar-user" class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-success-content" style="width: {{mem_usage.user_percent|int}}%">{% if mem_usage.user_percent|int >= 10 %}{{mem_usage.user_percent|int}}%{% endif %}</div>
+                                        <div id="ram-bar-cached" class="tw:bg-secondary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-secondary-content" style="width: {{mem_usage.cached_percent|int}}%">{% if mem_usage.cached_percent|int >= 10 %}{{mem_usage.cached_percent|int}}%{% endif %}</div>
                                     </div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1.5">
@@ -125,7 +125,7 @@ var camera_id = {{ camera_id }};
                                         <span class="tw:text-xs tw:font-mono tw:font-bold tw:text-base-content">{{ swap_total }} MB</span>
                                     </div>
                                     <div class="tw:w-full tw:h-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
-                                        <div id="swap-bar" class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.5rem] tw:font-bold tw:text-error-content" style="width: {{swap_usage|int}}%">{% if swap_usage|int >= 10 %}{{swap_usage|int}}%{% endif %}</div>
+                                        <div id="swap-bar" class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.6875rem] tw:font-bold tw:text-error-content" style="width: {{swap_usage|int}}%">{% if swap_usage|int >= 10 %}{{swap_usage|int}}%{% endif %}</div>
                                     </div>
                                 </div>
                                 <div class="tw:flex tw:flex-wrap tw:gap-2">
@@ -147,7 +147,7 @@ var camera_id = {{ camera_id }};
                                         <span class="tw:text-[0.625rem] tw:font-mono tw:opacity-60">{{"%.0f"|format(fs.total_mb)}} MB</span>
                                     </div>
                                     <progress id="fs-progress-{{loop.index0}}" class="tw:progress tw:progress-warning tw:w-full tw:h-2 tw:rounded-[var(--radius-box)]" value="{{fs.percent|int}}" max="100"></progress>
-                                    <span id="fs-text-{{loop.index0}}" class="tw:text-right tw:text-[0.5625rem] tw:opacity-50 tw:font-bold">{{fs.percent|int}}% Used</span>
+                                    <span id="fs-text-{{loop.index0}}" class="tw:text-right tw:text-xs tw:opacity-50 tw:font-bold">{{fs.percent|int}}% Used</span>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -161,11 +161,11 @@ var camera_id = {{ camera_id }};
                                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-3 tw:bg-base-100/50 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
                                     <span class="tw:font-mono tw:font-bold tw:text-info tw:text-xs">{{net.name}}</span>
                                     <div class="tw:text-[0.625rem] tw:font-mono">
-                                        <span class="tw:text-[0.5625rem] tw:opacity-50 tw:block tw:font-bold">IPv4</span>
+                                        <span class="tw:text-xs tw:opacity-50 tw:block tw:font-bold">IPv4</span>
                                         {{ net.inet4 | join('<br>') | safe }}
                                     </div>
                                     <div class="tw:text-[0.625rem] tw:font-mono">
-                                        <span class="tw:text-[0.5625rem] tw:opacity-50 tw:block tw:font-bold">IPv6</span>
+                                        <span class="tw:text-xs tw:opacity-50 tw:block tw:font-bold">IPv6</span>
                                         {{ net.inet6 | join('<br>') | safe }}
                                     </div>
                                 </div>
@@ -269,8 +269,8 @@ var camera_id = {{ camera_id }};
                 <form id="form_settime" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
                     {{ form_settime.csrf_token }}
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                        <div class="lg:tw:col-span-8 tw:form-control tw:gap-1.5">
-                            <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        <div class="lg:tw:col-span-8 tw:fieldset tw:gap-1.5">
+                            <label for="{{ form_settime.NEW_DATETIME.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                                 {{ form_settime.NEW_DATETIME.label.text }}
                             </label>
                             {{ form_settime.NEW_DATETIME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -293,8 +293,8 @@ var camera_id = {{ camera_id }};
                 <form id="form_timezone" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
                     {{ form_timezone.csrf_token }}
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                        <div class="lg:tw:col-span-8 tw:form-control tw:gap-1.5">
-                            <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        <div class="lg:tw:col-span-8 tw:fieldset tw:gap-1.5">
+                            <label for="{{ form_timezone.NEW_TIMEZONE.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                                 {{ form_timezone.NEW_TIMEZONE.label.text }}
                             </label>
                             {{ form_timezone.NEW_TIMEZONE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -336,14 +336,14 @@ var camera_id = {{ camera_id }};
 
                 <form id="form_indiserver_change" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
                     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
-                        <div class="tw:form-control tw:gap-1.5">
-                            <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        <div class="tw:fieldset tw:gap-1.5">
+                            <label for="{{ form_indiserver_change.CAMERA_SERVER_SELECT.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                                 {{ form_indiserver_change.CAMERA_SERVER_SELECT.label.text }}
                             </label>
                             {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
                         </div>
-                        <div class="tw:form-control tw:gap-1.5">
-                            <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        <div class="tw:fieldset tw:gap-1.5">
+                            <label for="{{ form_indiserver_change.GPS_SERVER_SELECT.id }}" class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                                 {{ form_indiserver_change.GPS_SERVER_SELECT.label.text }}
                             </label>
                             {{ form_indiserver_change.GPS_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -351,7 +351,7 @@ var camera_id = {{ camera_id }};
                     </div>
 
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
-                        <div class="lg:tw:col-span-4 tw:form-control">
+                        <div class="lg:tw:col-span-4 tw:fieldset">
                             <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3 tw:py-1">
                                 {{ form_indiserver_change.RESTART_INDISERVER(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                                 <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content">{{ form_indiserver_change.RESTART_INDISERVER.label.text }}</span>
@@ -401,11 +401,11 @@ var camera_id = {{ camera_id }};
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-sm tw:font-bold tw:text-base-content">indi-allsky</span>
-                            <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">UNIT: indi-allsky.service</span>
+                            <span class="tw:text-xs tw:font-mono tw:opacity-50">UNIT: indi-allsky.service</span>
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
                             <span class="tw:badge {% if indi_allsky_service_activestate == 'active' %}tw:badge-success{% elif indi_allsky_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{indi_allsky_service_activestate}}</span>
-                            <span class="tw:badge {% if indi_allsky_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_service_unitstate}}</span>
+                            <span class="tw:badge {% if indi_allsky_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.6875rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_service_unitstate}}</span>
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_hup">Reload</button>
@@ -420,11 +420,11 @@ var camera_id = {{ camera_id }};
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-sm tw:font-bold tw:text-base-content">indiserver</span>
-                            <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">UNIT: indiserver.service</span>
+                            <span class="tw:text-xs tw:font-mono tw:opacity-50">UNIT: indiserver.service</span>
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
                             <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% elif indiserver_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
-                            <span class="tw:badge {% if indiserver_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_service_unitstate}}</span>
+                            <span class="tw:badge {% if indiserver_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.6875rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_service_unitstate}}</span>
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_stop">Stop</button>
@@ -438,7 +438,7 @@ var camera_id = {{ camera_id }};
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-sm tw:font-bold tw:text-base-content">Web UI Server</span>
-                            <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
+                            <span class="tw:text-xs tw:font-mono tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
                         </div>
                         <div class="lg:tw:col-span-3">
                             <span class="tw:badge {% if gunicorn_indi_allsky_service_activestate == 'active' %}tw:badge-success{% elif gunicorn_indi_allsky_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_service_activestate}}</span>
@@ -451,8 +451,8 @@ var camera_id = {{ camera_id }};
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Web Socket</span>
                             <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
-                                <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">STATE:</span>
-                                <span class="tw:badge {% if gunicorn_indi_allsky_socket_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif gunicorn_indi_allsky_socket_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif gunicorn_indi_allsky_socket_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_socket_unitstate}}</span>
+                                <span class="tw:text-xs tw:font-mono tw:opacity-50">STATE:</span>
+                                <span class="tw:badge {% if gunicorn_indi_allsky_socket_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif gunicorn_indi_allsky_socket_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif gunicorn_indi_allsky_socket_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.6875rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_socket_unitstate}}</span>
                             </div>
                         </div>
                     </div>
@@ -530,7 +530,7 @@ var camera_id = {{ camera_id }};
                             <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Upgrade indi-allsky</span>
-                                    <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-40">./misc/unattended_upgrade.sh</span>
+                                    <span class="tw:text-xs tw:font-mono tw:opacity-40">./misc/unattended_upgrade.sh</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
                                     <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
@@ -550,7 +550,7 @@ var camera_id = {{ camera_id }};
                             <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Database Backup</span>
-                                    <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-40">./misc/backup_database.py</span>
+                                    <span class="tw:text-xs tw:font-mono tw:opacity-40">./misc/backup_database.py</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
                                     <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
@@ -570,7 +570,7 @@ var camera_id = {{ camera_id }};
                             <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Validate DB Entries</span>
-                                    <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-40">./misc/validate_db_entries.py</span>
+                                    <span class="tw:text-xs tw:font-mono tw:opacity-40">./misc/validate_db_entries.py</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
                                     <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
@@ -586,7 +586,7 @@ var camera_id = {{ camera_id }};
                             <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Expire Data</span>
-                                    <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-40">./misc/expire_images.py</span>
+                                    <span class="tw:text-xs tw:font-mono tw:opacity-40">./misc/expire_images.py</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
                                     <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
@@ -597,7 +597,7 @@ var camera_id = {{ camera_id }};
                                         <i class="tw:icon-[lucide--trash] tw:w-4 tw:h-4"></i> Run Expiry
                                     </button>
                                 </div>
-                                <span class="tw:text-[0.5625rem] tw:opacity-50 tw:font-medium">Task runs automatically 2x daily. Allsky must be running.</span>
+                                <span class="tw:text-xs tw:opacity-50 tw:font-medium">Task runs automatically 2x daily. Allsky must be running.</span>
                             </div>
                         </div>
 
