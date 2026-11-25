@@ -93,8 +93,8 @@ var camera_id = {{ camera_id }};
                                 
                                 <!-- Left Form Area -->
                                 <div class="lg:tw:col-span-8 tw:flex tw:flex-col tw:gap-6">
-                                    <div class="tw:form-control tw:w-full">
-                                        <label class="tw:label tw:py-1">
+                                    <div class="tw:fieldset tw:w-full">
+                                        <label for="{{ form_connections.CONNECTIONS_SELECT.id }}" class="tw:label tw:py-1">
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.CONNECTIONS_SELECT.label.text }}</span>
                                         </label>
                                         {{ form_connections.CONNECTIONS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -154,7 +154,7 @@ var camera_id = {{ camera_id }};
                                         </div>
                                     </div>
 
-                                    <div class="tw:form-control tw:mt-4 tw:bg-base-300/40 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5">
+                                    <div class="tw:fieldset tw:mt-4 tw:bg-base-300/40 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3 tw:p-0">
                                             <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y">
                                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/80">Confirm connection action</span>
@@ -174,8 +174,8 @@ var camera_id = {{ camera_id }};
                         
                         <!-- Device Select and scan -->
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                            <div class="lg:tw:col-span-8 tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="lg:tw:col-span-8 tw:fieldset">
+                                <label for="{{ form_connections.WIFI_DEVICES_SELECT.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.WIFI_DEVICES_SELECT.label.text }}</span>
                                 </label>
                                 {{ form_connections.WIFI_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -192,8 +192,8 @@ var camera_id = {{ camera_id }};
 
                         <!-- Network Select and Connect -->
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                            <div class="lg:tw:col-span-8 tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="lg:tw:col-span-8 tw:fieldset">
+                                <label for="{{ form_connections.SSID_SELECT.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_SELECT.label.text }}</span>
                                 </label>
                                 {{ form_connections.SSID_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -208,8 +208,8 @@ var camera_id = {{ camera_id }};
 
                         <!-- Security / priority settings -->
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
-                            <div class="tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="tw:fieldset">
+                                <label for="{{ form_connections.SSID_PSK.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_PSK.label.text }}</span>
                                 </label>
                                 <div class="tw:relative">
@@ -221,8 +221,8 @@ var camera_id = {{ camera_id }};
                                 <div id="SSID_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
                             
-                            <div class="tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="tw:fieldset">
+                                <label for="{{ form_connections.SSID_PRIORITY.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_PRIORITY.label.text }}</span>
                                 </label>
                                 {{ form_connections.SSID_PRIORITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -232,8 +232,8 @@ var camera_id = {{ camera_id }};
                         </div>
 
                         <!-- Retries -->
-                        <div class="tw:form-control tw:max-w-md">
-                            <label class="tw:label tw:py-1">
+                        <div class="tw:fieldset tw:max-w-md">
+                            <label for="{{ form_connections.SSID_RETRIES.id }}" class="tw:label tw:py-1">
                                 <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_RETRIES.label.text }}</span>
                             </label>
                             {{ form_connections.SSID_RETRIES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -255,8 +255,8 @@ var camera_id = {{ camera_id }};
                     <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
                         
                         <!-- Device Selector -->
-                        <div class="tw:form-control tw:max-w-lg">
-                            <label class="tw:label tw:py-1">
+                        <div class="tw:fieldset tw:max-w-lg">
+                            <label for="{{ form_connections.HOTSPOT_DEVICES_SELECT.id }}" class="tw:label tw:py-1">
                                 <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_DEVICES_SELECT.label.text }}</span>
                             </label>
                             {{ form_connections.HOTSPOT_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
@@ -267,8 +267,8 @@ var camera_id = {{ camera_id }};
 
                         <!-- Hotspot SSID configuration -->
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                            <div class="lg:tw:col-span-8 tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="lg:tw:col-span-8 tw:fieldset">
+                                <label for="{{ form_connections.HOTSPOT_SSID.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_SSID.label.text }}</span>
                                 </label>
                                 {{ form_connections.HOTSPOT_SSID(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]', placeholder='Hotspot Broadcast Name') }}
@@ -283,16 +283,16 @@ var camera_id = {{ camera_id }};
 
                         <!-- Security / band configs -->
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
-                            <div class="tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="tw:fieldset">
+                                <label for="{{ form_connections.HOTSPOT_BAND.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_BAND.label.text }}</span>
                                 </label>
                                 {{ form_connections.HOTSPOT_BAND(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
                                 <div id="HOTSPOT_BAND-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
                             
-                            <div class="tw:form-control">
-                                <label class="tw:label tw:py-1">
+                            <div class="tw:fieldset">
+                                <label for="{{ form_connections.HOTSPOT_PSK.id }}" class="tw:label tw:py-1">
                                     <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_PSK.label.text }}</span>
                                 </label>
                                 <div class="tw:relative">
@@ -306,7 +306,7 @@ var camera_id = {{ camera_id }};
                         </div>
 
                         <!-- Toggle security -->
-                        <div class="tw:form-control tw:max-w-md">
+                        <div class="tw:fieldset tw:max-w-md">
                             <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                 {{ form_connections.HOTSPOT_NOSECURITY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                                 <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/85">{{ form_connections.HOTSPOT_NOSECURITY.label.text }}</span>

@@ -249,6 +249,8 @@ function exclude_image(el, pswp, image_id, exclude) {
             }
         },
         error: function(rdata){
+            const msg = (rdata.responseJSON && rdata.responseJSON.message) || 'Unable to update image exclusion status.';
+            window.alert(msg);
         },
     });
 }
@@ -272,6 +274,14 @@ function populate_gallery(gallery_data) {
     scrollToTop();
 
     $('#allsky-gallery').empty();
+
+    if (!gallery_data || gallery_data.length === 0) {
+        $('<div />', {
+            'class': 'tw:col-span-full tw:text-center tw:py-12 tw:text-base-content/50 tw:font-semibold',
+            'text': 'No images found for the selected period.'
+        }).appendTo($('#allsky-gallery'));
+        return;
+    }
 
     gallery_data.forEach(item => {
         const repair_status = (

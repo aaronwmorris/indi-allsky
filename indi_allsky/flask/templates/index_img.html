@@ -167,12 +167,16 @@ $( document ).ready(function() {
             </button>
         </div>
 
+        <div id="latest-image-loader" class="tw:absolute tw:inset-0 tw:flex tw:items-center tw:justify-center tw:pointer-events-none">
+            <span class="tw:loading tw:loading-spinner tw:loading-md tw:text-primary" aria-label="Loading latest image"></span>
+        </div>
+
         <img id="latest-image" 
             class="tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in tw:transition-opacity tw:duration-700 tw:relative tw:z-10" 
             alt="Latest Allsky Capture"
             style="opacity: 0;"
-            onerror="this.style.opacity='0';"
-            onload="this.style.opacity='1';">
+            onerror="this.style.opacity='0'; document.getElementById('latest-image-loader')?.classList.add('tw:hidden'); $('#message').text('Unable to load image.'); $('#status-overlay').removeClass('tw:hidden');"
+            onload="this.style.opacity='1'; document.getElementById('latest-image-loader')?.classList.add('tw:hidden');">
     </div>
 </div>
 {% endblock %}

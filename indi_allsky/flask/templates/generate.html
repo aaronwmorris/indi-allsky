@@ -59,16 +59,16 @@ var camera_id = {{ camera_id }};
                     </div>
                     
                     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
-                        <div class="tw:form-control tw:w-full">
-                            <label class="tw:label tw:pb-1">
+                        <div class="tw:fieldset tw:w-full">
+                            <label for="{{ form_timelapsegen.ACTION_SELECT.id }}" class="tw:label tw:pb-1">
                                 <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.ACTION_SELECT.label.text }}</span>
                             </label>
                             {{ form_timelapsegen.ACTION_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
                             <div id="ACTION_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                         </div>
                         
-                        <div class="tw:form-control tw:w-full">
-                            <label class="tw:label tw:pb-1">
+                        <div class="tw:fieldset tw:w-full">
+                            <label for="{{ form_timelapsegen.DAY_SELECT.id }}" class="tw:label tw:pb-1">
                                 <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.DAY_SELECT.label.text }}</span>
                             </label>
                             {{ form_timelapsegen.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}

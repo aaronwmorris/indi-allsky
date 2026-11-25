@@ -16,7 +16,7 @@
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
 </head>
 
-<body class="tw:bg-neutral-950 tw:min-h-full tw:flex tw:items-center tw:justify-center tw:px-4 tw:m-0">
+<body class="tw:bg-base-100 tw:min-h-full tw:flex tw:items-center tw:justify-center tw:px-4 tw:m-0">
 
     <div
         class="tw:w-full tw:max-w-[400px] md:tw:max-w-[680px] tw:mx-auto tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-center tw:gap-8 md:tw:gap-10 tw:py-8">
@@ -25,7 +25,7 @@
             <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}"
                 class="tw:w-32 md:tw:w-40 tw:h-auto tw:object-contain tw:opacity-95" alt="indi-allsky">
             <div class="tw:hidden md:tw:block tw:mt-3">
-                <h1 class="tw:text-base tw:font-bold tw:text-base-content/90 tw:tracking-wider tw:uppercase">INDI AllSky
+                <h1 class="tw:text-2xl tw:font-bold tw:text-base-content/90 tw:tracking-wider tw:uppercase">INDI AllSky
                 </h1>
                 <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:mt-0.5">Control Console</p>
             </div>
@@ -46,8 +46,8 @@
                 <div class="tw:text-error tw:text-xs tw:font-semibold tw:text-center" id="csrf_token-error"></div>
 
                 {% if local_auth_enable %}
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:py-1">
+                    <div class="tw:fieldset tw:w-full">
+                        <label for="{{ form_login.NEXT.id }}" class="tw:label tw:py-1">
                             <span
                                 class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Username</span>
                         </label>
@@ -64,8 +64,8 @@
                             style="display: none;"></div>
                     </div>
 
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:py-1">
+                    <div class="tw:fieldset tw:w-full">
+                        <label for="{{ form_login.PASSWORD.id }}" class="tw:label tw:py-1">
                             <span
                                 class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Password</span>
                         </label>
@@ -81,7 +81,7 @@
                             style="display: none;"></div>
                     </div>
 
-                    <div class="tw:form-control tw:mt-4">
+                    <div class="tw:fieldset tw:mt-4">
                         <button type="submit"
                             class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2 tw:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:tw:shadow-[0_0_28px_rgba(59,130,246,0.55)] active:tw:scale-[0.98] tw:transition-all">
                             <i class="tw:icon-[lucide--key] tw:w-4 tw:h-4"></i> Sign In
@@ -94,7 +94,7 @@
                         <div class="tw:divider tw:my-2 tw:text-xs tw:opacity-50">OR</div>
                     {% endif %}
                     
-                    <div class="tw:form-control">
+                    <div class="tw:fieldset">
                         <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}"
                             class="tw:btn tw:btn-outline tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
                             {% if oidc_logo_url %}

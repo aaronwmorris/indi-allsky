@@ -410,6 +410,7 @@ $( document ).ready(function() {
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-primary m-0">Alignment Vectors</h2>
                     </div>
+                    <div class="tw:overflow-x-auto">
                     <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                         <tbody class="tw:divide-y tw:divide-base-300/20">
                             <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-4 tw:text-xs tw:font-bold tw:text-base-content/50 tw:uppercase">Hour Angle</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-sm tw:font-bold tw:text-base-content"><span id="pha"></span></td></tr>
@@ -420,6 +421,7 @@ $( document ).ready(function() {
                             <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-4 tw:text-xs tw:font-bold tw:text-base-content/50 tw:uppercase">Altitude</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-sm tw:font-bold tw:text-info"><span id="polaris_alt"></span></td></tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -437,6 +439,7 @@ $( document ).ready(function() {
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h4 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-info m-0">Lunar Ephemeris</h4>
                     </div>
+                    <div class="tw:overflow-x-auto">
                     <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                         <tbody class="tw:divide-y tw:divide-base-300/20">
                             <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Horizon</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:font-bold"><span id="moon_rise" class="tw:text-success">↑ Rise</span>&nbsp;&nbsp;&nbsp;<span id="moon_set" class="tw:text-error">↓ Set</span></td></tr>
@@ -448,6 +451,7 @@ $( document ).ready(function() {
                             <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Next Full Moon</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-warning"><span id="moon_full"></span></td></tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -465,6 +469,7 @@ $( document ).ready(function() {
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h4 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-warning m-0">Twilight Horizons</h4>
                     </div>
+                    <div class="tw:overflow-x-auto">
                     <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                         <tbody class="tw:divide-y tw:divide-base-300/20">
                             <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-semibold tw:text-base-content/40">Astro Twilight Start</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-info"><span id="sun_at_start"></span></td></tr>
@@ -476,6 +481,7 @@ $( document ).ready(function() {
                             <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Equinox Target</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-warning"><span id="sun_equinox"></span></td></tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -491,6 +497,7 @@ $( document ).ready(function() {
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-info m-0">Planetary Ephemeris Matrix</h2>
                     </div>
+                    <div class="tw:overflow-x-auto">
                     <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                         <thead>
                             <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/20 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/40">
@@ -515,6 +522,7 @@ $( document ).ready(function() {
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -525,7 +533,9 @@ $( document ).ready(function() {
                 <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                     <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-success m-0">Low Earth Satellites</h2>
                 </div>
+                <div class="tw:overflow-x-auto">
                 <table id="satellites-table" class="tw:table tw:table-xs tw:w-full tw:m-0"></table>
+                </div>
             </div>
         </div>
 
