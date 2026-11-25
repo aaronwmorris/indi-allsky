@@ -193,12 +193,12 @@ function render_sky_quality_chart(canvas_el, summary) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { display: true, labels: { boxWidth: 10, font: { size: 10 } } },
+                legend: { display: true, labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
             },
             scales: {
-                x: { ticks: { maxTicksLimit: 6, font: { size: 9 } }, grid: { display: false } },
-                yStars: { type: 'linear', position: 'left', ticks: { font: { size: 9 } }, title: { display: true, text: 'Stars', font: { size: 9 } } },
-                ySqm: { type: 'linear', position: 'right', ticks: { font: { size: 9 } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'SQM', font: { size: 9 } } },
+                x: { ticks: { maxTicksLimit: 5, maxRotation: 0, autoSkip: true, font: { size: 9 } }, grid: { display: false } },
+                yStars: { type: 'linear', position: 'left', ticks: { maxTicksLimit: 5, font: { size: 9 } }, title: { display: true, text: 'Stars', font: { size: 9 }, padding: 2 } },
+                ySqm: { type: 'linear', position: 'right', ticks: { maxTicksLimit: 5, font: { size: 9 } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'SQM', font: { size: 9 }, padding: 2 } },
             },
         },
     });
@@ -219,6 +219,7 @@ function populate_videos(video_list) {
         return;
     }
 
+    var pending_charts = [];
     var timeline_ul = $('<ul />', {
         'class': 'tw:timeline tw:timeline-vertical max-md:tw:flex max-md:tw:flex-col max-md:tw:gap-6 tw:w-full'
     });
@@ -429,10 +430,10 @@ function populate_videos(video_list) {
             }
         }
 
-        // C. Sky Quality Chart (Stars & SQM)
-        if (item['chart_summary']) {
+        // C. Sky Quality Chart (Stars & SQM) - night only
+        if (item['night'] && item['chart_summary']) {
             var chart_container = $('<div />', {
-                'class': 'tw:flex tw:flex-col tw:gap-2 thumbnail-container'
+                'class': 'tw:flex tw:flex-col tw:gap-2 tw:min-w-0 tw:w-full thumbnail-container'
             }).appendTo(end_div);
 
             $('<span />', {
@@ -441,11 +442,15 @@ function populate_videos(video_list) {
             }).appendTo(chart_container);
 
             var chart_card = $('<div />', {
-                'class': 'tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:bg-base-100 tw:p-2 tw:aspect-video tw:shadow-sm thumbnail-card'
+                'class': 'tw:relative tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:bg-base-100 tw:p-2 tw:h-52 md:tw:h-56 tw:w-full tw:min-w-0 tw:overflow-hidden tw:shadow-sm thumbnail-card'
             }).appendTo(chart_container);
 
-            var chart_canvas = $('<canvas />').appendTo(chart_card);
-            render_sky_quality_chart(chart_canvas[0], item['chart_summary']);
+            var chart_canvas_wrap = $('<div />', {
+                'class': 'tw:relative tw:w-full tw:h-full'
+            }).appendTo(chart_card);
+
+            var chart_canvas = $('<canvas />').appendTo(chart_canvas_wrap);
+            pending_charts.push({ canvas: chart_canvas[0], summary: item['chart_summary'] });
         }
 
         $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
@@ -453,6 +458,7 @@ function populate_videos(video_list) {
     });
 
     timeline_ul.appendTo($("#videos_div"));
+    pending_charts.forEach(c => render_sky_quality_chart(c.canvas, c.summary));
 };
 
 

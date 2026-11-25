@@ -90,3 +90,38 @@ class TestVideoViewerChartSummary:
             videos = viewer.getVideos(2026, 11, 'night')
             assert len(videos) == 1
             assert videos[0]['chart_summary'] == chart_summary
+
+    def test_get_videos_hides_chart_summary_for_day(self):
+        flask_app = create_app()
+        flask_app.config['WTF_CSRF_ENABLED'] = False
+        with flask_app.app_context(), flask_app.test_request_context():
+            db.create_all()
+            cam = IndiAllSkyDbCameraTable(
+                uuid='cam-uuid-day-chart',
+                name='TestCamDay',
+                friendlyName='TestCamDay',
+            )
+            db.session.add(cam)
+            db.session.commit()
+
+            now = datetime(2026, 11, 22, 12, 0, 0)
+            chart_summary = {'labels': ['12:00', '13:00'], 'stars': [0, 0], 'sqm': [10.0, 10.2]}
+            vid = IndiAllSkyDbVideoTable(
+                filename='vid_day_chart.mp4',
+                camera_id=cam.id,
+                createDate=now,
+                dayDate=now.date(),
+                dayDate_year=2026,
+                dayDate_month=11,
+                dayDate_day=22,
+                night=False,
+                success=True,
+                data={'chart_summary': chart_summary},
+            )
+            db.session.add(vid)
+            db.session.commit()
+
+            viewer = IndiAllskyVideoViewer(camera_id=cam.id, local=True)
+            videos = viewer.getVideos(2026, 11, 'day')
+            assert len(videos) == 1
+            assert videos[0]['chart_summary'] is None

@@ -54,10 +54,10 @@ var file_view = "{{ file_view }}";
 
         {% if video_chart_summary %}
         <!-- Sky Quality Chart Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
-            <div class="tw:card-body tw:p-5 tw:gap-3">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm tw:min-w-0">
+            <div class="tw:card-body tw:p-3 sm:tw:p-5 tw:gap-3 tw:min-w-0">
                 <h2 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70">Sky Quality Overview (Stars &amp; SQM)</h2>
-                <div class="tw:relative tw:h-64 tw:w-full">
+                <div class="tw:relative tw:h-52 sm:tw:h-64 tw:w-full tw:min-w-0">
                     <canvas id="video-sky-quality-chart"></canvas>
                 </div>
             </div>
@@ -172,9 +172,9 @@ $(document).ready(function() {
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     scales: {
-                        x: { ticks: { maxTicksLimit: 12 }, grid: { display: false } },
-                        yStars: { type: 'linear', position: 'left', title: { display: true, text: 'Stars' } },
-                        ySqm: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'SQM' } },
+                        x: { ticks: { maxTicksLimit: 8, maxRotation: 0, autoSkip: true, font: { size: 10 } }, grid: { display: false } },
+                        yStars: { type: 'linear', position: 'left', ticks: { maxTicksLimit: 6, font: { size: 10 } }, title: { display: true, text: 'Stars', font: { size: 10 } } },
+                        ySqm: { type: 'linear', position: 'right', ticks: { maxTicksLimit: 6, font: { size: 10 } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'SQM', font: { size: 10 } } },
                     },
                 },
             });

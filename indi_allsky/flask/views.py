@@ -11533,7 +11533,7 @@ class TimelapseVideoView(TemplateView):
         context['dayDate_full'] = video.dayDate.strftime('%B %d, %Y')
         context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
         video_data = video.data if isinstance(video.data, dict) else {}
-        context['video_chart_summary'] = video_data.get('chart_summary')
+        context['video_chart_summary'] = video_data.get('chart_summary') if video.night else None
 
 
         return context

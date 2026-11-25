@@ -711,7 +711,7 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
-        chart_summary = build_video_chart_summary(chart_samples)
+        chart_summary = build_video_chart_summary(chart_samples) if night else None
         if chart_summary:
             video_metadata['data']['chart_summary'] = chart_summary
 
