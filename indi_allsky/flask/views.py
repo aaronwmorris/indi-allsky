@@ -12,6 +12,7 @@ import time
 import math
 import base64
 from pathlib import Path
+from types import SimpleNamespace
 import socket
 import ipaddress
 import re
@@ -1196,6 +1197,32 @@ class ImageLoopCanvasView(TemplateView):
         context['form_history'] = IndiAllskyLoopHistoryForm()
 
         return context
+
+
+def virtualsky_frame_alignment(view, entry):
+    """Expose only the geometry and observer information for this photograph."""
+    model = entry.data.get('star_alignment')
+    if not isinstance(model, dict) or model.get('image_size') != [entry.width, entry.height]:
+        return None
+    model_id = model.get('id')
+    if not isinstance(model_id, str) or re.fullmatch(r'[a-f0-9]{32}', model_id) is None:
+        return None
+    raw = model.get('values')
+    if not isinstance(raw, dict):
+        return None
+    values, error = parseSolverRequestValues(raw)
+    if error or not all(k in values for k in ('LENS_ALTITUDE', 'POINTING_AZIMUTH', 'RADIAL_DISTORTION', 'PRECESSION')):
+        return None
+    values.pop('CALIBRATION_ENABLED', None)
+    result = {'id': model_id, 'values': values, 'image_size': model['image_size']}
+    site = model.get('location')
+    if (isinstance(site, (list, tuple)) and len(site) == 2 and
+            all(type(v) in (int, float) and abs(v) <= bound for v, bound in zip(site, (90, 180)))):
+        result['location'] = view.getCameraPrivacyLatLong(SimpleNamespace(latitude=site[0], longitude=site[1]))
+    offset = entry.data.get('utc_offset')
+    if type(offset) in (int, float) and -86400 < offset < 86400:
+        result['observed_at'] = entry.createDate.replace(tzinfo=timezone(timedelta(seconds=offset))).timestamp()
+    return result
 
 
 class JsonImageLoopView(JsonView):

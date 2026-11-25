@@ -227,6 +227,59 @@ def marker_coordinates(values):
     return coordinates
 
 
+def projection_values(solution):
+    v = solution['values']
+    return (v['AZIMUTH_ANGLE'], 0, 0, v['IMAGE_CIRCLE_DIAMETER'], v['OFFSET_X'],
+            v['OFFSET_Y'], v['RADIAL_DISTORTION'], v['LENS_ALTITUDE'], v['POINTING_AZIMUTH'])
+
+
+def rotate_horizontal(alt, az, lat, fitted_lat, delta):
+    """Express a direction in a second observer basis (all angles in radians)."""
+    import numpy as np
+    east, north, up = np.cos(alt) * np.sin(az), np.cos(alt) * np.cos(az), np.sin(alt)
+    equator = np.cos(lat) * up - np.sin(lat) * north
+    pole = np.sin(lat) * up + np.cos(lat) * north
+    meridian = np.cos(delta) * equator + np.sin(delta) * east
+    east = np.cos(delta) * east - np.sin(delta) * equator
+    north = np.cos(fitted_lat) * pole - np.sin(fitted_lat) * meridian
+    up = np.sin(fitted_lat) * pole + np.cos(fitted_lat) * meridian
+    return np.arctan2(up, np.hypot(north, east)), np.arctan2(east, north)
+
+
+def project_horizontal_pixels(model, altitude_deg, azimuth_deg):
+    """Map geographic horizon coordinates through this frame's fitted camera."""
+    import numpy as np
+    from .lens_solver.projection import cameraAltAz, projectToPixels
+
+    alt, az = np.broadcast_arrays(np.radians(altitude_deg), np.radians(azimuth_deg))
+    values = model['values']
+    if values['LATITUDE_OFFSET'] or values['LONGITUDE_OFFSET']:
+        # The solver applies these offsets before converting RA/Dec to Alt/Az.
+        # Rotate ground-fixed directions into the same effective observer basis.
+        lat = np.radians(model['location'][0])
+        fitted_lat = lat + np.radians(values['LATITUDE_OFFSET'])
+        delta = np.radians(values['LONGITUDE_OFFSET'])
+        alt, az = rotate_horizontal(alt, az, lat, fitted_lat, delta)
+    params = projection_values(model)
+    width, height = model['image_size']
+    lens_alt, _ = cameraAltAz(alt, az, params[7], params[8])
+    x, y = projectToPixels(alt, az, params[:7], width, height,
+                           lens_altitude=params[7], pointing_azimuth=params[8])
+    return x, y, (lens_alt >= 0) & (x >= 0) & (x < width) & (y >= 0) & (y < height)
+
+
+def project_horizon_line(model, directions):
+    """Keep breaks where the physical direction is outside the saved image."""
+    if not directions:
+        return []
+    from math import nan
+    altitudes, azimuths = zip(*(point if point is not None else (nan, nan) for point in directions))
+    width, height = model['image_size']
+    xs, ys, visible = project_horizontal_pixels(model, altitudes, azimuths)
+    return [{'x': round(float(x) / width, 5), 'y': round(float(y) / height, 5)} if seen else None
+            for x, y, seen in zip(xs, ys, visible)]
+
+
 def project_targets(coordinates, model):
     """Return normalized positions in this archived frame, in input order."""
     if not model or not model.get('location') or model.get('observed_at') is None:
@@ -238,8 +291,7 @@ def project_targets(coordinates, model):
         return None
     # Imported only for a frame that carries a verified stellar solution.
     import numpy
-    from .aligned_media import projection_values
-    from .fisheye import cameraAltAz, projectToPixels
+    from .lens_solver.projection import cameraAltAz, projectToPixels
     from .lens_solver.projection import precessCatalog, predictAltAz
 
     timestamp = model['observed_at']

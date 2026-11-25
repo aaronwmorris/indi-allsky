@@ -238,6 +238,245 @@ test('companion batches targets and never applies obsolete positions to another 
     assert.match(b.el('target-status').textContent, /saved, aligned image/);
 });
 
+test('only an open visible Companion with targets requests skyline data', async () => {
+    const targetRequests = sim => sim.requests.filter(r => r.url.searchParams.has('target_settings'));
+    const targets = [{label: 'Vega', ra_deg: 12, dec_deg: 20}];
+    const sim = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
+    sim.requests[0].reply(status({...frame(1), id: 7})); await sim.flush(); sim.images[0].onload(); await sim.flush();
+    const pending = targetRequests(sim).at(-1);
+    sim.document.hidden = true; sim.emit('visibilitychange');
+    assert.equal(pending.options.signal.aborted, true);
+    pending.reply({frame: 7, state: 'ready', points: [{x: .2, y: .3}]}); await sim.flush();
+    assert.equal(sim.el('target-markers').options.length, 0);
+    const count = targetRequests(sim).length;
+    await sim.advance(125000);
+    assert.equal(targetRequests(sim).length, count);
+    sim.document.hidden = false; sim.emit('visibilitychange');
+    assert.equal(targetRequests(sim).length, count + 1);
+    sim.emit('pagehide');
+    assert.equal(targetRequests(sim).at(-1).options.signal.aborted, true);
+    await sim.advance(125000);
+    assert.equal(targetRequests(sim).length, count + 1);
+    sim.emit('pageshow', {persisted: true});
+    assert.equal(targetRequests(sim).length, count + 2);
+    for (const view of ['companion', 'image']) {
+        const empty = browser(view);
+        empty.requests[0].reply(view === 'companion' ? status({...frame(1), id: 7}) : latest('saved'));
+        await empty.flush(); empty.images[0].onload(); await empty.advance(125000);
+        assert.equal(targetRequests(empty).length, 0);
+    }
+});
+
+test('target windows work without alignment and use the camera clock even without an image', async () => {
+    const targets = [{label: 'M31', ra_deg: 10.68, dec_deg: 41.27}];
+    const b = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
+    b.requests[0].reply(status(null)); await b.flush();
+    const forecasts = () => b.requests.filter(r => r.url.searchParams.has('target_settings'));
+    const req = forecasts()[0];
+    assert.equal(req.url.searchParams.has('frame'), false);
+    assert.deepEqual(JSON.parse(req.url.searchParams.get('target_settings')), {min_altitude: 0, moon_distance: 30, horizon: []});
+    req.reply({frame: null, state: 'unavailable', points: [null], qualities: [
+        {state: 'unknown', reason: 'No saved frame.'}], window_at: '2026-11-07T20:00:10Z', windows: [
+        {state: 'open', starts_at: '2026-11-07T20:00:10Z', ends_at: '2026-11-07T21:45:10Z', end_reason: 'horizon'}]});
+    await b.flush();
+    const card = b.el('target-conditions-list').options[0].options[0];
+    const [name, sky, time] = card.options[0].options;
+    assert.equal(name.textContent, 'M31');
+    assert.equal(sky.textContent, 'Unassessed');
+    assert.match(time.textContent, /1 h 45 min left.*22:45.*local horizon/);
+    assert.match(card.options[1].textContent, /No saved frame/);
+    assert.equal(b.el('target-markers').options.length, 0);
+    await b.advance(61000);
+    assert.equal(forecasts().length, 2);
+    assert.match(time.textContent, /1 h 44 min/);
+});
+
+test('companion projects one selected track, breaks at unmapped sectors, and marks an observed crossing', async () => {
+    const targets = [{label: 'First', ra_deg: 12, dec_deg: 20}, {label: 'Second', ra_deg: 13, dec_deg: 21}];
+    const b = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
+    b.requests.find(r => r.url.searchParams.has('image_only')).reply(status({...frame(1), id: 7}));
+    await b.flush();
+    b.images[0].onload();
+    await b.flush();
+    const p = {x: .2, y: .3}, q = {x: .4, y: .5}, r = {x: .6, y: .7};
+    const plan = {state: 'open', ends_at: '2026-11-08T01:00:00Z', end_reason: 'twilight',
+        horizon_basis: 'partial', track: [p, q, null, q, null, r, {x: 1, y: .1}], intersection: q,
+        track_ends_at: '2026-11-08T02:30:00Z', track_end_reason: 'obstacle'};
+    b.requests.filter(r => r.url.searchParams.has('target_settings')).at(-1).reply({frame: 7, state: 'ready',
+        window_at: '2026-11-07T20:00:10Z', points: [p, q], skyline: [p, q, null, r, null, q], windows: [plan,
+            {state: 'unknown', reason: 'unmapped', horizon_basis: 'partial'}]});
+    await b.flush();
+    const select = b.el('target-path-choice');
+    assert.equal(select.value, '');
+    assert.equal(b.el('target-geometry').hidden, true);
+    assert.equal(b.el('target-crossing').hidden, true);
+    assert.equal(b.el('target-path-tools').hidden, false);
+    select.value = '12,20'; select.change();
+    assert.equal(b.el('target-geometry').hidden, false);
+    assert.equal(b.el('target-crossing').hidden, false);
+    assert.equal(b.el('target-crossing').style.left, '40%');
+    assert.match(b.el('projected-track').d, /^M200.00 300.00L400.00 500.00M600.00 700.00L1000.00 100.00$/);
+    assert.equal(b.el('observed-skyline').d, 'M200.00 300.00L400.00 500.00M600.00 700.00l.01 0M400.00 500.00l.01 0');
+    const rows = b.el('target-conditions-list').options.map(li => li.options[0]);
+    assert.match(rows[0].options[0].options[2].textContent, /Nov 8 02:00 \(twilight\)/);
+    assert.match(b.el('crossing-key').textContent, /× Estimated edge at Nov 8 03:30/);
+    assert.match(rows[1].options[0].options[2].textContent, /Visibility unverified/);
+    select.value = '13,21'; select.change();
+    assert.equal(b.el('target-crossing').hidden, true);
+    assert.equal(b.el('target-geometry').hidden, true);
+    select.value = ''; select.change();
+    assert.equal(b.el('skyline-key').hidden, true);
+});
+
+test('a circumpolar path distinguishes tree crossings, unseen sky, and a complete circuit', async () => {
+    const targets = [{label: 'Polaris', ra_deg: 12, dec_deg: 89}];
+    const sim = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
+    sim.requests.find(r => r.url.searchParams.has('image_only')).reply(status({...frame(1), id: 7}));
+    await sim.flush(); sim.images[0].onload(); await sim.flush();
+    const a = {at: '2026-11-07T20:00:10Z', x: .2, y: .3}, b = {at: '2026-11-08T20:00:10Z', x: .4, y: .5};
+    const plan = {state: 'open', circumpolar: true, horizon_basis: 'image', end_reason: 'twilight', ends_at: '2026-11-08T04:30:00Z',
+        track: [a, b, a], edit_path: [a, b], track_end_reason: 'forecast_limit', intersection: null};
+    const reply = async p => {
+        sim.requests.filter(r => r.url.searchParams.has('target_settings')).at(-1).reply({
+            frame: 7, setup_id: 'garden', state: 'ready', window_at: a.at, points: [a], windows: [p]});
+        await sim.flush();
+    };
+    await reply(plan);
+    const choice = sim.el('target-path-choice');
+    choice.value = '12,89'; choice.change(); await reply(plan);
+    const card = sim.el('target-conditions-list').options[0].options[0];
+    assert.equal(card.options[0].options[0].options[0].hidden, false);
+    assert.match(sim.el('crossing-key').textContent, /Circumpolar · No horizon crossing in the next 24 h/);
+    assert.equal(sim.el('target-crossing').hidden, true);
+    assert.equal(sim.el('target-end-time').value, '');
+    assert.match(sim.el('target-end-note').textContent, /Move the slider/);
+    sim.el('target-end-time').value = '23:05'; sim.el('target-end-time').change();
+    assert.equal(sim.el('target-crossing').hidden, false);
+    assert.match(sim.el('crossing-key').textContent, /Preview at 23:05/);
+    sim.el('target-end-auto').click();
+    await reply({...plan, horizon_basis: 'partial', track_end_reason: 'unmapped', track_ends_at: '2026-11-07T23:10:00Z'});
+    assert.match(sim.el('crossing-key').textContent, /Circumpolar · Path reaches unverified sky/);
+    assert.equal(sim.el('target-crossing').hidden, true);
+    assert.equal(sim.el('target-end-time').value, '');
+    for (const [reason, label] of [['obstacle', 'Estimated edge'], ['horizon', 'User horizon']]) {
+        choice.change();
+        await reply({...plan, track_end_reason: reason, track_ends_at: '2026-11-08T05:00:00Z', intersection: b,
+            track_reappears_at: '2026-11-08T05:45:00Z'});
+        assert.ok(sim.el('crossing-key').textContent.includes(label + ' at Nov 8 06:00 · clears the obstruction at Nov 8 06:45'));
+        assert.match(card.options[0].options[2].textContent, /05:30 \(twilight\)/);
+        assert.match(card.options[1].textContent, /Clears the obstruction at Nov 8 06:45/);
+    }
+    choice.change();
+    await reply({...plan, horizon_basis: 'estimated', track_end_reason: 'obstacle', end_reason: 'obstacle',
+        track_ends_at: '2026-11-08T04:30:00Z', track_reappears_at: '2026-11-08T05:45:00Z', intersection: b});
+    assert.equal(sim.el('skyline-key').textContent, 'Estimated skyline');
+    assert.match(card.options[0].options[2].textContent, /estimated obstruction/);
+    assert.match(sim.el('crossing-key').textContent, /Estimated edge.*expected to reappear at/);
+    assert.match(card.options[1].textContent, /Window follows the estimated skyline.*Expected to reappear at/);
+    choice.change();
+    await reply({...plan, horizon_basis: 'estimated'});
+    assert.match(sim.el('crossing-key').textContent, /No skyline crossing predicted/);
+    assert.equal(sim.el('target-crossing').hidden, true);
+});
+
+test('path slider and camera time move the endpoint locally and save one setting for the current setup', async () => {
+    const key = 'allsky-companion-targets-3';
+    const targets = [{label: 'A', ra_deg: 12, dec_deg: 20}, {label: 'B', ra_deg: 13, dec_deg: 21}];
+    const saved = new Map([[key, JSON.stringify(targets)]]);
+    const a = {at: '2026-11-07T20:00:10Z', x: .1, y: .1};
+    const b = {at: '2026-11-07T23:00:00Z', x: .2, y: .2};
+    const c = {at: '2026-11-08T01:00:00Z', x: .6, y: .6};
+    const plan = {state: 'open', track: [a, b], track_ends_at: '2026-11-07T23:00:40Z', intersection: b, track_end_reason: 'obstacle'};
+    const reply = (setup_id, selected = plan) => ({frame: 7, setup_id, state: 'ready', points: [a, b],
+        window_at: a.at, windows: [plan, selected]});
+    const latest = sim => sim.requests.filter(r => r.url.searchParams.has('target_settings')).at(-1);
+    async function open() {
+        const sim = browser('companion', {saved});
+        sim.requests.find(r => r.url.searchParams.has('image_only')).reply(status({...frame(1), id: 7}));
+        await sim.flush(); sim.images[0].onload(); await sim.flush();
+        return sim;
+    }
+    const sim = await open();
+    latest(sim).reply(reply('garden')); await sim.flush();
+    const select = sim.el('target-path-choice');
+    select.value = '13,21'; select.change();
+    assert.equal(latest(sim).url.searchParams.get('edit_path'), '1');
+    latest(sim).reply(reply('garden', {...plan, edit_path: [a, b, c]})); await sim.flush();
+    const slider = sim.el('target-end-slider'), time = sim.el('target-end-time');
+    assert.equal(sim.el('target-end-tools').hidden, false);
+    assert.equal(time.value, '00:00');
+    assert.match(sim.el('crossing-key').textContent, /Estimated edge at Nov 8 00:00/);
+    const count = sim.requests.length;
+    slider.value = Date.parse('2026-11-08T00:00Z') / 60000; slider.input();
+    assert.equal(time.value, '01:00');
+    assert.equal(sim.el('target-crossing').style.left, '40%');
+    assert.match(sim.el('crossing-key').textContent, /Preview at Nov 8 01:00/);
+    time.value = '00:30'; time.change();
+    assert.ok(Math.abs(parseFloat(sim.el('target-crossing').style.left) - 30) < 1e-8);
+    assert.equal(sim.requests.length, count);
+    sim.el('target-end-set').click();
+    const manual = '2026-11-07T23:30:00.000Z';
+    assert.deepEqual(latest(sim).url.searchParams.getAll('path_end_at'), ['', manual]);
+    assert.equal(latest(sim).url.searchParams.get('path_end_setup'), 'garden');
+    const active = {...plan, edit_path: [a, b, c], track_ends_at: manual, track_end_reason: 'user_marked', manual_end_status: 'applied'};
+    latest(sim).reply(reply('garden', active)); await sim.flush();
+    assert.match(sim.el('crossing-key').textContent, /Marked end at Nov 8 00:30/);
+    const reopened = await open();
+    assert.equal(latest(reopened).url.searchParams.has('path_end_at'), false);
+    latest(reopened).reply(reply('garden')); await reopened.flush();
+    assert.deepEqual(latest(reopened).url.searchParams.getAll('path_end_at'), ['', manual]);
+    assert.equal(reopened.el('target-path-choice').value, '');
+    const moved = await open();
+    latest(moved).reply(reply('patio')); await moved.flush();
+    assert.equal(latest(moved).url.searchParams.has('path_end_at'), false);
+    sim.el('target-end-auto').click();
+    assert.equal(latest(sim).url.searchParams.has('path_end_at'), false);
+    assert.equal(JSON.parse(saved.get(key))[1].path_end, undefined);
+});
+
+test('camera time input skips the elapsed autumn hour and rejects a nonexistent spring hour', async () => {
+    const targets = [{label: 'Vega', ra_deg: 12, dec_deg: 20}];
+    for (const [now, end, expected] of [
+        ['2026-10-25T00:50:00Z', '2026-10-25T03:00:00Z', '2026-10-25T01:30:00Z'],
+        ['2026-03-29T00:50:00Z', '2026-03-29T02:30:00Z', null],
+    ]) {
+        const sim = browser('companion', {saved: new Map([['allsky-companion-targets-3', JSON.stringify(targets)]])});
+        const image = {...frame(1), captured_at: now, id: 7};
+        sim.requests.find(r => r.url.searchParams.has('image_only')).reply({...status(image), now});
+        await sim.flush(); sim.images[0].onload(); await sim.flush();
+        const req = () => sim.requests.filter(r => r.url.searchParams.has('target_settings')).at(-1);
+        const samples = [{at: now, x: .1, y: .1}, {at: end, x: .5, y: .5}];
+        const response = {frame: 7, setup_id: 'here', state: 'ready', points: [samples[0]], window_at: now,
+            windows: [{state: 'open', track: samples, edit_path: samples, track_end_reason: 'geometric_horizon', track_ends_at: end}]};
+        req().reply(response); await sim.flush();
+        sim.el('target-path-choice').value = '12,20'; sim.el('target-path-choice').change();
+        req().reply(response); await sim.flush();
+        sim.el('target-end-time').value = '02:30'; sim.el('target-end-time').change();
+        assert.equal(sim.el('target-end-set').disabled, !expected);
+        if (expected) assert.equal(Number(sim.el('target-end-slider').value) * 60000, Date.parse(expected));
+        else assert.match(sim.el('target-end-note').textContent, /future camera time/);
+    }
+});
+
+test('imaging limits validate the horizon and save camera-specific settings including zero', async () => {
+    const saved = new Map();
+    const b = browser('companion', {saved});
+    const oldKey = 'allsky-companion-targets-3-limits';
+    b.el('target-min-alt').value = '0';
+    b.el('target-moon-distance').value = '0';
+    b.el('target-horizon').value = '0 4\n360 8';
+    const apply = () => b.el('target-settings-form').submit({preventDefault() {}});
+    apply();
+    assert.match(b.el('target-settings-message').textContent, /one height/);
+    assert.equal(saved.has(oldKey), false);
+    b.el('target-horizon').value = '360 8\n90 25';
+    apply();
+    assert.deepEqual(JSON.parse(saved.get(oldKey)), {min_altitude: 0, moon_distance: 0, horizon: [[0,8], [90,25]]});
+    const reopened = browser('companion', {saved});
+    assert.equal(reopened.el('target-horizon').value, '0 8\n90 25');
+    assert.equal(reopened.el('target-conditions').hidden, true);
+});
+
 for (const view of ['image', 'canvas']) {
     test(view + ': login HTML cannot kill the loop, recovered data draws immediately', async () => {
         const b = browser(view);

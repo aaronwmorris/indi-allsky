@@ -45,9 +45,14 @@
         return clock.timestamp + performance.now() - clock.syncedAt;
     }
 
-    function localTime(timestamp, withSeconds = false) {
-        const value = formats.useOffset ? timestamp + clock.offset * 60000 : timestamp;
-        return (withSeconds ? formats.seconds : formats.minutes).format(value);
+    function localTime(timestamp, withSeconds = false, relativeTo) {
+        const offset = formats.useOffset ? clock.offset * 60000 : 0;
+        const value = timestamp + offset;
+        const time = (withSeconds ? formats.seconds : formats.minutes).format(value);
+        if (Number.isFinite(relativeTo) && formats.day.format(value) !== formats.day.format(relativeTo + offset)) {
+            return formats.day.format(value) + ' ' + time;
+        }
+        return time;
     }
 
     function clockFormats(zone) {
@@ -57,6 +62,7 @@
                 zone, useOffset: !zone || zone !== timeZone,
                 minutes: new Intl.DateTimeFormat('en', options),
                 seconds: new Intl.DateTimeFormat('en', {...options, second: '2-digit'}),
+                day: new Intl.DateTimeFormat('en', {timeZone, month: 'short', day: 'numeric'}),
             };
         };
         // Some browsers have an older timezone database than the camera.
@@ -117,6 +123,7 @@
     function tick() {
         if (!clock) return;
         const now = cameraNow();
+        targets.tick(now, localTime);
         showBattery(now);
         byId('clock').textContent = localTime(now, true);
         byId('clock').dateTime = new Date(now).toISOString();

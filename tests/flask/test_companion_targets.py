@@ -10,8 +10,21 @@ import pytest
 from indi_allsky import companion_targets
 from indi_allsky.companion_targets import OnlineCatalogUnavailable, UnknownTargetName, resolve_coordinates, resolve_name
 from indi_allsky.flask import db, views
-from indi_allsky.flask.companion import companion_status, latest_companion_image
+from indi_allsky.flask.companion import companion_status, latest_companion_image, skyline_directions
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable as Camera, IndiAllSkyDbImageTable as Frame
+
+
+def test_draw_separate_branch_tips_without_bridging_open_sky_or_the_north_seam():
+    heights = [10., 11., 31., None, 30., 29.]
+    contour = skyline_directions({'altitudes': heights, 'step_deg': 60.})
+    assert contour == [(10., 0.), (11., 60.), None, (31., 120.), None,
+                       (30., 240.), (29., 300.), None, (10., 0.)]
+    assert heights == [10., 11., 31., None, 30., 29.]
+
+
+def test_estimated_contour_closes_at_north_and_spans_the_original_gaps():
+    profile = {'altitudes': [None, 9., None, 30.], 'step_deg': 90., 'envelope': [19., 9., 20., 30.]}
+    assert skyline_directions(profile) == [(19., 0.), (9., 90.), (20., 180.), (30., 270.), (19., 0.)]
 
 
 @pytest.mark.parametrize('name,ra,dec', [
@@ -126,7 +139,7 @@ def test_coordinate_formats(ra, dec, expected):
 
 
 def solution(roll=0, width=1000, tilt=90):
-    return dict(id='a' * 32, image_size=[width, 1000], location=[52.7, 12.4], values=dict(
+    return dict(id='a' * 32, image_size=[width, 1000], location=[51.5, 0.0], values=dict(
         AZIMUTH_ANGLE=roll, POINTING_AZIMUTH=180, LENS_ALTITUDE=tilt, RADIAL_DISTORTION=0.,
         LATITUDE_OFFSET=0., LONGITUDE_OFFSET=0., IMAGE_CIRCLE_DIAMETER=1000,
         OFFSET_X=0, OFFSET_Y=0, PRECESSION=True))
@@ -185,6 +198,215 @@ def test_bulk_limit_only_applies_per_request(station):
     assert call(client, 1, ['0,90'] * 65).status_code == 400
     response = call(client, 5, ['0,90'] * 64)
     assert len(response.json['points']) == 64
+
+
+def test_planning_without_a_frame_and_invalid_input(station):
+    client, view = station
+    params = dict(camera_id=1, target='17,59', target_settings='{}')
+    view.getCameraPrivacyLatLong = lambda _: (51, 10)
+    payload = client.get('/companion', query_string=params).json
+    assert payload['frame'] is None and payload['qualities'][0]['state'] == 'unknown'
+    assert payload['windows'][0]['state'] in ('open', 'upcoming', 'none')
+    assert datetime.fromisoformat(payload['window_at']).tzinfo is not None
+    for invalid in (dict(frame='x'), dict(target_settings='{bad')):
+        assert client.get('/companion', query_string=dict(params, **invalid)).status_code == 400
+
+
+def test_horizontal_track_and_capture_marker_share_the_fitted_lens():
+    import numpy as np
+    from indi_allsky.lens_solver.projection import precessCatalog, predictAltAz
+
+    model = solution(roll=46, tilt=85)
+    model['observed_at'] = 1794685508
+    model['values'].update(LATITUDE_OFFSET=3., LONGITUDE_OFFSET=-5.)
+    coordinates = [(66.75, 55.466667), (317.95075, 59.985833)]
+    actual = companion_targets.project_targets(coordinates, model)
+    catalog = precessCatalog(np.asarray(coordinates), model['observed_at'])
+    alt, az = predictAltAz(catalog, *model['location'], model['observed_at'])
+    track = companion_targets.project_horizon_line(model, list(zip(np.degrees(alt), np.degrees(az))) + [None])
+    for point, sample in zip(actual, track):
+        assert sample == pytest.approx(point, abs=1e-5)
+    assert track[-1] is None
+
+
+@pytest.mark.parametrize('extra', [
+    [('path_end_at', 'bad')], [('path_end_at', 'NaN')], [('path_end_at', '2026-13-13T13:00Z')],
+    [('path_end_at', '2026-11-14T19:15:00')], [('path_end_at', '2026-11-14T19:15:00+01:00')],
+    [('path_end_at', ''), ('path_end_at', '')], [('edit_path', '-1')], [('edit_path', '1')],
+    [('edit_path', '0'), ('edit_path', '0')], [('path_end_setup', 'a' * 65)],
+])
+def test_manual_path_rejects_ambiguous_or_invalid_requests(station, extra):
+    client, _ = station
+    query = [('camera_id', 1), ('frame', 1), ('target', '0,90'), ('target_settings', '{}')]
+    response = client.get('/companion', query_string=query + extra)
+    assert response.status_code == 400 and response.json['error']
+
+
+def test_manual_path_uses_current_setup_exact_endpoint_and_only_selected_editor(station, monkeypatch):
+    from indi_allsky.flask import companion
+    client, view = station
+    view.getCameraPrivacyLatLong = lambda _: (51.5, 0.0)
+
+    class CaptureClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 11, 14, 18, 30, 10, tzinfo=timezone.utc).astimezone(tz)
+
+    monkeypatch.setattr(companion, 'datetime', CaptureClock)
+    targets = [('target', '10,41'), ('target', '0,90')]
+    base = [('camera_id', 1), ('edit_path', 0), ('target_settings', '{}')] + targets
+    def request_frame(fid, *extra):
+        return client.get('/companion', query_string=[('frame', fid)] + base + list(extra)).json
+
+    automatic = request_frame(1)
+    token = automatic['setup_id']
+    assert token and len(token) == 32 and request_frame(1)['setup_id'] == token
+    editor, untouched = automatic['windows']
+    assert 'edit_path' not in untouched
+    assert editor['edit_path'][0]['at'] == automatic['window_at']
+    anchor = editor['edit_path'][18]
+    assert set(anchor) == {'at', 'x', 'y'}
+    end_at = anchor['at'].replace('+00:00', 'Z')
+    marker = [('path_end_setup', token), ('path_end_at', end_at), ('path_end_at', '')]
+    edited, other = request_frame(1, *marker)['windows']
+    assert edited['manual_end_status'] == 'applied' and edited['track_end_reason'] == 'user_marked'
+    assert edited['track_ends_at'] == anchor['at'] and edited['intersection'] == edited['track'][-1]
+    assert edited['intersection'] == pytest.approx(dict(x=anchor['x'], y=anchor['y']), abs=.00005)
+    assert other == untouched
+    turned = request_frame(2, *marker)
+    assert turned['setup_id'] != token and turned['windows'][0]['manual_end_status'] == 'setup_changed'
+    assert turned['windows'][0]['track_end_reason'] != 'user_marked'
+    unavailable = request_frame(5, *marker)
+    assert unavailable['setup_id'] is None and unavailable['windows'][0]['manual_end_status'] == 'unavailable'
+    assert unavailable['windows'][0]['edit_path'] == []
+    late = request_frame(1, ('path_end_setup', token), ('path_end_at', '2026-11-15T18:30:05Z'), ('path_end_at', ''))
+    assert late['windows'][0]['manual_end_status'] == 'out_of_range'  # 24h from the image, not the request.
+    # Reversing the target list must not allow a northern pole on a south-facing lens.
+    south = request_frame(6)
+    inactive, off_sensor = request_frame(6, ('path_end_setup', south['setup_id']), ('path_end_at', ''),
+                                         ('path_end_at', end_at))['windows']
+    assert inactive['manual_end_status'] is None and off_sensor['manual_end_status'] == 'outside_image'
+    # The pole never sets here. Even with an identical lens solution its
+    # private time limit from yesterday must not follow it to another night.
+    assert other['circumpolar'] is True
+    image = db.session.get(Frame, 1)
+    image.dayDate += timedelta(days=1)
+    db.session.commit()
+    later = request_frame(1, ('path_end_setup', token), ('path_end_at', ''), ('path_end_at', end_at))
+    assert later['setup_id'] != token
+    assert later['windows'][1]['manual_end_status'] == 'setup_changed'
+    assert later['windows'][1]['track_end_reason'] == 'forecast_limit'
+
+
+@pytest.fixture
+def horizon_station(station, tmp_path, monkeypatch):
+    from indi_allsky import companion_visible_horizon as vision
+    from indi_allsky.flask import companion_horizon as cache
+    from indi_allsky.flask.companion import companion_observed_horizon
+
+    _, view = station
+    entry = db.session.get(Frame, 1)
+    anchor = entry.createDate
+    minutes = [0, 1, 2, 10, 16, 17, 19, 21, 23, 38, 40, 42, 58]
+    for index, minute in enumerate(minutes, 10):
+        pose_id = 'b' if index in (11, 22) else 'a'
+        pose = dict(solution(), id=pose_id * 32)
+        db.session.add(Frame(id=index, camera_id=entry.camera_id, filename=f'{index}.jpg',
+                             createDate=anchor + timedelta(minutes=minute), dayDate=anchor.date(),
+                             exposure=30, gain=1, adu=1, night=True, width=1000, height=1000,
+                             data={'utc_offset': 3600, 'star_alignment': pose}))
+        (tmp_path / f'{index}.jpg').touch()
+    db.session.commit()
+    probes, full = [], []
+    # No signal on 10 and 16, isolated departure at 15, repeatable change at 19/20.
+    shapes = {10: None, 15: 2, 16: None, 19: 3, 20: 3, 21: 3, 22: 4}
+    def signature(path, model):
+        index = int(path.stem)
+        probes.append(index)
+        return shapes.get(index, 1)
+    def measure(frames):
+        full.append([int(path.stem) for path, _ in frames])
+        return {'envelope': [float(len(frames))] * 4, 'frames': len(frames)}
+    def request_frame(index):
+        frame = db.session.get(Frame, index)
+        return companion_observed_horizon(view, frame, views.virtualsky_frame_alignment(view, frame))
+    monkeypatch.setattr(vision, 'horizon_signature', signature)
+    monkeypatch.setattr(vision, 'significant_horizon_change', lambda a, b: a != b)
+    monkeypatch.setattr(vision, 'measure_horizon', measure)
+    monkeypatch.setattr(cache.tempfile, 'gettempdir', lambda: str(tmp_path / 'cache'))
+    return request_frame, probes, full
+
+
+def test_horizon_saved_from_first_good_frame_and_only_rebuilt_after_confirmation(horizon_station, tmp_path):
+    from flask import current_app
+    from indi_allsky.flask.companion_horizon import _read_version
+    request_frame, probes, full = horizon_station
+    first = request_frame(13)
+    assert first['source_frame_id'] == 12 and full == [[12]] and probes == [10, 12]
+    cache_path, = (tmp_path / 'cache').rglob('*.json')
+    modified = cache_path.stat().st_mtime_ns
+    _read_version.cache_clear()
+    current_app.extensions.pop('companion_horizon_fallback')  # another worker starts empty
+    assert request_frame(14) == first and cache_path.stat().st_mtime_ns == modified
+    for index in (15, 15, 16, 17, 18, 19):
+        assert request_frame(index) == first
+    assert full == [[12]] and probes == [10, 12, 15, 16, 17, 19]
+    updated = request_frame(20)
+    assert updated['source_frame_id'] == 20 and full == [[12], [19, 20]]
+    assert request_frame(21) == updated
+    assert request_frame(13) == first and request_frame(10) is None  # no future references on replay
+    assert request_frame(22)['source_frame_id'] == 11  # different pose has its own first good image
+    assert full == [[12], [19, 20], [11]]
+
+
+def test_horizon_concurrent_request_returns_available_reference_without_duplicate_work(horizon_station, tmp_path):
+    import fcntl
+    request_frame, probes, full = horizon_station
+    first = request_frame(13)
+    lock_path, = (tmp_path / 'cache').rglob('*.lock')
+    with lock_path.open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        assert request_frame(15) == first
+        assert probes == [10, 12] and full == [[12]]
+    assert request_frame(15) == first and probes[-1] == 15
+
+
+def test_horizon_keeps_acquisition_bounded_and_handles_unwritable_cache(horizon_station, tmp_path, monkeypatch):
+    from indi_allsky.flask import companion_horizon as cache
+    request_frame, probes, full = horizon_station
+    (tmp_path / 'cache').touch()  # cannot create the shared cache directory
+    wall = cache.time.time()
+    monkeypatch.setattr(cache, 'time', SimpleNamespace(time=lambda: wall))
+    assert request_frame(10) is None and request_frame(10) is None
+    assert request_frame(13) is None and probes == [10] and full == []
+    wall -= 3600  # an NTP correction or reboot cannot strand the retry cursor
+    first = request_frame(13)
+    assert first['source_frame_id'] == 12 and request_frame(13) == first and full == [[12]]
+
+
+def test_historical_replay_never_replaces_live_reference(horizon_station, tmp_path, monkeypatch):
+    from indi_allsky.flask import companion_horizon as cache
+    request_frame, _, _ = horizon_station
+    frame = db.session.get(Frame, 13)
+    live = frame.createDate.replace(tzinfo=timezone(timedelta(hours=1))).timestamp()
+    monkeypatch.setattr(cache, 'time', SimpleNamespace(time=lambda: live))
+    first = request_frame(13)
+    path, = (tmp_path / 'cache').rglob('*.json')
+    previous = path.read_bytes()
+    live += 86400
+    assert request_frame(13) == first
+    assert request_frame(15) == first
+    assert len(list((tmp_path / 'cache').rglob('*.json'))) == 2 and path.read_bytes() == previous
+
+
+def test_remote_only_targets_never_read_a_local_image(station, monkeypatch):
+    from indi_allsky import companion_target_quality
+    client, view = station
+    view.local_images_allowed = False
+    monkeypatch.setattr(companion_target_quality, 'assess_targets', lambda *a, **k: pytest.fail('Local image read'))
+    params = dict(camera_id=1, target='17,59', target_settings='{}')
+    assert client.get('/companion', query_string=dict(params, frame=1)).json['qualities'][0]['state'] == 'unknown'
+    assert client.get('/companion', query_string=dict(params, frame=2)).json['state'] == 'unavailable'
 
 
 def test_resolution_endpoint(station):

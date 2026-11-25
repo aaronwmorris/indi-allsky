@@ -2,19 +2,21 @@ from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from importlib.util import find_spec
 from pathlib import Path
+import re
 
-from flask import abort, jsonify, make_response, render_template, request, session
+from flask import abort, current_app, jsonify, make_response, render_template, request, session
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from ..companion_astronomy import camera_timezone, night_ephemeris
 from ..companion_battery import battery_reading
 from ..companion_targets import (
-    OnlineCatalogUnavailable, UnknownTargetName, marker_coordinates, project_targets,
+    OnlineCatalogUnavailable, UnknownTargetName, marker_coordinates, project_horizon_line, project_targets,
     resolve_coordinates, resolve_name,
 )
 from .base_views import BaseView
 from .companion_charts import companion_charts, sensor_probes
+from .companion_horizon import observed_horizon, setup_id
 from .misc import login_optional_media
 
 
@@ -128,10 +130,17 @@ def companion_target_request(view):
             return {'target': resolve_name(request.args['resolve'], online=online)}
         if 'ra' in request.args or 'dec' in request.args:
             return {'target': resolve_coordinates(request.args.get('ra'), request.args.get('dec'))}
+        details = 'target_settings' in request.args
         frame = request.args.get('frame', type=int)
-        if frame is None or not 0 < frame <= 2**63 - 1:
+        if (not details or 'frame' in request.args) and (frame is None or not 0 < frame <= 2**63 - 1):
             raise ValueError('Invalid image ID.')
         coordinates = marker_coordinates(request.args.getlist('target'))
+        if not details and any(key in request.args for key in ('path_end_at', 'path_end_setup', 'edit_path')):
+            raise ValueError('Editing a target path requires window settings.')
+        if details:
+            from ..companion_target_window import parse_window_settings
+            settings = parse_window_settings(request.args['target_settings'])
+            path_ends, edit_index, path_setup = companion_path_options(request.args, len(coordinates))
     except UnknownTargetName as exc:
         code = 'online_unknown' if online else 'unknown_name'
         abort(make_response(jsonify(error=str(exc), code=code), 400))
@@ -140,32 +149,170 @@ def companion_target_request(view):
     except ValueError as exc:
         abort(make_response(jsonify(error=str(exc)), 400))
 
+    if details and view.camera.hidden:
+        abort(404)
     result = {'frame': frame, 'state': 'unavailable', 'points': [None] * len(coordinates)}
+    entry, model = companion_frame(view, frame) if frame is not None else (None, None)
+    if entry is not None:
+        points = project_targets(coordinates, model)
+        if points is None:
+            result['state'] = 'orientation_pending'
+        else:
+            result.update(state='ready', points=points)
+    if not details:
+        return result
+
+    from ..companion_target_window import target_directions, target_windows
+    when = datetime.now(timezone.utc)
+    latitude, longitude = view.getCameraPrivacyLatLong(view.camera)
+    profile = None
+    plan_model = None
+    result['qualities'] = [
+        {'state': 'unknown', 'reason': 'An accessible, star-aligned night image is required.', 'matched': 0, 'expected': 0}
+        for _ in coordinates
+    ]
+    if result['state'] == 'ready':
+        # Forecasts use the current sky. A stale frame from a mobile rig may
+        # show the previous setup, even if its own target markers remain valid.
+        age = when.timestamp() - model['observed_at']
+        if (latitude is not None and longitude is not None
+                and abs(latitude - model['location'][0]) <= .03
+                and abs((longitude - model['location'][1] + 180) % 360 - 180) <= .03
+                and -5 <= age <= max(180, 3 * (entry.exposure or 0) + 60)):
+            plan_model = model
+        if view.camera.local and view.local_images_allowed:
+            from ..companion_target_quality import assess_targets
+            path = companion_archive_path(entry)
+            result['qualities'] = assess_targets(path, model, coordinates, night=entry.night,
+                                                exposure=entry.exposure, gain=entry.gain)
+            if plan_model is not None and entry.night and path is not None:
+                profile = companion_observed_horizon(view, entry, model)
+
+    setup = setup_id(entry, plan_model) if plan_model else None
+    rejected = {}
+    site = (latitude, longitude, view.camera.elevation or 0)
+    for index, end in enumerate(path_ends):
+        if end is None:
+            continue
+        if not setup:
+            rejected[index] = 'unavailable'
+        elif path_setup != setup:
+            rejected[index] = 'setup_changed'
+        elif abs(end - plan_model['observed_at']) > 86400 or abs(end - when.timestamp()) > 86400:
+            rejected[index] = 'out_of_range'
+        else:
+            position = target_directions(*coordinates[index], site, [end])[0]
+            if position[0] < 0:
+                rejected[index] = 'outside_pass'
+            elif project_horizon_line(plan_model, [position])[0] is None:
+                rejected[index] = 'outside_image'
+        if index in rejected:
+            path_ends[index] = None
+    windows = target_windows(coordinates, when, *site, settings, observed_horizon=profile,
+                             path_ends=path_ends, edit_path=edit_index if plan_model else None)
+    for index, window in enumerate(windows):
+        directions = window.pop('trajectory', [])
+        crossing = window.pop('obstacle_crossing', None)
+        window['track'] = project_horizon_line(plan_model, directions) if plan_model else []
+        window['intersection'] = project_horizon_line(plan_model, [crossing])[0] if crossing and plan_model else None
+        window['manual_end_status'] = rejected.get(index, window.get('manual_end_status'))
+        if index == edit_index:
+            times = window.pop('edit_times', [])
+            positions = project_horizon_line(plan_model, window.pop('edit_directions', [])) if plan_model else []
+            window['edit_path'] = [dict(at=at, **p) if p else None for at, p in zip(times, positions)]
+    skyline = project_horizon_line(plan_model, skyline_directions(profile)) if profile is not None else []
+    zone = camera_timezone(view.camera)
+    result.update(window_at=when.isoformat(), windows=windows, skyline=skyline, setup_id=setup,
+                  skyline_source_frame_id=profile.get('source_frame_id') if profile else None,
+                  time_zone=getattr(zone, 'key', None), offset_minutes=int(when.astimezone(zone).utcoffset().total_seconds() / 60))
+    return result
+
+
+def skyline_directions(profile):
+    """Close the estimated silhouette at north, using the same bearings as the forecast."""
+    envelope = profile.get('envelope')
+    if envelope is not None and len(envelope):
+        points = [(height, i * profile['step_deg']) for i, height in enumerate(envelope)]
+        return points + points[:1]
+    # If the detector could only substantiate isolated patches, draw those on their own.
+    heights = profile['altitudes']
+    if not heights:
+        return []
+    contour = []
+    previous = None
+    for i in range(len(heights) + 1):
+        index = i % len(heights)
+        height = heights[index]
+        # A large jump on adjacent rays is a gap between measured edges.
+        # Connecting their tips would draw a diagonal through open sky.
+        if previous is not None and height is not None and abs(height - previous) > 3.:
+            contour.append(None)
+        contour.append((height, index * profile['step_deg']) if height is not None else None)
+        previous = height
+    return contour
+
+
+def companion_path_options(args, count):
+    values = args.getlist('path_end_at')
+    if values and len(values) != count:
+        raise ValueError('Send one path end per target, leaving unmarked targets empty.')
+    ends = []
+    for value in values:
+        if not value:
+            ends.append(None)
+        elif len(value) <= 32 and re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}'
+                                             r'(?::[0-9]{2}(?:\.[0-9]{1,6})?)?(?:Z|\+00:00)', value):
+            try:
+                ends.append(datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp())
+            except (ValueError, OSError, OverflowError):
+                raise ValueError('Enter a valid UTC date and time for the path end.') from None
+        else:
+            raise ValueError('Enter the path end as an ISO 8601 UTC date and time.')
+    index = args.get('edit_path')
+    if index is not None:
+        if len(args.getlist('edit_path')) != 1 or not re.fullmatch(r'[0-9]{1,2}', index) or int(index) >= count:
+            raise ValueError('Choose one target in this request to edit.')
+        index = int(index)
+    setup = args.get('path_end_setup')
+    if setup is not None and (len(args.getlist('path_end_setup')) != 1 or len(setup) > 64):
+        raise ValueError('Invalid observing setup.')
+    return ends, index, setup
+
+
+def companion_frame(view, frame):
     query = view.model.query.filter_by(camera_id=view.camera.id, id=frame)
     if not view.local_images_allowed:
         query = query.filter(or_(view.model.remote_url != '', view.model.s3_key != ''))
     entry = query.first()
     if entry is None:
-        return result
+        return None, None
     try:
         url = entry.getUrl(s3_prefix=view.s3_prefix, local=view.local_images_allowed)
     except ValueError:
-        return result
+        return None, None
     if not url or (isinstance(url, Path) and url.is_absolute()):
-        return result
+        return None, None
 
     # The companion also runs on stations without automatic stellar alignment.
     from . import views
     frame_alignment = getattr(views, 'virtualsky_frame_alignment', None)
     if frame_alignment is None:
-        return result
+        return None, None
     model = frame_alignment(view, entry) if isinstance(entry.data, dict) else None
-    points = project_targets(coordinates, model)
-    if points is None:
-        result['state'] = 'orientation_pending'
-    else:
-        result.update(state='ready', points=points)
-    return result
+    return entry, model
+
+
+def companion_archive_path(entry):
+    try:
+        path = Path(entry.getFilesystemPath()).resolve(strict=True)
+        path.relative_to(Path(current_app.config['INDI_ALLSKY_IMAGE_FOLDER']).resolve(strict=True))
+        return path
+    except (OSError, RuntimeError, ValueError):
+        return None
+
+
+def companion_observed_horizon(view, entry, model):
+    return observed_horizon(view, entry, model, companion_archive_path)
 
 
 def latest_companion_image(view, now, entry):
