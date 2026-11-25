@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" data-theme="forest">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Astrophotography Companion · indi-allsky</title>
+    <link rel="icon" href="{{ url_for('indi_allsky.static', filename='images/favicon_32.png') }}">
+    <script>
+        function applyCompanionTheme() {
+            try {
+                const light = localStorage.getItem('allsky-theme-mode') === 'light';
+                const theme = localStorage.getItem(light ? 'allsky-light-theme' : 'allsky-dark-theme');
+                document.documentElement.dataset.theme = theme || (light ? 'fantasy' : 'forest');
+                document.documentElement.style.fontSize = localStorage.getItem('allsky-font-size') || '100%';
+            } catch (_) { /* The default theme also works without browser storage. */ }
+        }
+        applyCompanionTheme();
+        window.addEventListener('storage', applyCompanionTheme);
+    </script>
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}">
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=12">
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=1"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion_targets.js') }}?v=10"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=14"></script>
+</head>
+<body class="tw:font-sans">
+<main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}" data-stale-ms="{{ stale_ms }}"
+      data-endpoint="{{ url_for('indi_allsky.js_companion_view', camera_id=camera_id) }}">
+    <div class="overview">
+        <header class="masthead">
+            <div>
+                <h1>Astrophotography Companion</h1>
+            </div>
+            <div class="clock">
+                <time id="clock">–</time>
+                <span>Camera local time</span>
+            </div>
+            <span id="battery" class="battery" role="img" aria-label="Battery" hidden><span id="battery-value"></span></span>
+        </header>
+
+        <figure class="capture">
+            <div class="image-area">
+                <img id="capture-image" alt="Latest all-sky image" hidden>
+                <div id="target-geometry" aria-hidden="true" hidden>
+                    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                        <path id="observed-skyline"></path>
+                        <path id="projected-track"></path>
+                    </svg>
+                    <span id="target-crossing" hidden>×</span>
+                </div>
+                <div id="target-markers" aria-hidden="true"></div>
+                <p id="empty-image">Loading image…</p>
+            </div>
+            <figcaption>
+                <div><span class="caption-label">Captured</span><time id="image-time">–</time></div>
+                <small id="orientation" role="status" hidden></small>
+                <span id="image-age" class="age" title="Time since capture, including image processing"></span>
+                <button type="button" id="target-open" aria-haspopup="dialog" aria-controls="target-dialog">Targets</button>
+            </figcaption>
+        </figure>
+    </div>
+    <div class="readings">
+        <div class="readings-grid">
+            <p id="connection-message" class="notice" role="status" hidden></p>
+
+            <section id="target-conditions" class="surface" aria-labelledby="target-conditions-title" hidden>
+                <div class="section-heading"><h2 id="target-conditions-title">Imaging targets</h2><span id="target-frame-time"></span></div>
+                <ul id="target-conditions-list"></ul>
+                <div id="target-path-tools" hidden>
+                    <label for="target-path-choice">Projected path</label>
+                    <select id="target-path-choice"></select>
+                    <span id="skyline-key" hidden>Observed skyline</span>
+                    <span id="crossing-key" hidden></span>
+                    <div id="target-end-tools" hidden>
+                        <label for="target-end-time">Path end</label>
+                        <input type="range" id="target-end-slider" step="1" aria-label="Adjust path end on image">
+                        <input type="time" id="target-end-time" step="60" aria-label="Path end in camera local time">
+                        <button type="button" id="target-end-set">Set</button>
+                        <button type="button" id="target-end-auto">Auto</button>
+                        <span id="target-end-note" role="status"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="surface history" aria-labelledby="history-title">
+                <div class="section-heading"><h2 id="history-title">History</h2><span>Last 2 hours</span></div>
+                <div class="chart-slot" id="chart-slot-1">
+                    <label for="series-1">Chart 1</label>
+                    <select id="series-1"><option value="">Off</option></select>
+                    <output class="chart-value" hidden></output>
+                    <div class="plot" hidden><canvas aria-label="History for the first metric" role="img"></canvas></div>
+                    <p class="plot-empty" hidden>No readings in this period.</p>
+                </div>
+                <div class="chart-slot" id="chart-slot-2">
+                    <label for="series-2">Chart 2</label>
+                    <select id="series-2"><option value="">Off</option></select>
+                    <output class="chart-value" hidden></output>
+                    <div class="plot" hidden><canvas aria-label="History for the second metric" role="img"></canvas></div>
+                    <p class="plot-empty" hidden>No readings in this period.</p>
+                </div>
+            </section>
+            <section class="surface twilight" aria-labelledby="conditions-title">
+                <h2 id="conditions-title">Astronomical twilight</h2>
+                <div class="events-wrap">
+                    <table class="events">
+                        <thead><tr><th scope="col">Period</th><th scope="col">Start</th><th scope="col">End</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">Evening</th><td id="evening_start">–</td><td id="evening_end">–</td></tr>
+                            <tr><th scope="row">Morning</th><td id="morning_start">–</td><td id="morning_end">–</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="surface moon" aria-labelledby="moon-title">
+                <div class="section-heading"><h2 id="moon-title">Moon</h2><span id="moon-phase">–</span></div>
+                <dl class="moon-events">
+                    <div><dt>Moonrise</dt><dd id="moon_rise">–</dd></div>
+                    <div><dt>Moonset</dt><dd id="moon_set">–</dd></div>
+                </dl>
+            </section>
+        </div>
+    </div>
+    <noscript>Enable JavaScript to view the camera image and sensor readings.</noscript>
+    <dialog id="target-dialog" class="surface" aria-labelledby="target-title">
+        <div class="section-heading">
+            <h2 id="target-title">Imaging targets</h2>
+            <button id="target-close" type="button" aria-label="Close target settings">Close</button>
+        </div>
+        <form id="target-form">
+            <label for="target-mode">Add target by</label>
+            <select id="target-mode"><option value="name">Object name</option><option value="coords">RA / Dec (J2000)</option></select>
+            <div id="target-name-fields">
+                <label for="target-name">Object name</label>
+                <input id="target-name" placeholder="M31, NGC 7000, Vega…" required maxlength="128" autocomplete="off">
+            </div>
+            <div id="target-coord-fields" hidden>
+                <label for="target-ra">Right ascension</label>
+                <input id="target-ra" placeholder="00:42:44 or 10.683°" disabled required maxlength="64" aria-describedby="target-units">
+                <label for="target-dec">Declination</label>
+                <input id="target-dec" placeholder="+41:16:09 or +41.269°" disabled required maxlength="64" aria-describedby="target-units">
+                <p id="target-units">Use decimal degrees, or hours:minutes:seconds for RA and degrees:minutes:seconds for Dec.</p>
+                <label for="target-label">Marker label (optional)</label>
+                <input id="target-label" disabled maxlength="64" autocomplete="off">
+            </div>
+            <button type="submit" id="target-add">Add target</button>
+            <p id="target-error" role="status" hidden></p>
+            <button type="button" id="target-online" hidden>Search online (CDS)</button>
+        </form>
+        <ul id="target-list" aria-label="Saved targets"></ul>
+        <p id="target-status" role="status" hidden></p>
+        <details id="target-limits">
+            <summary>Imaging window settings</summary>
+            <form id="target-settings-form">
+                <label for="target-min-alt">Minimum target altitude (°)</label>
+                <input id="target-min-alt" type="number" min="0" max="90" step="any" required>
+                <label for="target-moon-distance">Minimum Moon separation (°)</label>
+                <input id="target-moon-distance" type="number" min="0" max="180" step="any" required>
+                <p>Windows use astronomical darkness. Moon separation applies while the Moon is above your horizon.</p>
+                <label for="target-horizon">Additional horizon limit</label>
+                <canvas id="target-horizon-plot" width="600" height="172" aria-label="Local horizon from north through east, south and west to north"></canvas>
+                <p id="target-horizon-help">An aligned image can reveal trees and buildings. To add your own height limits, tap the plot or enter azimuth and height in degrees, one pair per line.</p>
+                <textarea id="target-horizon" rows="3" maxlength="2600" aria-describedby="target-horizon-help" placeholder="0 10&#10;90 25"></textarea>
+                <button type="submit">Apply limits</button>
+                <p id="target-settings-message" role="status" hidden></p>
+            </form>
+        </details>
+    </dialog>
+</main>
+</body>
+</html>
