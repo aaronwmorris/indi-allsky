@@ -243,6 +243,16 @@
                                     class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">
                                     {{ label }}
                                 </a>
+                                {# Live is always listed: an unsupported camera is sent back to Focus, which says why. #}
+                                {% if endpoint == 'indi_allsky.focus_view' %}
+                                <ul id="menu-focus-children"
+                                    class="tw:mt-1 tw:pl-4 tw:ml-4 tw:border-l tw:border-base-content/15 tw:flex tw:flex-col tw:gap-1">
+                                    <li>
+                                        <a href="{{ url_for('indi_allsky.focus_live_view') }}"
+                                            class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">Live</a>
+                                    </li>
+                                </ul>
+                                {% endif %}
                             </li>
                             {% endif %}
                             {% endfor %}

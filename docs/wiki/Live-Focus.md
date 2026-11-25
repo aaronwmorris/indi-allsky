@@ -29,10 +29,12 @@ The starlight list covers sensors whose maker documents both a low-light family 
 
 ## 2. Open the page
 
-1. Go to **Tools** → **Focus**.
-2. Click **Try the live focus**. If the link is missing, the page shows the reason in its place.
+Either:
 
-The live page is at `/indi-allsky/focus/live`. **Back to the Focus page** returns to the classic view.
+* Go to **Tools** → **Focus** and press **Live Focus** at the top of the page. If the button is missing, the page shows the reason in its place.
+* Or go straight to **Tools** → **Focus** → **Live**. If this camera cannot run live focus, you land on the Focus page with the reason.
+
+The live page is at `/indi-allsky/focus/live`. **← Focus**, in the same spot, returns to the classic view.
 
 ---
 

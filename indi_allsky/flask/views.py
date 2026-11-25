@@ -7905,7 +7905,7 @@ class FocusView(TemplateView):
 
 
 class FocusLiveView(FocusView):
-    page_title = 'Live focus'
+    page_title = 'Live Focus'
 
     def dispatch_request(self):
         context = self.get_context()

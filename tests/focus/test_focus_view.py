@@ -123,15 +123,26 @@ def test_focus_links_to_the_live_page_when_the_rig_can_run_it(page):
 
     assert status == 200
     assert 'id="focus-chart"' in html  # today's page stays the Focus page
-    assert '>Try the live focus</a>' in html
-    assert 'href="/indi-allsky/focus/live"' in html
+    assert 'class="focus-live-link' in html
+    assert 'href="/indi-allsky/focus/live" class="tw:btn tw:btn-sm tw:btn-primary tw:rounded-full">Live Focus</a>' in html
     assert 'data-focus-session' not in html
 
 
 def test_focus_has_no_link_when_the_rig_cannot(page):
     status, html = page.classic()  # the link is down
 
-    assert 'Try the live focus' not in html
+    assert 'focus-live-link' not in html
+    assert '>Live Focus</a>' not in html
+
+
+def test_menu_lists_live_under_focus_on_every_rig(page):
+    status, html = page.classic()  # the link is down: the live page itself sends the user back here
+
+    focus = html.index('href="/indi-allsky/focus"')
+    live = html.index('href="/indi-allsky/focus/live"')
+    assert focus < live < html.index('Process FITS')
+    assert 'id="menu-focus-children"' in html
+    assert '>Live</a>' in html[live:live + 400]
 
 
 def test_live_page_sends_a_rig_that_cannot_back_to_focus(page):
@@ -146,7 +157,7 @@ def test_live_page_links_back_and_has_the_advanced_switch(page):
 
     status, html = page.get()
 
-    assert 'href="/indi-allsky/focus">Back to the Focus page</a>' in html
+    assert 'href="/indi-allsky/focus" class="tw:btn tw:btn-sm tw:btn-outline tw:rounded-full">&larr; Focus</a>' in html
     assert 'id="fs-advanced"' in html
     assert '.fs:not(.fs-advanced) .fs-adv { display: none !important; }' in html
 
