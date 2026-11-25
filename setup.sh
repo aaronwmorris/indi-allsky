@@ -176,7 +176,7 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-if [ -n "${WHIPTAIL_BIN:-}" ]; then
+if [ -z "${CAMERA_INTERFACE:-}" ] && [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "NEW METHOD OF INSTALLATION" \
         --msgbox "There is now an official APT repository:\n\n  https://apt.indi-allsky.org\n\nInstallation guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started\n\nMigration guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration\n\n\nIt is *NOT* a requirement to migrate to the apt repository.  You may continue using the setup.sh to manage your installation." 0 0
@@ -388,7 +388,7 @@ if systemctl --quiet is-enabled "caddy.service" 2>/dev/null; then
 fi
 
 
-if [ -n "${WHIPTAIL_BIN:-}" ]; then
+if [ -z "${CAMERA_INTERFACE:-}" ] && [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
         --msgbox "*** Welcome to the indi-allsky setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nINDI Port: $INDI_PORT\n\nWeb Server: $WEBSERVER\nHTTP Port: $HTTP_PORT\nHTTPS Port: $HTTPS_PORT" 0 0
