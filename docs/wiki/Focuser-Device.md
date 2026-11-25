@@ -42,6 +42,15 @@ The Adafruit Motor Shield uses I2C communication (default address `0x60`).
 ## 3. Web Interface Focus Calibration
 
 In the web interface:
-1. Navigate to **Tools** → **Focus Assistant**.
+1. Navigate to **Tools** → **Focus**.
 2. Select target step increments (`1`, `10`, `50`, `100` steps) and direction (In / Out).
 3. Inspect live star metrics (FWHM, HFD, and SEP star counts) as focus position varies to identify the critical focus zone.
+
+For cameras capture can command, the Focus page also links to the live focus page, which can focus the lens automatically with **Autofocus**. See [Live Focus and Autofocus](Live-Focus).
+
+Two focuser settings apply to the live focus page:
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Lens Travel Limit (degrees each way)** | 360 | How far, in motor degrees, the lens may move either way from where it was when the session started. Range 10 to 3600. |
+| **Gear Slack (degrees)** | 30 | Free play in the gears. Every move ends travelling outward, so the slack never decides where the lens stops. Must be less than the travel limit. |

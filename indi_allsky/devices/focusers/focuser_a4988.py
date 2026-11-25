@@ -11,6 +11,13 @@ logger = logging.getLogger('indi_allsky')
 
 class focuser_a4988(FocuserBase):
 
+    # override in child class
+    STEPS = 200
+
+    # one step is one pulse, 2 x 5 ms
+    STEPS_PER_SECOND = 100
+    CAN_STOP = True
+
     def __init__(self, *args, **kwargs):
         super(focuser_a4988, self).__init__(*args, **kwargs)
 
@@ -45,26 +52,39 @@ class focuser_a4988(FocuserBase):
     def move(self, direction, degrees):
         steps = round(degrees / (360 / self.STEPS))
 
-        self.step(direction, steps)
-
         if direction == 'ccw':
             steps *= -1  # negative for CCW
 
-        return steps
+        return self.move_steps(steps)
 
 
-    def step(self, direction, steps):
-        if direction == 'cw':  # CW
+    @property
+    def STEPS_PER_TURN(self):
+        return self.STEPS
+
+
+    def move_steps(self, steps, should_stop=None):
+        if steps > 0:  # CW
             self.pins['dir'].value = 1
+            sign = 1
         else:  # CCW
             self.pins['dir'].value = 0
+            sign = -1
 
 
-        for i in range(steps):
+        moved = 0
+        for i in range(abs(steps)):
             self.pins['step'].value = 1
             time.sleep(0.005)
             self.pins['step'].value = 0
             time.sleep(0.005)
+
+            moved += sign
+
+            if should_stop is not None and should_stop():
+                break
+
+        return moved
 
 
     def deinit(self):

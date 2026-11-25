@@ -137,6 +137,13 @@ from .youtube_views import YoutubeCallbackView
 from .youtube_views import YoutubeRefreshAuthView
 from .youtube_views import YoutubeRevokeAuthView
 
+from .focus_views import WsFocusView
+from .focus_views import focus_address
+from .focus_views import focus_session_running
+
+from ..focus.link import probe as focus_link_probe
+from ..focus.rigs import decide
+
 from ..exceptions import ConfigSaveException
 from ..exceptions import NotFound
 
@@ -3082,6 +3089,8 @@ class ConfigView(FormView):
             'FOCUSER__GPIO_PIN_3'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_3', 'D27'),
             'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
             'FOCUSER__I2C_ADDRESS'           : self.indi_allsky_config.get('FOCUSER', {}).get('I2C_ADDRESS', '0x60'),
+            'FOCUSER__TRAVEL_LIMIT_DEGREES'  : self.indi_allsky_config.get('FOCUSER', {}).get('TRAVEL_LIMIT_DEGREES', 360),
+            'FOCUSER__SLACK_DEGREES'         : self.indi_allsky_config.get('FOCUSER', {}).get('SLACK_DEGREES', 30),
             'DEW_HEATER__CLASSNAME'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('CLASSNAME', ''),
             'DEW_HEATER__I2C_ADDRESS'        : self.indi_allsky_config.get('DEW_HEATER', {}).get('I2C_ADDRESS', '0x10'),
             'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
@@ -4173,6 +4182,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_3']                = str(request.json['FOCUSER__GPIO_PIN_3'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
         self.indi_allsky_config['FOCUSER']['I2C_ADDRESS']               = str(request.json['FOCUSER__I2C_ADDRESS'])
+        self.indi_allsky_config['FOCUSER']['TRAVEL_LIMIT_DEGREES']      = int(request.json['FOCUSER__TRAVEL_LIMIT_DEGREES'])
+        self.indi_allsky_config['FOCUSER']['SLACK_DEGREES']             = int(request.json['FOCUSER__SLACK_DEGREES'])
         self.indi_allsky_config['DEW_HEATER']['CLASSNAME']              = str(request.json['DEW_HEATER__CLASSNAME'])
         self.indi_allsky_config['DEW_HEATER']['I2C_ADDRESS']            = str(request.json['DEW_HEATER__I2C_ADDRESS'])
         self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
@@ -7857,7 +7868,53 @@ class FocusView(TemplateView):
         context['focuser_device'] = int(bool(self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME')))
         context['form_focuscontroller'] = IndiAllskyFocusControllerForm()
 
+
+        # whether the driver offers video comes from the capture side's `state` message, so it is not known here
+        decision = decide(
+            self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
+            self.camera.name,
+            None,
+            focus_link_probe(focus_address()),
+        )
+
+        ws_url = url_for('indi_allsky.ws_focus_view', _external=True)
+        if ws_url.startswith('https://'):
+            ws_url = 'wss://' + ws_url[8:]
+        elif ws_url.startswith('http://'):
+            ws_url = 'ws://' + ws_url[7:]
+
+        context['focus_decision'] = decision
+        context['focus_reason'] = decision.reason
+        # same rule as /ws/focus
+        context['can_start'] = bool(current_user.is_authenticated and current_user.is_admin and self.verify_admin_network())
+        context['motor_configured'] = bool(self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME'))
+        context['focus_ws_url'] = ws_url
+        # the script's address changes with the file: static files are served with no Cache-Control, so a browser
+        # could otherwise keep running the old script after a deploy
+        js = os.path.join(bp_allsky.static_folder, 'js', 'focus_session.js')
+        context['focus_js_version'] = int(os.stat(js).st_mtime) if os.path.exists(js) else 0
+
         return context
+
+
+    def dispatch_request(self):
+        # today's page, with a link to the live page when this rig can run it (or the reason it cannot)
+        context = self.get_context()
+        self.template_name = 'focus_classic.html'
+        return self.render_template(context)
+
+
+class FocusLiveView(FocusView):
+    page_title = 'Live focus'
+
+    def dispatch_request(self):
+        context = self.get_context()
+
+        if context['focus_decision'].page != 'new':
+            return redirect(url_for('indi_allsky.focus_view'))  # the Focus page says why
+
+        self.template_name = 'focus_session.html'
+        return self.render_template(context)
 
 
 class JsonFocusView(JsonView):
@@ -8031,6 +8088,14 @@ class AjaxFocusControllerView(BaseView):
         if not self.verify_admin_network():
             json_data = {
                 'focuser_error' : ['Request not from admin network (flask.json)'],
+            }
+            return jsonify(json_data), 400
+
+
+        if focus_session_running():
+            # capture owns the motor while a focus session runs
+            json_data = {
+                'focuser_error' : ['A focus session is running'],
             }
             return jsonify(json_data), 400
 
@@ -14850,6 +14915,7 @@ bp_allsky.add_url_rule('/ajax/settimezone', view_func=AjaxSetTimezoneView.as_vie
 bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as_view('ajax_indiserver_change_view'))
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
+bp_allsky.add_url_rule('/focus/live', view_func=FocusLiveView.as_view('focus_live_view', template_name='focus_session.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
 bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerView.as_view('focus_controller_view'))
 
@@ -14913,6 +14979,7 @@ bp_allsky.add_url_rule('/shell', view_func=ShellView.as_view('shell_view', templ
 bp_allsky.add_url_rule('/ws/shell', view_func=WsShellView.as_view('ws_shell_view'), websocket=True)
 bp_allsky.add_url_rule('/ws/events', view_func=WsEventsView.as_view('ws_events_view'), websocket=True)
 bp_allsky.add_url_rule('/ws/control', view_func=WsControlView.as_view('ws_control_view'), websocket=True)
+bp_allsky.add_url_rule('/ws/focus', view_func=WsFocusView.as_view('ws_focus_view'), websocket=True)
 
 bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))

@@ -341,6 +341,16 @@
                         <div id="FOCUSER__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUSER__TRAVEL_LIMIT_DEGREES.label.text }}</span>
+                        {{ form_config.FOCUSER__TRAVEL_LIMIT_DEGREES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FOCUSER__TRAVEL_LIMIT_DEGREES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUSER__SLACK_DEGREES.label.text }}</span>
+                        {{ form_config.FOCUSER__SLACK_DEGREES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FOCUSER__SLACK_DEGREES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Focuser GPIO Pins</span>
                         <div class="tw:grid tw:grid-cols-2 tw:gap-2">
                             <div>

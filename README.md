@@ -448,6 +448,10 @@ Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able 
 ## Focus Mode
 Focus mode is a special setting that generates images more often and implements a Variance of Laplacian scoring algorithm on the image to assist with focusing the camera.  Images are not saved when focus mode is enabled.
 
+For cameras that capture can command, the Focus view also links to a live focus page. It shows the camera's picture as it is taken and measures star size while you turn the focus ring. With a focuser motor, **Autofocus** tunes the exposure, picks stars, sweeps the lens and moves it to best focus. Normal capture pauses during a session and resumes when it ends. An INDI camera whose driver streams video and whose sensor is documented for low-light capture at 10 pictures a second or more (today only the ZWO ASI676MC) gets live video; other cameras get still pictures taken back to back, and cameras capture cannot command (`indi_passive`, `pycurl_camera`) keep the classic view.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Live-Focus
+
 
 ## Stacking
 indi-allsky supports image stacking to increase details and contrast in the image.

@@ -3226,6 +3226,29 @@ def CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER_validator(form, field):
         raise ValidationError('Value must be 100 or greater')
 
 
+def FOCUSER__TRAVEL_LIMIT_DEGREES_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 10:
+        raise ValidationError('Value must be 10 or greater')
+
+    if field.data > 3600:
+        raise ValidationError('Value must be 3600 or less')
+
+
+def FOCUSER__SLACK_DEGREES_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0 or greater')
+
+    limit = form.FOCUSER__TRAVEL_LIMIT_DEGREES.data
+    if isinstance(limit, int) and field.data >= limit:
+        raise ValidationError('Slack must be less than the travel limit')
+
+
 def FOCUSER__CLASSNAME_validator(form, field):
     if field.data not in list(zip(*form.FOCUSER__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -5166,6 +5189,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__I2C_ADDRESS             = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    FOCUSER__TRAVEL_LIMIT_DEGREES    = IntegerField('Lens Travel Limit (degrees each way)', validators=[FOCUSER__TRAVEL_LIMIT_DEGREES_validator])
+    FOCUSER__SLACK_DEGREES           = IntegerField('Gear Slack (degrees)', validators=[FOCUSER__SLACK_DEGREES_validator])
     DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__I2C_ADDRESS          = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
