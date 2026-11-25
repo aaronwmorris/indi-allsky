@@ -7775,6 +7775,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
                 'youtube_uploaded'  : bool(data.get('youtube_id', False)),
+                'chart_summary'     : data.get('chart_summary') if v.night else None,
             }
             videos_data.append(entry)
 
@@ -8249,6 +8250,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
                 'youtube_uploaded'  : bool(data.get('youtube_id', False)),
+                'chart_summary'     : data.get('chart_summary') if v.night else None,
             }
             videos_data.append(entry)
 

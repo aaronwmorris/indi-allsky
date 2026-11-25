@@ -5,6 +5,7 @@
 {% block head %}
 <meta charset="UTF-8">
 <script type="module" src="{{ url_for('indi_allsky.static', filename='js/cally.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var youtube__enable = {{ youtube__enable }};
@@ -153,7 +154,60 @@ fields['form_global'] = {
 };
 
 
+var active_sky_charts = [];
+
+function render_sky_quality_chart(canvas_el, summary) {
+    if (!canvas_el || !summary || typeof Chart === 'undefined') return;
+    var ctx = canvas_el.getContext('2d');
+    var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: summary.labels || [],
+            datasets: [
+                {
+                    label: 'Stars',
+                    data: summary.stars || [],
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    tension: 0.25,
+                    yAxisID: 'yStars',
+                    spanGaps: true,
+                },
+                {
+                    label: 'SQM',
+                    data: summary.sqm || [],
+                    borderColor: '#a3e635',
+                    backgroundColor: 'rgba(163, 230, 53, 0.12)',
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    tension: 0.25,
+                    yAxisID: 'ySqm',
+                    spanGaps: true,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: true, labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
+            },
+            scales: {
+                x: { ticks: { maxTicksLimit: 5, maxRotation: 0, autoSkip: true, font: { size: 9 } }, grid: { display: false } },
+                yStars: { type: 'linear', position: 'left', ticks: { maxTicksLimit: 5, font: { size: 9 } }, title: { display: true, text: 'Stars', font: { size: 9 }, padding: 2 } },
+                ySqm: { type: 'linear', position: 'right', ticks: { maxTicksLimit: 5, font: { size: 9 } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'SQM', font: { size: 9 }, padding: 2 } },
+            },
+        },
+    });
+    active_sky_charts.push(chart);
+}
+
 function populate_videos(video_list) {
+    active_sky_charts.forEach(c => c.destroy());
+    active_sky_charts = [];
     $("#videos_div").empty();
 
 
@@ -165,6 +219,7 @@ function populate_videos(video_list) {
         return;
     }
 
+    var pending_charts = [];
     var timeline_ul = $('<ul />', {
         'class': 'tw:timeline tw:timeline-vertical max-md:tw:flex max-md:tw:flex-col max-md:tw:gap-6 tw:w-full'
     });
@@ -176,6 +231,9 @@ function populate_videos(video_list) {
             'class': 'timeline-day-item max-md:tw:flex max-md:tw:flex-col max-md:tw:w-full'
         });
         
+        // C. Sky Quality Chart (Stars & SQM)
+        // (top divider - chart rendered after Star Trail column)
+
         $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
         
         // 1. Timeline Start (Metadata & Stats)
@@ -372,11 +430,35 @@ function populate_videos(video_list) {
             }
         }
 
+        // C. Sky Quality Chart (Stars & SQM) - night only
+        if (item['night'] && item['chart_summary']) {
+            var chart_container = $('<div />', {
+                'class': 'tw:flex tw:flex-col tw:gap-2 tw:min-w-0 tw:w-full thumbnail-container'
+            }).appendTo(end_div);
+
+            $('<span />', {
+                'text': 'Sky Quality (Stars / SQM)',
+                'class': 'tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
+            }).appendTo(chart_container);
+
+            var chart_card = $('<div />', {
+                'class': 'tw:relative tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:bg-base-100 tw:p-2 tw:h-52 md:tw:h-56 tw:w-full tw:min-w-0 tw:overflow-hidden tw:shadow-sm thumbnail-card'
+            }).appendTo(chart_container);
+
+            var chart_canvas_wrap = $('<div />', {
+                'class': 'tw:relative tw:w-full tw:h-full'
+            }).appendTo(chart_card);
+
+            var chart_canvas = $('<canvas />').appendTo(chart_canvas_wrap);
+            pending_charts.push({ canvas: chart_canvas[0], summary: item['chart_summary'] });
+        }
+
         $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
         li.appendTo(timeline_ul);
     });
 
     timeline_ul.appendTo($("#videos_div"));
+    pending_charts.forEach(c => render_sky_quality_chart(c.canvas, c.summary));
 };
 
 

@@ -80,6 +80,37 @@ logger = logging.getLogger('indi_allsky')
 
 
 
+def build_video_chart_summary(samples, max_points=96):
+    """Downsample (createDate, stars, sqm) tuples into <= max_points averaged buckets."""
+    if not samples or max_points < 1:
+        return None
+
+    bucket_size = max(1, math.ceil(len(samples) / max_points))
+    labels = []
+    stars_series = []
+    sqm_series = []
+
+    for i in range(0, len(samples), bucket_size):
+        chunk = samples[i:i + bucket_size]
+        mid_dt = chunk[len(chunk) // 2][0]
+        labels.append(mid_dt.strftime('%H:%M') if hasattr(mid_dt, 'strftime') else str(mid_dt))
+
+        star_vals = [float(s[1]) for s in chunk if s[1] is not None]
+        sqm_vals = [float(s[2]) for s in chunk if s[2] is not None]
+
+        stars_series.append(round(sum(star_vals) / len(star_vals), 1) if star_vals else None)
+        sqm_series.append(round(sum(sqm_vals) / len(sqm_vals), 2) if sqm_vals else None)
+
+    if not any(v is not None for v in stars_series) and not any(v is not None for v in sqm_series):
+        return None
+
+    return {
+        'labels': labels,
+        'stars': stars_series,
+        'sqm': sqm_series,
+    }
+
+
 class VideoWorker(Process):
 
     thumbnail_keogram_width = 1000
@@ -643,6 +674,7 @@ class VideoWorker(Process):
 
 
         timelapse_files = list()
+        chart_samples = list()
         for entry in timelapse_files_entries:
             p_entry = Path(entry.getFilesystemPath())
 
@@ -654,6 +686,7 @@ class VideoWorker(Process):
                 continue
 
             timelapse_files.append(p_entry)
+            chart_samples.append((entry.createDate, entry.stars, entry.sqm))
 
 
         timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
@@ -678,6 +711,10 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
+        chart_summary = build_video_chart_summary(chart_samples) if night else None
+        if chart_summary:
+            video_metadata['data']['chart_summary'] = chart_summary
+
 
         # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(
