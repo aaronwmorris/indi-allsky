@@ -337,6 +337,15 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
   sudo systemctl status indi-allsky.service gunicorn-indi-allsky.socket indiserver.service caddy.service
   ```
 
+### Documentation & Man Pages
+* **Web UI Docs:** Built-in offline documentation is available in the web interface under **Docs** (`/indi-allsky/docs`), rendered directly from `docs/wiki/`.
+* **Man Pages (`.deb` installs):** The Debian/Ubuntu package installs local manual pages for both the CLI utility and wiki topics:
+  ```bash
+  man indi-allsky-ctl
+  man 7 indi-allsky
+  man 7 indi-allsky-configuration-reference
+  ```
+
 
 ## Updating
 

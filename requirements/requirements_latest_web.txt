@@ -52,3 +52,4 @@ PyWavelets >= 1.4.0 ; python_version < '3.12'
 PyWavelets >= 1.10.0 ; python_version >= '3.12'
 systemd-python
 pkgconfig
+Markdown >= 3.5

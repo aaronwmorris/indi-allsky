@@ -10,7 +10,7 @@
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GPS_ENABLE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable using GPS location services. Requires GPS hardware and <a href="https://github.com/aaronwmorris/indi-allsky/wiki/GPSd-NTP-Time-Sync" class="tw:link tw:link-info tw:no-underline" target="_blank">GPSd installation</a></span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable using GPS location services. Requires GPS hardware and <a href="{{ url_for('indi_allsky.docs_view_page', page='GPSd-NTP-Time-Sync') }}" class="tw:link tw:link-info tw:no-underline" target="_blank">GPSd installation</a></span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.GPS_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -239,7 +239,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">VirtualSky Overlay Geometry</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Wiki Reference</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='VirtualSky') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Wiki Reference</a>
                 </div>
 
                 <div class="tw:flex tw:flex-col tw:gap-1">

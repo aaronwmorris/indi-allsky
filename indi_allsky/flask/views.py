@@ -14959,6 +14959,55 @@ bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('no
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 
 
+class DocsView(TemplateView):
+    page_title = 'Documentation'
+
+    def get_context(self, page='Home'):
+        from flask import abort
+        from .docs import load_doc_navigation, render_doc_markdown, resolve_doc_file
+
+        doc_file = resolve_doc_file(page)
+        if doc_file is None:
+            abort(404)
+
+        context = super(DocsView, self).get_context()
+        md_text = doc_file.read_text(encoding='utf-8')
+        doc_html, doc_toc = render_doc_markdown(
+            md_text,
+            url_for_doc=lambda slug: url_for('indi_allsky.docs_view_page', page=slug),
+            url_for_asset=lambda asset: url_for('indi_allsky.docs_asset_view', asset=asset),
+        )
+
+        current_slug = doc_file.stem
+        context['doc_slug'] = current_slug
+        context['doc_title'] = 'Documentation' if current_slug == 'Home' else current_slug.replace('-', ' ')
+        context['doc_html'] = doc_html
+        context['doc_toc'] = doc_toc
+        context['doc_sections'] = load_doc_navigation()
+        return context
+
+    def dispatch_request(self, page='Home'):
+        context = self.get_context(page=page)
+        return self.render_template(context)
+
+
+class DocsAssetView(BaseView):
+    def dispatch_request(self, asset):
+        from flask import abort
+        from .docs import resolve_doc_asset
+
+        asset_file = resolve_doc_asset(asset)
+        if asset_file is None:
+            abort(404)
+
+        return send_from_directory(str(asset_file.parent), asset_file.name)
+
+
+bp_allsky.add_url_rule('/docs', defaults={'page': 'Home'}, view_func=DocsView.as_view('docs_view', template_name='docs.html'))
+bp_allsky.add_url_rule('/docs/<path:page>', view_func=DocsView.as_view('docs_view_page', template_name='docs.html'))
+bp_allsky.add_url_rule('/docs/assets/<path:asset>', view_func=DocsAssetView.as_view('docs_asset_view'))
+
+
 @bp_allsky.route('/sw.js')
 def service_worker():
     response = send_from_directory(

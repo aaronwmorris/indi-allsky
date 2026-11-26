@@ -261,6 +261,16 @@
                 </li>
                 {% endif %}
                 {% endfor %}
+
+                <li class="tw:w-full">
+                    <a href="{{ url_for('indi_allsky.docs_view') }}"
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        <div class="tw:flex tw:items-center tw:gap-3">
+                            <i class="tw:icon-[lucide--book-open] tw:w-4 tw:h-4 tw:opacity-50"></i>
+                            <span class="tw:font-medium tw:text-[0.875rem]">Docs</span>
+                        </div>
+                    </a>
+                </li>
             </ul>
         </div>
         <div class="tw:px-4 tw:pt-2.5 tw:pb-2.5 tw:bg-base-200/60 tw:border-t tw:border-base-content/10 tw:flex-shrink-0">
