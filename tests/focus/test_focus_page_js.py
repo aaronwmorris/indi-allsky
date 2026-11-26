@@ -370,10 +370,10 @@ def test_step_bar_fills_with_the_tune_and_the_pick():
 
 def test_start_button_is_busy_until_capture_answers():
     out = run('var f = h.startButton;'
-              ' console.log(JSON.stringify([f(true, false, false, "Start preview"), f(true, true, true, "Start preview"),'
+              ' console.log(JSON.stringify([f(true, false, false, "Start Live Preview"), f(true, true, true, "Start Live Preview"),'
               ' f(false, false, false, "Autofocus"), f(false, true, true, "Autofocus"),'
               ' f(true, true, false, "Autofocus")]));')
-    assert out[0] == {'disabled': False, 'busy': False, 'label': 'Start preview'}
+    assert out[0] == {'disabled': False, 'busy': False, 'label': 'Start Live Preview'}
     assert out[1] == {'disabled': True, 'busy': True, 'label': 'Starting\u2026'}
     assert out[2]['disabled'] is True and out[2]['busy'] is False
     assert out[3]['disabled'] is True

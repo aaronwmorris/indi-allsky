@@ -36,6 +36,12 @@ Either:
 
 The live page is at `/indi-allsky/focus/live`. **← Focus**, in the same spot, returns to the classic view.
 
+Until a session starts, the page shows the last sky picture with a **▶ Start Live Preview** button on it. The focus controls sit underneath, greyed out. Starting a session asks first, because it pauses sky pictures. A running session shows a red **LIVE** tag on the picture.
+
+Every question the page asks puts the safe answer first and selects it. Pressing Esc or tapping outside the question gives that answer.
+
+With a focuser configured but its gear teeth or lens travel limit not set, the lens buttons and **Autofocus** stay off and the page says which setting to fill in. See [Settings](#7-settings).
+
 ---
 
 ## 3. Focus with a motor: Autofocus
@@ -46,18 +52,20 @@ The live page is at `/indi-allsky/focus/live`. **← Focus**, in the same spot, 
    * **Tune exposure:** the camera tries a range of exposures and gains and keeps the shortest one that shows most of the stars. This takes about 20 to 40 seconds.
    * **Pick stars:** three pictures are stacked and the stars to measure are chosen. Moon glare and lens reflections are left out.
    * **Autofocus:** the lens moves inward, then makes one slow outward sweep while every picked star is measured. A curve is fitted to the star sizes, and the lens moves to the lowest point of the curve.
-   * **Check focus:** look at the stars. Nudge the lens or run Autofocus again if they are not sharp.
+   * **Check focus:** look at the stars. If they are not sharp, step the lens in or out, or run Autofocus again.
 4. Press **Save autofocus results** to keep the lens where it is and end the session.
 
-Press **Cancel** at any time to put the lens back where it was when the session started and end the session without saving.
+A good fit also resizes the steps: **Fine** becomes a quarter of the in-focus range and **Medium** the whole range, and Fine is selected. Running **Autofocus** again after a fit asks first.
+
+Press **Cancel** at any time. It asks **End without saving?** with **Keep going** selected. **End session** puts the lens back where it was when the session started.
 
 ---
 
 ## 4. Preview, and focusing by hand
 
-**Start preview** tunes the exposure and then shows the live picture. Use it to watch the picture while you focus yourself.
+**▶ Start Live Preview** tunes the exposure and then shows the live picture. Use it to watch the picture while you focus yourself.
 
-* **With a motor:** the lens arrows under **Focus controls** move the lens inward and outward in small (◀ ▶) and larger (◀◀ ▶▶) steps. The lens moves when you let go. Press **Autofocus** at any point; it picks the stars first.
+* **With a motor:** **Step in** and **Step out** under **Focus controls** move the lens one step each press. **Step size** sets how far, in degrees of the focus ring: **Fine** 0.8°, **Medium** 3.5° (the default) or **Coarse** 13°, until an autofocus fit resizes Fine and Medium. Press **Autofocus** at any point; it picks the stars first.
 * **Without a motor:** turn the focus ring slowly. After the tune the stars are picked, and the number beside the picture shows their size. Smaller is sharper. Stop where it is lowest.
 
 Press **Save focus** when you are done, or **Cancel**.
@@ -101,12 +109,16 @@ The camera's normal exposure and gain are put back, and normal pictures resume o
 
 ## 7. Settings
 
-The two lens settings are under **Configuration** → **Focuser**.
+The lens settings are under **Configuration** → **Focuser**. With a focuser selected, Config will not save until both gear counts and the travel limit are set.
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Lens Travel Limit (degrees each way)** | 360 | How far, in motor degrees, the lens may move inward or outward from where it was when the session started. Nothing crosses it, Autofocus included. Allowed range 10 to 3600. |
-| **Gear Slack (degrees)** | 30 | The free play in the gears between the motor and the focus ring. Every move ends travelling outward, and a move that ends inward first goes past its target by more than this, so the slack never decides where the lens stops. Must be less than the travel limit. |
+| **Motor Gear Teeth** | 0 (unset) | Teeth on the gear the motor turns. Allowed range 1 to 1000. |
+| **Lens Gear Teeth** | 0 (unset) | Teeth on the gear around the focus ring. With the motor gear, this turns motor steps into degrees of the ring. If the motor turns the ring directly, give both the same number. Allowed range 1 to 1000. |
+| **Lens Travel Limit (lens degrees each way)** | 0 (unset) | How far the focus ring may turn inward or outward from where it was when the session started. Nothing crosses it, Autofocus included. Allowed range 1 to 3600. |
+| **Backlash (motor degrees)** | 30 | The free play in the gears between the motor and the focus ring. Every move ends travelling outward, and a move that ends inward first goes past its target by more than this, so backlash never decides where the lens stops. Must be less than the whole lens travel, counted in motor degrees. |
+
+For example, a motor gear of 12 teeth driving a ring gear of 82 teeth turns the motor 6.8 times for one turn of the ring.
 
 The position is counted from the start of each session, because a stepper motor has no fixed zero. Turning the focus ring by hand during a session makes the count wrong.
 

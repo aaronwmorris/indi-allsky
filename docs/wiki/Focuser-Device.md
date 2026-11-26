@@ -48,9 +48,11 @@ In the web interface:
 
 For cameras capture can command, the Focus page also links to the live focus page, which can focus the lens automatically with **Autofocus**. See [Live Focus and Autofocus](Live-Focus).
 
-Two focuser settings apply to the live focus page:
+Four focuser settings apply to the live focus page. With a focuser selected, Config will not save until the first three are set.
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Lens Travel Limit (degrees each way)** | 360 | How far, in motor degrees, the lens may move either way from where it was when the session started. Range 10 to 3600. |
-| **Gear Slack (degrees)** | 30 | Free play in the gears. Every move ends travelling outward, so the slack never decides where the lens stops. Must be less than the travel limit. |
+| **Motor Gear Teeth** | 0 (unset) | Teeth on the gear the motor turns. Range 1 to 1000. |
+| **Lens Gear Teeth** | 0 (unset) | Teeth on the gear around the focus ring. If the motor turns the ring directly, give both gears the same number. Range 1 to 1000. |
+| **Lens Travel Limit (lens degrees each way)** | 0 (unset) | How far the focus ring may turn either way from where it was when the session started. Range 1 to 3600. |
+| **Backlash (motor degrees)** | 30 | Free play in the gears. Every move ends travelling outward, so backlash never decides where the lens stops. Must be less than the whole lens travel in motor degrees. |
