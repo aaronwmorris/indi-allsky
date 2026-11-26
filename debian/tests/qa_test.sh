@@ -252,7 +252,9 @@ with application.test_client() as client:
         "/indi-allsky/ajax/notification",
     ]:
         cresp = client.get(cam_json_route)
-        assert cresp.status_code in (200, 400) and cresp.get_json() is not None, f"JSON route {cam_json_route} failed with HTTP {cresp.status_code}"
+        assert cresp.status_code in (200, 400), f"JSON route {cam_json_route} failed with HTTP {cresp.status_code}"
+        if cresp.status_code == 200:
+            assert cresp.get_json() is not None, f"JSON route {cam_json_route} returned non-JSON HTTP 200 body"
 
     # 7. Config save round-trip, CSRF enforcement, negative validation, and config download
     cfg_resp = client.get("/indi-allsky/config")
