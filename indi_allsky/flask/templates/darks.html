@@ -15,9 +15,12 @@ var camera_id = {{ camera_id }};
 <div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
     <!-- Tab Selection Header -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
-        <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-darks">Dark Frames</button>
-        <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-bpm">Bad Pixel Maps</button>
+    <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
+        <div class="tw:flex tw:flex-wrap tw:gap-2">
+            <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-darks">Dark Frames</button>
+            <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-bpm">Bad Pixel Maps</button>
+        </div>
+        <a href="{{ url_for('indi_allsky.docs_view_page', page='Dark-Calibration-Frames') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline tw:px-2">Dark Calibration Docs</a>
     </div>
 
     <div class="tw:w-full">

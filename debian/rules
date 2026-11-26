@@ -42,6 +42,9 @@ override_dh_auto_build:
 	tar -cf - -C debian/venv . | zstd -12 -T0 > debian/bundle/venv.tar.zst
 	rm -rf debian/venv
 
+	@echo "=== [4/4] Generating man pages ==="
+	python3 misc/build_manpages.py --out debian/bundle/man
+
 # Pre-compiled third-party binary wheels inside venv lack DWARF debuginfo symbols
 override_dh_dwz:
 

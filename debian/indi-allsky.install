@@ -6,6 +6,7 @@ flask.json_template usr/share/indi-allsky/
 indi_allsky usr/share/indi-allsky/
 misc usr/share/indi-allsky/
 html usr/share/indi-allsky/
+docs/wiki usr/share/indi-allsky/docs/
 requirements usr/share/indi-allsky/
 misc/indi-allsky-ctl usr/bin/
 debian/conf/10-indi-allsky.rsyslog.conf etc/rsyslog.d/

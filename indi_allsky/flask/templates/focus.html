@@ -279,6 +279,10 @@ function closeFullscreen() {
 
 <div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 focus-wrapper">
 
+    <div class="tw:flex tw:justify-end">
+        <a href="{{ url_for('indi_allsky.docs_view_page', page='Focuser-Device') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Focuser Docs</a>
+    </div>
+
     <form id="form_focus" onSubmit="return false;" class="tw:w-full tw:flex tw:flex-col tw:gap-6 force-desktop-row">
         
         <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">

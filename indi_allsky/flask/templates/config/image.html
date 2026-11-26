@@ -4,7 +4,10 @@
         <!-- Daytime & Capture Control Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Capture Execution & Modes</span>
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Capture Execution & Modes</span>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Image-order-of-operations') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Image Processing Docs</a>
+                </div>
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">

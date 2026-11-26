@@ -17,7 +17,7 @@ var pin_states = {{ pin_states | tojson }};
     <div class="tw:flex tw:flex-col tw:gap-3">
         <div class="tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
             <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-            <span><strong>Note:</strong> Some pins read HIGH by default (e.g., Raspberry Pi GPIOs 1-8 have internal pull-ups enabled).</span>
+            <span><strong>Note:</strong> Some pins read HIGH by default (e.g., Raspberry Pi GPIOs 1-8 have internal pull-ups enabled). <a href="{{ url_for('indi_allsky.docs_view_page', page='GPIO-Permissions') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline tw:ml-1">GPIO Permissions Docs</a></span>
         </div>
         <div class="tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
             <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>

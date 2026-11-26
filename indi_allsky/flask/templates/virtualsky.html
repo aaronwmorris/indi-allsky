@@ -506,7 +506,7 @@ function loadJS(url, data, onDone, onError) {
                                 class="tw:btn tw:btn-xs tw:btn-circle tw:btn-neutral">?</button>
                         {% endif %}
 
-                        <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" target="_blank"
+                        <a href="{{ url_for('indi_allsky.docs_view_page', page='VirtualSky') }}"
                            class="tw:btn tw:btn-xs tw:btn-neutral tw:btn-accent-hover tw:gap-1.5 tw:rounded-full tw:no-underline tw:ml-auto">
                             <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:block"></i> VirtualSky Wiki
                         </a>

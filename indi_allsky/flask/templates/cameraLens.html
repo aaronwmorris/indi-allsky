@@ -13,7 +13,7 @@ var camera_id = {{ camera_id }};
 
     <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm">
         <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-        <span>The indi-allsky service requires a reload after parameter changes. Ensure the camera database entry is updated.</span>
+        <span>The indi-allsky service requires a reload after parameter changes. Ensure the camera database entry is updated. <a href="{{ url_for('indi_allsky.docs_view_page', page='Camera-Information') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline tw:ml-1">Camera Docs</a> &middot; <a href="{{ url_for('indi_allsky.docs_view_page', page='Lens-Information') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Lens Docs</a></span>
     </div>
 
     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-6">

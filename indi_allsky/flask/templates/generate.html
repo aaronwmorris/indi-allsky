@@ -102,11 +102,11 @@ var camera_id = {{ camera_id }};
             <div class="tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:flex tw:flex-col tw:w-full">
                 <h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Documentation Wiki Links</h3>
                 <div class="tw:flex tw:flex-col tw:gap-2 tw:grow tw:justify-center">
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]" target="_blank">
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Timelapses') }}" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]">
                         Timelapse Guide
                         <i class="tw:icon-[lucide--external-link] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
                     </a>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Mini-Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]" target="_blank">
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Mini-Timelapses') }}" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]">
                         Mini-Timelapse Guide
                         <i class="tw:icon-[lucide--external-link] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
                     </a>

@@ -17,9 +17,12 @@ var camera_id = {{ camera_id }};
     <!-- Users Table Card -->
     <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
         <div class="tw:card-body tw:p-6">
-            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6 tw:flex tw:items-center tw:gap-2">
-                <i class="tw:icon-[lucide--users] tw:w-4 tw:h-4 tw:text-primary"></i> All Users
-            </h4>
+            <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:flex tw:items-center tw:gap-2">
+                    <i class="tw:icon-[lucide--users] tw:w-4 tw:h-4 tw:text-primary"></i> All Users
+                </h4>
+                <a href="{{ url_for('indi_allsky.docs_view_page', page='Web-Interface-Password') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">User & Password Docs</a>
+            </div>
 
             <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                 <table id="users-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">

@@ -6,7 +6,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera Interface & Server Details</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Camera Interfaces Wiki</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Camera-Interfaces') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Camera Interfaces Wiki</a>
                 </div>
 
                 <!-- Camera Interface Selection -->
@@ -51,7 +51,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Exposure Control & Limits</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Exposure-Mode" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Exposure Mode Wiki</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Exposure-Mode') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Exposure Mode Wiki</a>
                 </div>
 
                 <!-- Exposure Class & Auto Gain Levels -->
@@ -128,7 +128,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Gain & Binning Modes</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Gain-Reference" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Gain Reference Wiki</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Camera-Gain-Reference') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Gain Reference Wiki</a>
                 </div>
 
                 <!-- Night, Moon & Day Gain/Binning Grid -->
@@ -175,7 +175,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-Based Sky Quality Measurement (SQM)</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">SQM Wiki</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='SQM-Sky-Brightness-Measurement') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">SQM Wiki</a>
                 </div>
 
                 <!-- SQM Enable Toggles -->

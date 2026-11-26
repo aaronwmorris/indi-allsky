@@ -65,7 +65,7 @@
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
                         <div class="tw:flex tw:items-center tw:justify-between">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_MASK.label.text }}</span>
-                            <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Detection Mask Wiki</a>
+                            <a href="{{ url_for('indi_allsky.docs_view_page', page='Detection-Masks') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Detection Mask Wiki</a>
                         </div>
                         {{ form_config.DETECT_MASK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="DETECT_MASK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -251,7 +251,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Keogram Processing (Nightly, Long-Term & Realtime)</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Keogram Wiki</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Keogram') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Keogram Wiki</a>
                 </div>
 
                 <!-- Daily Keogram Parameters -->
@@ -366,7 +366,7 @@
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Star Trails Generation & Filtering</span>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Startrails" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Star Trails Wiki</a>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='Startrails') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Star Trails Wiki</a>
                 </div>
 
                 <!-- Sun & Moon Thresholds -->
