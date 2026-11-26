@@ -16,6 +16,17 @@ GITHUB_WIKI_PREFIX_RE = re.compile(
 )
 HREF_RE = re.compile(r'href=(["\'])([^"\']+)\1')
 SRC_RE = re.compile(r'src=(["\'])([^"\']+)\1')
+ALERT_BLOCKQUOTE_RE = re.compile(
+    r'<blockquote>\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(?:<br\s*/?>|\r?\n)?\s*(.*?)</p>(.*?)</blockquote>',
+    re.DOTALL | re.IGNORECASE,
+)
+_ALERT_META = {
+    'NOTE': ('note', 'info', 'Note'),
+    'TIP': ('tip', 'lightbulb', 'Tip'),
+    'IMPORTANT': ('important', 'alert-circle', 'Important'),
+    'WARNING': ('warning', 'triangle-alert', 'Warning'),
+    'CAUTION': ('caution', 'octagon-alert', 'Caution'),
+}
 
 
 def _get_docs_dir(docs_dir=None):
@@ -145,6 +156,25 @@ def render_doc_markdown(md_text, url_for_doc, url_for_asset):
             return match.group(0)
         return f'src={quote}{url_for_asset(unquote(src))}{quote}'
 
+    def _rewrite_alert(match):
+        kind = match.group(1).upper()
+        first_body = match.group(2).strip()
+        rest_body = match.group(3).strip()
+        css_kind, icon_name, label = _ALERT_META.get(kind, ('note', 'info', kind.title()))
+        inner = f'<p>{first_body}</p>' if first_body else ''
+        if rest_body:
+            inner += rest_body
+        return (
+            f'<div class="indi-doc-alert indi-doc-alert-{css_kind}">'
+            f'<div class="indi-doc-alert-title">'
+            f'<i class="tw:icon-[lucide--{icon_name}] tw:w-4 tw:h-4"></i>'
+            f'<span>{label}</span>'
+            f'</div>'
+            f'<div class="indi-doc-alert-body">{inner}</div>'
+            f'</div>'
+        )
+
     html_body = HREF_RE.sub(_rewrite_href, html_body)
     html_body = SRC_RE.sub(_rewrite_src, html_body)
+    html_body = ALERT_BLOCKQUOTE_RE.sub(_rewrite_alert, html_body)
     return Markup(html_body), Markup(getattr(md, 'toc', ''))

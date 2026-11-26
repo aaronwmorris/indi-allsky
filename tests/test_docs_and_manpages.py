@@ -31,6 +31,8 @@ class TestEmbeddedDocsAndManpages(unittest.TestCase):
     def test_render_doc_markdown_rewrites_links(self):
         md = (
             '# Title\n\n'
+            '> [!IMPORTANT]\n'
+            '> HTTPS is required.\n\n'
             'See [Sync](SyncAPI-Setup#sec) and '
             '[Wiki](https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky#top) and '
             '![img](images/example.png).\n'
@@ -41,6 +43,8 @@ class TestEmbeddedDocsAndManpages(unittest.TestCase):
             url_for_asset=lambda a: f'/indi-allsky/docs/assets/{a}',
         )
         html_str = str(html)
+        self.assertIn('indi-doc-alert-important', html_str)
+        self.assertIn('HTTPS is required.', html_str)
         self.assertIn('href="/indi-allsky/docs/SyncAPI-Setup#sec"', html_str)
         self.assertIn('href="/indi-allsky/docs/VirtualSky#top"', html_str)
         self.assertIn('src="/indi-allsky/docs/assets/images/example.png"', html_str)
