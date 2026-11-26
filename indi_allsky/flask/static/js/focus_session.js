@@ -562,9 +562,9 @@
                    'how sharp the focus is.'},
         autofocus: {busy: 'Wait while the lens moves through focus and settles at the sharpest point.',
                     idle: 'Press Autofocus to move the lens through focus and settle at the sharpest point.'},
-        check: 'Check that the stars look sharp. Nudge the lens or run Autofocus again if not.',
+        check: 'Check that the stars look sharp. Step the lens in or out, or run Autofocus again, if not.',
         hand: 'Turn the focus ring slowly and watch the star size fall to its lowest.',
-        preview: 'Move the lens with the arrows and watch the picture until the stars look sharp. Press Autofocus ' +
+        preview: 'Step the lens in or out and watch the picture until the stars look sharp. Press Autofocus ' +
             'to let the camera do it.',
         'preview-hand': 'Turn the focus ring and watch the picture until the stars look sharp.'
     };

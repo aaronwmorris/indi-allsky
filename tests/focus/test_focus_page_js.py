@@ -332,7 +332,7 @@ def test_step_help_says_wait_or_press():
     assert got[3].startswith('Press Autofocus')
     assert got[4].startswith('Turn the focus ring')
     assert got[5] == ''
-    assert 'Press Autofocus' in got[6] and 'arrows' in got[6]
+    assert 'Press Autofocus' in got[6] and 'Step the lens in or out' in got[6] and 'arrows' not in got[6]
     assert got[7].startswith('Turn the focus ring') and 'Autofocus' not in got[7]
 
 
