@@ -84,6 +84,7 @@ Welcome to the indi-allsky wiki!
 * [Sky Quality Meter (SQM)](SQM-Sky-Brightness-Measurement)
 * [MQTT Broker Publishing](MQTT-Broker-Publishing)
 * [Grafana, Telegraf & InfluxDB](Grafana-Telegraf-Influx-Integration)
+* [OpenTelemetry Integration](OpenTelemetry-Integration)
 * [Web Status Configuration](Web-Status-Configuration)
 
 # File Transfers & Cloud Storage

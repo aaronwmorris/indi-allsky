@@ -230,6 +230,9 @@ class ImageWorker(Process):
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
+        from .otel import init_otel
+        init_otel(service_name='indi-allsky', component='image-worker', loggers=[logger])
+
 
         ### use this as a method to log uncaught exceptions
         try:
@@ -264,8 +267,16 @@ class ImageWorker(Process):
 
 
             # new context for every task, reduces the effects of caching
-            with app.app_context():
-                self.processImage(i_dict)
+            from .otel import extract_trace_context, get_pipeline_instruments, get_tracer
+            otel_ctx = extract_trace_context(i_dict.get('_otel_context'))
+            tracer = get_tracer('indi_allsky.image')
+            otel_inst = get_pipeline_instruments()
+            otel_inst['queue_depth'].set(self.image_q.qsize(), {'queue': 'image_q'})
+            start_ts = time.monotonic()
+            with tracer.start_as_current_span('image.process', context=otel_ctx):
+                with app.app_context():
+                    self.processImage(i_dict)
+            otel_inst['image_processing_duration'].record(time.monotonic() - start_ts)
 
 
     def processImage(self, i_dict):

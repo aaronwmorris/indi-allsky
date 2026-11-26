@@ -171,6 +171,9 @@ class VideoWorker(Process):
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
+        from .otel import init_otel
+        init_otel(service_name='indi-allsky', component='video-worker', loggers=[logger])
+
 
         # Calibration has its own serial thread so a long retained-FITS scan
         # does not prevent the video worker from accepting timelapse jobs.
@@ -213,8 +216,17 @@ class VideoWorker(Process):
 
 
             # new context for every task, reduces the effects of caching
-            with app.app_context():
-                self.processTask(v_dict)
+            from .otel import extract_trace_context, get_pipeline_instruments, get_tracer
+            otel_ctx = extract_trace_context(v_dict.get('_otel_context'))
+            tracer = get_tracer('indi_allsky.video')
+            otel_inst = get_pipeline_instruments()
+            otel_inst['queue_depth'].set(self.video_q.qsize(), {'queue': 'video_q'})
+            start_ts = time.monotonic()
+            with tracer.start_as_current_span('video.process_task', context=otel_ctx) as span:
+                span.set_attribute('task.id', v_dict.get('task_id', -1))
+                with app.app_context():
+                    self.processTask(v_dict)
+            otel_inst['video_generation_duration'].record(time.monotonic() - start_ts)
 
 
     def processTask(self, v_dict):
