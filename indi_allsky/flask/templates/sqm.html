@@ -226,9 +226,12 @@ $( document ).ready(function() {
             <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary"></span>
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70" id="status-message">Loading SQM metrics...</span>
         </div>
-        <div id="detection-alert" class="tw:badge tw:badge-error tw:gap-1.5 tw:font-bold tw:py-2.5 tw:px-3.5" style="display: none;">
-            <i class="tw:icon-[lucide--triangle-alert] tw:w-3.5 tw:h-3.5"></i>
-            Detection Active
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div id="detection-alert" class="tw:badge tw:badge-error tw:gap-1.5 tw:font-bold tw:py-2.5 tw:px-3.5" style="display: none;">
+                <i class="tw:icon-[lucide--triangle-alert] tw:w-3.5 tw:h-3.5"></i>
+                Detection Active
+            </div>
+            <a href="{{ url_for('indi_allsky.docs_view_page', page='SQM-Sky-Brightness-Measurement') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">SQM Docs</a>
         </div>
     </div>
 

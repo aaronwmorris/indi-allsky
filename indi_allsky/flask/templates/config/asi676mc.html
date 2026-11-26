@@ -22,7 +22,10 @@
     <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-5">
         <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-4">
             <div>
-                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-specific handling</span>
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-specific handling</span>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='ASI676MC-Known-Issues') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">ASI676MC Docs</a>
+                </div>
                 <h3 class="tw:text-lg tw:font-bold tw:mt-1">ASI676MC purple-frame handling</h3>
             </div>
             <span class="tw:badge tw:badge-warning tw:badge-outline">ASI676MC only</span>

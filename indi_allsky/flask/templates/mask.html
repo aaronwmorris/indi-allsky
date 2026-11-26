@@ -16,6 +16,7 @@ var url = '{{ mask_image_uri }}';
         
         <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-4">
             This image is the original camera output. It is not rotated, flipped, or cropped.
+            <a href="{{ url_for('indi_allsky.docs_view_page', page='Detection-Masks') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline tw:ml-2">Detection Mask Docs</a>
         </div>
 
         <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-2xl tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:mb-4">

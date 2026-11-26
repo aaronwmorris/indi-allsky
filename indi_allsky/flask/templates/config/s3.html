@@ -9,7 +9,10 @@
         <!-- S3 Main Storage & Provider Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Object Storage Provider & Credentials</span>
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Object Storage Provider & Credentials</span>
+                    <a href="{{ url_for('indi_allsky.docs_view_page', page='S3-Object-Storage') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">S3 Object Storage Wiki</a>
+                </div>
 
                 <!-- Enable S3 -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
