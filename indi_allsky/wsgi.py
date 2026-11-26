@@ -23,3 +23,10 @@ LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
 indi_allsky_logger = logging.getLogger('indi_allsky')
 indi_allsky_logger.setLevel(logging.INFO)
 indi_allsky_logger.addHandler(LOG_HANDLER_SYSLOG)
+
+from indi_allsky.otel import init_otel  # noqa: E402
+init_otel(
+    service_name='indi-allsky-web',
+    component='wsgi',
+    loggers=[indi_allsky_logger, application.logger, gunicorn_logger],
+)

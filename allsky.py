@@ -102,6 +102,9 @@ if __name__ == "__main__":
     else:
         raise Exception('Invalid log output')
 
+    from indi_allsky.otel import init_otel
+    init_otel(service_name='indi-allsky', component='main', loggers=[logger])
+
 
     args_list = list()
     kwargs_dict = dict()

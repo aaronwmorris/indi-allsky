@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Python Dependencies (requirements/*.txt)
+  # Python Dependencies (requirements/*.txt - subdirectories like legacy/ are excluded)
   - package-ecosystem: "pip"
     directory: "/requirements"
     schedule:

@@ -252,6 +252,9 @@ def create_app():
         if db.engine.dialect.name == 'sqlite':
             event.listen(db.engine, 'connect', _sqlite_pragma_on_connect)
 
+        from ..otel import instrument_flask_app
+        instrument_flask_app(app, db.engine)
+
         #from . import views  # noqa: F401
 
         #db.create_all()  # Create sql tables for our data models

@@ -550,7 +550,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
 
     PYTHON_BIN=python3.9
 
-    VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
+    VIRTUALENV_REQ=requirements/legacy/requirements_debian11_web.txt
 
 
     sudo apt update
@@ -918,7 +918,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
 
     PYTHON_BIN=python3.9
 
-    VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
+    VIRTUALENV_REQ=requirements/legacy/requirements_debian11_web.txt
 
 
     sudo apt update
