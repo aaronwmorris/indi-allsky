@@ -321,7 +321,9 @@ with application.test_client() as client:
 
     # 7d. Config download export check
     dl_res = client.get(f"/indi-allsky/config/download?id={latest_cfg_id}")
-    assert dl_res.status_code == 200 and isinstance(dl_res.get_json(), dict), f"Config download failed: HTTP {dl_res.status_code}"
+    assert dl_res.status_code == 200, f"Config download failed: HTTP {dl_res.status_code}"
+    dl_json = json.loads(dl_res.get_data(as_text=True))
+    assert isinstance(dl_json, dict) and "LOCATION_LATITUDE" in dl_json, "Config download did not return valid config JSON"
 
     # 8. Logout terminates session
     logout_res = client.get("/indi-allsky/logout")
