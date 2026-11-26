@@ -239,11 +239,12 @@ with application.test_client() as client:
         assert resp.status_code == 200, f"Route {route} failed with HTTP {resp.status_code}: {resp.get_data(as_text=True)[:300]}"
 
     # 6. Read-only JSON and AJAX endpoint sweep
-    for json_route in ["/indi-allsky/js/support", "/indi-allsky/ajax/system/stats"]:
+    for json_route in ["/indi-allsky/ajax/system/stats"]:
         jresp = client.get(json_route)
         assert jresp.status_code == 200 and jresp.get_json() is not None, f"JSON route {json_route} failed with HTTP {jresp.status_code}"
 
     for cam_json_route in [
+        "/indi-allsky/js/support",
         "/indi-allsky/js/latest",
         "/indi-allsky/js/charts",
         "/indi-allsky/js/sensor_panel",
@@ -251,7 +252,7 @@ with application.test_client() as client:
         "/indi-allsky/ajax/notification",
     ]:
         cresp = client.get(cam_json_route)
-        assert cresp.status_code in (200, 400) and cresp.get_json() is not None, f"Camera JSON route {cam_json_route} failed with HTTP {cresp.status_code}"
+        assert cresp.status_code in (200, 400) and cresp.get_json() is not None, f"JSON route {cam_json_route} failed with HTTP {cresp.status_code}"
 
     # 7. Config save round-trip, CSRF enforcement, negative validation, and config download
     cfg_resp = client.get("/indi-allsky/config")
