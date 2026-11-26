@@ -26,6 +26,11 @@ class focuser_28byj(FocuserBase):
 
     # override in child class
     STEP_DEGREES = {}
+    STEPS_PER_TURN = 512
+
+    # one step is one pass through SEQ, 8 x 5 ms
+    STEPS_PER_SECOND = 25
+    CAN_STOP = True
 
 
     def __init__(self, *args, **kwargs):
@@ -62,14 +67,21 @@ class focuser_28byj(FocuserBase):
     def move(self, direction, degrees):
         steps = self.STEP_DEGREES[degrees]
 
-        self.set_step(0, 0, 0, 0)  # reset
-        self.step(direction, steps)
-        self.set_step(0, 0, 0, 0)  # reset
-
         if direction == 'ccw':
             steps *= -1  # negative for CCW
 
-        return steps
+        return self.move_steps(steps)
+
+
+    def move_steps(self, steps, should_stop=None):
+        self.set_step(0, 0, 0, 0)  # reset
+
+        try:
+            moved = self.step(steps, should_stop)
+        finally:
+            self.set_step(0, 0, 0, 0)  # reset
+
+        return moved
 
 
     def set_step(self, w1, w2, w3, w4):
@@ -79,17 +91,27 @@ class focuser_28byj(FocuserBase):
         self.pins[3].value = w4
 
 
-    def step(self, direction, steps):
-        if direction == 'cw':  # CW
+    def step(self, steps, should_stop=None):
+        if steps > 0:  # CW
             seq = self.SEQ[::-1]
+            sign = 1
         else:  # CCW
             seq = self.SEQ
+            sign = -1
 
 
-        for i in range(steps):
+        moved = 0
+        for i in range(abs(steps)):
             for j in seq:
                 self.set_step(*j)
                 time.sleep(0.005)
+
+            moved += sign
+
+            if should_stop is not None and should_stop():
+                break
+
+        return moved
 
 
     def deinit(self):
@@ -101,6 +123,7 @@ class focuser_28byj(FocuserBase):
 
 class focuser_28byj_64(focuser_28byj):
     # 1/64 ratio
+    STEPS_PER_TURN = 512
 
     STEP_DEGREES = {
         6   : 8,
@@ -115,6 +138,8 @@ class focuser_28byj_64(focuser_28byj):
 
 class focuser_28byj_16(focuser_28byj):
     # 1/16 ratio
+
+    STEPS_PER_TURN = 128
 
     ### untested
     STEP_DEGREES = {

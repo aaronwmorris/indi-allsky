@@ -4,7 +4,9 @@ import time
 from pathlib import Path
 import math
 import random
+import sys
 import tempfile
+import threading
 import logging
 
 from .indi import IndiClient
@@ -168,6 +170,89 @@ class IndiClientTestCameraBase(IndiClient):
             self._queueImage()
 
 
+    # -- video for a focus session ------------------------------------------------------------------------------
+    # Simulated focus: 0 is in focus, and blur grows with abs(sim_position). It stays 0 until a simulated focuser
+    # drives it.
+    sim_position = 0
+    SIM_BLUR_PER_STEP = 8.0  # sim_position steps per pixel of blur sigma
+
+    def has_video(self):
+        return True
+
+
+    def start_video(self, exposure, roi):
+        """Render a frame every `exposure` seconds and hand `roi` (x, y, w, h; None for the whole picture) of it
+        to `blob_sink` as 16-bit little-endian mono, like a driver's RAW stream."""
+        self.stop_video()
+
+        stop = threading.Event()
+        thread = threading.Thread(
+            target=self._video_loop,
+            args=(stop, float(exposure), roi),
+            name='test-camera-video',
+            daemon=True,
+        )
+        self._video = (stop, thread)
+        thread.start()
+
+
+    def stop_video(self):
+        video = getattr(self, '_video', None)
+        if video is None:
+            return
+
+        self._video = None
+
+        stop, thread = video
+        stop.set()
+        if thread is not threading.current_thread():
+            thread.join(5.0)
+
+
+    def _video_loop(self, stop, exposure, roi):
+        while not stop.is_set():
+            started = time.time()
+
+            try:
+                data = self._video_frame(roi)
+            except Exception:
+                logger.exception('Test camera: rendering a video frame failed')
+                return
+
+            remaining = exposure - (time.time() - started)
+            if remaining > 0 and stop.wait(remaining):
+                return
+
+            sink = self.blob_sink
+            if sink is not None and not stop.is_set():
+                sink(data, '.stream', time.time())
+
+
+    def _video_frame(self, roi):
+        import numpy
+        import cv2
+
+        self.updateImage(1)
+
+        image = self._image
+        if image.ndim == 3:
+            image = image.mean(axis=2)
+
+        if roi is not None:
+            x, y, w, h = (int(v) for v in roi)
+            image = image[y:y + h, x:x + w]
+
+        image = numpy.ascontiguousarray(image, dtype=numpy.float32)
+
+        sigma = abs(float(self.sim_position)) / self.SIM_BLUR_PER_STEP
+        if sigma > 0:
+            image = cv2.GaussianBlur(image, (0, 0), sigma)
+
+        frame = numpy.clip(image, 0, 65535).astype('<u2')
+
+        return frame.tobytes()
+
+
     def getCcdExposureStatus(self):
         if self.active_exposure:
             if time.time() - self.exposureStartTime < self.exposure:
@@ -188,6 +273,9 @@ class IndiClientTestCameraBase(IndiClient):
 
         self.active_exposure = False
 
+
+        if self.current_exposure_file_p is None:
+            return  # nothing exposed yet
 
         try:
             self.current_exposure_file_p.unlink()
@@ -615,6 +703,17 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
+    # Simulated focus. When a simulated focuser exists in this process (focuserSimulator.SIMULATED_LENS), every star
+    # is drawn as a Gaussian whose sigma follows the lens position (driver steps, 512 per turn, positive outward):
+    #     sigma = min(PLATEAU, sqrt(a**2 + (k * (lens - best))**2))
+    # the shape of the real fit model. `a` is the star's own in-focus sigma (half its circle radius, so today's look is
+    # kept at best focus). Total flux per star stays constant, so the peak drops as the star spreads.
+    SIM_FOCUS_BEST_STEPS = 60.0        # lens position of best focus; not 0, so an autofocus has to find it
+    SIM_FOCUS_BLUR_PX_PER_STEP = 0.03  # k: the plateau is reached about 100 steps from best focus
+    SIM_FOCUS_PLATEAU_SIGMA_PX = 3.0   # P: 6x the sigma of a radius-1 star (a = 0.5 px)
+    SIM_FOCUS_MIN_SIGMA_PX = 0.5       # a, for the smallest stars
+    SIM_FOCUS_STAMP_SIGMAS = 4.0       # a star's stamp reaches this many sigmas out
+
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
     background_color = (6144, 6144, 6144)  # 24 in 8-bit rgb
 
@@ -658,6 +757,72 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
                 numpy.save(f_numpy, self.stars_array)
 
         super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
+
+
+    def _simulated_lens_position(self):
+        """The simulated focuser's lens position (steps) now, or None when this process has no simulated focuser.
+
+        Read from the module only if it is already imported: a simulator can only exist where its module is.
+        """
+        module = sys.modules.get('indi_allsky.devices.focusers.focuserSimulator')
+        lens = getattr(module, 'SIMULATED_LENS', None)
+        if lens is None:
+            return None
+
+        return float(lens.lens_position)
+
+
+    def _render_blurred_stars(self, numpy, lens_position, width, height, start_width, start_height):
+        """Draw the stars that fall in the crop as constant-flux Gaussians; returns a uint16 (height, width, 3) image.
+
+        Only the stars in the crop are drawn (about a ninth of the 3x canvas), each as the outer product of two 1-D
+        Gaussians added into the crop's float canvas, so the cost is a few tens of microseconds per visible star
+        however large its sigma.
+        """
+        kdist = self.SIM_FOCUS_BLUR_PX_PER_STEP * (lens_position - self.SIM_FOCUS_BEST_STEPS)
+        plateau = self.SIM_FOCUS_PLATEAU_SIGMA_PX
+        reach = self.SIM_FOCUS_STAMP_SIGMAS
+
+        xs = self.stars_array[0] - start_width
+        ys = self.stars_array[1] - start_height
+        margin = reach * plateau + 1
+        visible = numpy.nonzero((xs > -margin) & (xs < width + margin) & (ys > -margin) & (ys < height + margin))[0]
+
+        canvas = numpy.zeros([height, width, 3], dtype=numpy.float32)
+
+        for i in visible:
+            a = max(float(self.stars_array[2][i]) / 2.0, self.SIM_FOCUS_MIN_SIGMA_PX)
+            sigma = min(plateau, math.sqrt(a * a + kdist * kdist))
+            half = int(math.ceil(reach * sigma)) + 1
+
+            xc = float(xs[i])
+            yc = float(ys[i])
+            x0 = int(round(xc)) - half
+            y0 = int(round(yc)) - half
+
+            grid = numpy.arange(2 * half + 1, dtype=numpy.float32)
+            gx = numpy.exp(-0.5 * ((grid + x0 - xc) / sigma) ** 2)
+            gy = numpy.exp(-0.5 * ((grid + y0 - yc) / sigma) ** 2)
+            gx /= gx.sum()
+            gy /= gy.sum()
+
+            # flux is chosen so the peak equals the star's colour when sigma == a (best focus)
+            rgb = self.stars_array[3:6, i] * (2.0 * math.pi * a * a)
+
+            cx0 = max(x0, 0)
+            cx1 = min(x0 + 2 * half + 1, width)
+            cy0 = max(y0, 0)
+            cy1 = min(y0 + 2 * half + 1, height)
+            if cx0 >= cx1 or cy0 >= cy1:
+                continue
+
+            stamp = numpy.outer(gy[cy0 - y0:cy1 - y0], gx[cx0 - x0:cx1 - x0])
+            canvas[cy0:cy1, cx0:cx1] += stamp[:, :, None] * rgb
+
+        canvas += self.background_color[0]
+        numpy.clip(canvas, 0, 65535, out=canvas)
+
+        return canvas.astype(numpy.uint16)
 
 
     def updateImage(self, binning):
@@ -724,18 +889,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         base_image_height = self.camera_info['height'] * 3
 
 
-        # create blank image
-        base_image = numpy.full(
-            [
-                base_image_height,
-                base_image_width,
-                3
-            ],
-            self.background_color,
-            dtype=numpy.uint16,
-        )
-
-
         base_center_x = int(base_image_width / 2)
         base_center_y = int(base_image_height / 2)
 
@@ -761,47 +914,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         #logger.info('Star rotation in %0.4f s', rot_elapsed_s)
 
 
-        # redraw the stars
-        for i in range(self.stars_array.shape[1]):
-            center = (round(self.stars_array[0][i]), round(self.stars_array[1][i]))
-            radius = int(self.stars_array[2][i])
-            color = (int(self.stars_array[3][i]), int(self.stars_array[4][i]), int(self.stars_array[5][i]))
-            #logger.info('Center: %s', center)
-
-            cv2.circle(
-                base_image,
-                center=center,
-                radius=radius,
-                color=color,
-                thickness=cv2.FILLED,
-                lineType=cv2.LINE_AA,
-            )
-
-
         image_width = int(self.camera_info['width'] / binning)
         image_height = int(self.camera_info['height'] / binning)
-
-
-        ### test circles
-        ## center
-        #cv2.circle(
-        #    base_image,
-        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
-        #    radius=15,
-        #    color=(32767, 32767, 32767),  # 128
-        #    thickness=cv2.FILLED,
-        #    lineType=cv2.LINE_AA,
-        #)
-
-        ## ring
-        #cv2.circle(
-        #    base_image,
-        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
-        #    radius=int(image_height / 2),
-        #    color=(16383, 16383, 16383),  # 64
-        #    thickness=10,
-        #    lineType=cv2.LINE_AA,
-        #)
 
 
         # slice the image
@@ -810,10 +924,72 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
-        self._image = base_image[
-            start_height:start_height + image_height,
-            start_width:start_width + image_width,
-        ]
+
+        # read once per frame, here at render time (this camera has no mid-exposure moment)
+        lens_position = self._simulated_lens_position()
+
+        if lens_position is not None:
+            self._image = self._render_blurred_stars(numpy, lens_position, image_width, image_height, start_width, start_height)
+
+        else:
+            # create blank image
+            base_image = numpy.full(
+                [
+                    base_image_height,
+                    base_image_width,
+                    3
+                ],
+                self.background_color,
+                dtype=numpy.uint16,
+            )
+
+
+            # redraw the stars
+            for i in range(self.stars_array.shape[1]):
+                center = (round(self.stars_array[0][i]), round(self.stars_array[1][i]))
+                radius = int(self.stars_array[2][i])
+                color = (int(self.stars_array[3][i]), int(self.stars_array[4][i]), int(self.stars_array[5][i]))
+                #logger.info('Center: %s', center)
+
+                cv2.circle(
+                    base_image,
+                    center=center,
+                    radius=radius,
+                    color=color,
+                    thickness=cv2.FILLED,
+                    lineType=cv2.LINE_AA,
+                )
+
+
+
+
+            ### test circles
+            ## center
+            #cv2.circle(
+            #    base_image,
+            #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+            #    radius=15,
+            #    color=(32767, 32767, 32767),  # 128
+            #    thickness=cv2.FILLED,
+            #    lineType=cv2.LINE_AA,
+            #)
+
+            ## ring
+            #cv2.circle(
+            #    base_image,
+            #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+            #    radius=int(image_height / 2),
+            #    color=(16383, 16383, 16383),  # 64
+            #    thickness=10,
+            #    lineType=cv2.LINE_AA,
+            #)
+
+
+            self._image = base_image[
+                start_height:start_height + image_height,
+                start_width:start_width + image_width,
+            ]
+
 
 
         if self.image_circle_diameter:

@@ -11,6 +11,9 @@ class FocuserMotorKitBase(FocuserBase):
 
     STEP_FACTOR = 1.0
 
+    STEPS_PER_TURN = 360  # one step is one "degree"
+    CAN_STOP = True
+
 
     def __init__(self, *args, **kwargs):
         super(FocuserMotorKitBase, self).__init__(*args, **kwargs)
@@ -39,17 +42,33 @@ class FocuserMotorKitBase(FocuserBase):
         self.stepper = getattr(kit, stepper_name)
 
 
+    @property
+    def STEPS_PER_SECOND(self):
+        # 20 onesteps per second (0.05 s each), STEP_FACTOR onesteps per step
+        return 20 / self.STEP_FACTOR
+
+
     def move(self, direction, degrees):
-        from adafruit_motor import stepper
-
-
         steps = degrees  # assumptions are being made
-        stepper_dir = stepper.FORWARD
-
 
         if direction == 'ccw':
             steps *= -1  # negative for CCW
+
+        return self.move_steps(steps)
+
+
+    def move_steps(self, steps, should_stop=None):
+        from adafruit_motor import stepper
+
+
+        steps = int(steps)
+
+        if steps >= 0:
+            stepper_dir = stepper.FORWARD
+            sign = 1
+        else:
             stepper_dir = stepper.BACKWARD
+            sign = -1
 
 
         style = self.getStepStyle()
@@ -58,19 +77,28 @@ class FocuserMotorKitBase(FocuserBase):
         # Not sure if this is necessary
         #self.stepper.release()
 
+        moved = 0
+        onesteps_done = 0
         try:
-            for _ in range(int(steps * self.STEP_FACTOR)):
-                self.stepper.onestep(direction=stepper_dir, style=style)
-                time.sleep(0.05)
+            for i in range(1, abs(steps) + 1):
+                # a step is one degree, STEP_FACTOR onesteps (can be fractional)
+                onesteps_due = int(i * self.STEP_FACTOR)
 
-            self.stepper.release()
+                while onesteps_done < onesteps_due:
+                    self.stepper.onestep(direction=stepper_dir, style=style)
+                    time.sleep(0.05)
+                    onesteps_done += 1
+
+                moved += sign
+
+                if should_stop is not None and should_stop():
+                    break
         except RuntimeError as e:
             raise DeviceControlException(str(e)) from e
+        finally:
+            self.stepper.release()
 
-
-        self.stepper.release()
-
-        return steps
+        return moved
 
 
     def getStepStyle(self):

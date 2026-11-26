@@ -73,6 +73,7 @@ Welcome to the indi-allsky wiki!
 * [Dew Heater Support](Dew-Heater-Support)
 * [Fan Control](Fan-Control)
 * [Focuser](Focuser-Device)
+* [Live Focus and Autofocus](Live-Focus)
 * [GPIO Permissions](GPIO-Permissions)
 * [Disable LEDs](Disable-LEDs)
 * [Raspberry Pi Watchdog](Raspberry-Pi-Watchdog)

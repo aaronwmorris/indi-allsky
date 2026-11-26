@@ -1,0 +1,11 @@
+{% extends 'focus.html' %}
+
+{# Today's Focus page, with a link to the live focus page when this rig can run it, or the reason it cannot. #}
+{% block content %}
+{% if focus_decision.page == 'new' %}
+<div class="focus-live-link tw:p-4 tw:pb-0"><a href="{{ url_for('indi_allsky.focus_live_view') }}" class="tw:btn tw:btn-sm tw:btn-primary tw:rounded-full">Live Focus</a></div>
+{% elif focus_reason %}
+<div class="focus-reason tw:p-4 tw:pb-0" role="status">{{ focus_reason }}</div>
+{% endif %}
+{{ super() }}
+{% endblock %}

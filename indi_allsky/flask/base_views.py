@@ -159,6 +159,10 @@ class BaseView(View):
                 continue
 
             for addr in addr_info:
+                if addr.family == socket.AF_INET and addr.netmask is None:
+                    # point-to-point/tunnel interfaces (macOS utun) may report no netmask
+                    continue
+
                 if addr.family == socket.AF_INET:
                     cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
                     network_list.append('{0:s}/{1:d}'.format(addr.address, cidr))
@@ -307,6 +311,8 @@ class BaseView(View):
             data['status'] = '<span class="tw:text-primary">STOPPED</span>'
         elif status == constants.STATUS_PAUSED:
             data['status'] = '<span class="tw:text-base-content/60">PAUSED</span>'
+        elif status == constants.STATUS_FOCUSING:
+            data['status'] = '<span class="tw:text-info">FOCUSING</span>'
         elif status == constants.STATUS_NOCAMERA:
             data['status'] = '<span class="tw:text-error">NO CAMERA</span>'
         elif status == constants.STATUS_CAMERAERROR:

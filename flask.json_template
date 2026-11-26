@@ -31,6 +31,7 @@
 
     "INDI_ALLSKY_DOCROOT" : "/var/www/html/allsky",
     "INDI_ALLSKY_IMAGE_FOLDER" : "/var/www/html/allsky/images",
+    "INDI_ALLSKY_FOCUS_ADDRESS" : "/var/lib/indi-allsky/focus-session.sock",
 
     "INDI_ALLSKY_AUTH_ALL_VIEWS" : false,
     "INDI_ALLSKY_AUTH_MEDIA_VIEWS" : false,

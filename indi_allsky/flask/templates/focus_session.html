@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{# The live Focus page. Idle: today's picture and score. Live: the session's pictures over /ws/focus.
+   The behaviour is in static/js/focus_session.js; this file holds the markup and the server-side facts. #}
+{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
+
+{% block head %}
+<style>
+    .fs { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+    .fs [hidden] { display: none !important; }
+    .fs-muted { color: color-mix(in oklab, var(--color-base-content) 60%, transparent); font-size: 0.85rem; }
+    .fs-panel { background: var(--color-base-200); border: 1px solid var(--color-base-300); border-radius: var(--radius-box, 8px); padding: 12px; }
+    .fs-toast { position: sticky; top: 8px; z-index: 20; }
+    /* Advanced: the controls and details beyond the picture, the steps, the lens buttons, Save and Cancel */
+    .fs:not(.fs-advanced) .fs-adv { display: none !important; }
+    .fs-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+    .fs-adv-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; }
+
+    /* idle: the last sky picture with Play on it, and the lens controls waiting for a session */
+    .fs-idle { max-width: 640px; }
+    .fs-poster { position: relative; min-height: 240px; background: #000; border: 1px solid var(--color-base-300); border-radius: 8px; overflow: hidden; }
+    .fs-poster img { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: contain; }
+    .fs-tag { position: absolute; left: 8px; top: 8px; z-index: 3; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #ddd; pointer-events: none; }
+    .fs-tag-live { background: #b91c1c; color: #fff; font-weight: 700; letter-spacing: 0.05em; }
+    .fs-play { position: absolute; inset: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+               background: rgba(0, 0, 0, 0.35); border: 0; color: #fff; cursor: pointer; }
+    .fs-play:disabled { cursor: default; opacity: 0.6; }
+    .fs-play:focus-visible { outline: 3px solid var(--color-primary); outline-offset: -3px; }
+    .fs-disc { width: 76px; height: 76px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); border: 2px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; }
+    .fs-play .fs-label { font-size: 0.85rem; font-weight: 600; text-shadow: 0 1px 2px #000; }
+    .fs-hint { margin: 0; font-size: 0.75rem; text-align: center; color: color-mix(in oklab, var(--color-base-content) 60%, transparent); }
+
+    /* live: one set of boxes, arranged by grid areas (desktop two columns, phone) */
+    .fs-live { display: grid; gap: 8px 16px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+               grid-template-rows: auto auto auto 1fr auto auto auto;
+               grid-template-areas: "warn warn" "stage stage" "pic num" "pic rest" "status rest" "mode rest" "cam rest"; }
+    .fs-live > .fs-warn { grid-area: warn; }
+
+    /* the session's steps (Gitea issue 4) */
+    .fs-stages { grid-area: stage; padding: 8px 12px; }
+    .fs-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; font-size: 0.9rem; }
+    .fs-steps li { white-space: nowrap; }
+    .fs-steps li + li::before { content: "\2500"; margin: 0 8px; opacity: 0.4; }
+    .fs-step-done { color: var(--color-success); }
+    .fs-step-current { font-weight: 700; color: var(--color-primary); }
+    .fs-step-todo, .fs-step-skipped { opacity: 0.6; }
+    .fs-step-help { margin: 4px 0 0; font-size: 0.85rem; }
+    .fs-step-help:empty { display: none; }
+    .fs-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .fs-af { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .fs-af progress { color: var(--color-primary); }
+    .fs-af-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 0.9rem; }
+    .fs-af-title { font-weight: 700; white-space: pre; }
+    .fs-af-left { font-variant-numeric: tabular-nums; }
+    .fs-af ol { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; white-space: pre; }
+    .fs-af-msg { margin-top: 6px; }
+
+    /* loading signs (Gitea issue 5) */
+    .fs-wait { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 8px;
+               color: #e5e7eb; background: rgba(0, 0, 0, 0.55); font-size: 0.9rem; pointer-events: none; }
+
+    /* the lens: graph, nudges, buttons */
+    .fs-ghead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .fs-graph { width: 100%; height: 220px; display: block; background: var(--color-base-100); border-radius: 6px; touch-action: none; cursor: crosshair; }
+    .fs-size { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+    .fs-size select { flex: 1; }
+    .fs-nudge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .fs-nudge .tw\:btn { height: auto; min-height: 3.2rem; padding: 6px 2px; display: flex; flex-direction: column; gap: 2px; }
+    .fs-nudge svg { width: 22px; height: 22px; }
+    .fs-nudge .fs-label { font-size: 0.75rem; font-weight: 500; line-height: 1.1; }
+    .fs-lens-btns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+    .fs-lens-btns #fs-af-btn, .fs-lens-btns #fs-af-save { grid-column: 1 / -1; }
+    .fs-lens-btns .tw\:btn { white-space: nowrap; }
+    .fs-clear-row { display: flex; justify-content: flex-end; }
+    .fs-pic { grid-area: pic; align-self: start; position: relative; background: #000; border: 1px solid var(--color-base-300); border-radius: 8px; overflow: hidden; touch-action: manipulation; }
+    .fs-pic canvas, .fs-pic svg { display: block; width: 100%; height: auto; }
+    /* the rings take the picture's box, not the panel's: the panel can be taller than the picture */
+    .fs-pic svg { position: absolute; left: 0; top: 0; pointer-events: none; }
+    .fs-pic .fs-close { position: absolute; top: 6px; right: 6px; z-index: 3; }
+    .fs-num { grid-area: num; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .fs-status { grid-area: status; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-weight: 600; font-size: 0.9rem; white-space: nowrap; min-width: 0; }
+    .fs-status-row { display: flex; align-items: center; gap: 8px; }
+    .fs-status .fs-age { font-variant-numeric: tabular-nums; }
+    .fs-status .fs-stxt { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .fs-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: currentColor; }
+    .fs-live[data-status="live"] .fs-status { color: var(--color-success); }
+    .fs-live[data-status="waiting"] .fs-status { color: var(--color-warning); }
+    .fs-live[data-status="stalled"] .fs-status { color: var(--color-error); }
+    .fs-status .fs-age { color: var(--color-base-content); }
+    .fs-mode { grid-area: mode; }
+    .fs-cam { grid-area: cam; display: flex; flex-direction: column; gap: 8px; }
+    .fs-rest { grid-area: rest; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    .fs-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .fs-value { font-size: 2.4rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .fs-value .fs-unit { font-size: 1.1rem; opacity: 0.6; }
+    .fs-value.fs-dim, .fs-sub.fs-dim { opacity: 0.35; }
+    .fs-sub { font-size: 0.85rem; }
+    .fs-ctl { display: flex; flex-direction: column; gap: 0.5rem; }
+    .fs-ctl-h { margin: 0; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+                color: color-mix(in oklab, var(--color-base-content) 60%, transparent); }
+    .fs-slider label { display: block; font-size: 0.85rem; margin-top: 6px; }
+    .fs-slider input[type=range] { width: 100%; }
+    .fs-stars-list { list-style: none; margin: 6px 0 0; padding: 0; max-height: 220px; overflow: auto; }
+    .fs-stars-list button { width: 100%; text-align: left; justify-content: flex-start; }
+    .fs-trace { width: 100%; height: 140px; display: block; background: var(--color-base-100); border-radius: 6px; }
+
+    /* Move region: the whole-sensor picture with a box to drag */
+    .fs-region { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; }
+    .fs-region-pic { position: relative; max-width: min(96vw, 900px); }
+    .fs-region-pic img { display: block; max-width: 100%; max-height: 75vh; }
+    .fs-region-box { position: absolute; border: 2px solid var(--color-success); background: rgba(74, 222, 128, 0.12); cursor: move; touch-action: none; }
+    .fs-region .fs-muted { color: #e5e7eb; }
+
+    /* phone: picture and number side by side, everything else below */
+    @media (max-width: 767px) {
+        .fs { padding: 8px 0; }
+        .fs-live { gap: 6px 10px; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); grid-template-rows: auto;
+                   grid-template-areas: "warn warn" "stage stage" "pic num" "status status" "mode mode" "cam cam" "rest rest"; }
+        .fs-graph { height: 170px; }
+        .fs-value { font-size: 1.9rem; }
+        .fs-live.fs-big { grid-template-columns: minmax(0, 1fr);
+                          grid-template-areas: "warn" "stage" "num" "pic" "status" "mode" "cam" "rest"; }
+        .fs-live.fs-big .fs-num { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+        .fs-live.fs-big .fs-trace { display: none; }
+    }
+</style>
+{% endblock %}
+
+{# The lens step buttons and the Step size list. `prefix` names the ids (prefix-in, prefix-out, prefix-size); the idle
+   copy is all disabled until a session starts. Sizes are lens degrees: capture sends their steps in each `lens` message,
+   and the script rewrites the labels from those. #}
+{% macro step_controls(prefix, idle) %}
+<label class="fs-size"><span>Step size</span>
+    <select id="{{ prefix }}-size" class="tw:select tw:select-sm" {% if idle %}disabled{% endif %}>
+        <option value="fine">Fine &middot; 0.8&deg;</option>
+        <option value="medium" selected>Medium &middot; 3.5&deg;</option>
+        <option value="coarse">Coarse &middot; 13&deg;</option>
+    </select>
+</label>
+<div class="fs-nudge" role="group" aria-label="Move the lens">
+    <button type="button" id="{{ prefix }}-in" class="tw:btn tw:btn-sm" {% if idle %}disabled{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="fs-label">Step in</span></button>
+    <button type="button" id="{{ prefix }}-out" class="tw:btn tw:btn-sm" {% if idle %}disabled{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span class="fs-label">Step out</span></button>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div id="focus-session" class="fs"
+     data-focus-session
+     data-ws-url="{{ focus_ws_url }}"
+     data-motor-configured="{{ '1' if motor_configured else '0' }}"
+     data-motor-reason="{{ motor_reason or '' }}"
+     data-reason="{{ focus_decision.reason }}">
+
+    <div class="fs-top">
+        <a href="{{ url_for('indi_allsky.focus_view') }}" class="tw:btn tw:btn-sm tw:btn-outline tw:rounded-full">&larr; Focus</a>
+        <label class="fs-adv-toggle"><input type="checkbox" id="fs-advanced" class="tw:toggle tw:toggle-sm"> Advanced</label>
+    </div>
+
+    <div id="fs-toast" class="fs-toast tw:alert tw:alert-error" role="status" aria-live="polite" hidden></div>
+
+    {# ---- idle: no session is running ------------------------------------------------------------------------- #}
+    <section id="fs-idle" class="fs-idle tw:flex tw:flex-col tw:gap-3">
+        <div class="fs-poster">
+            {% if poster_url %}<img src="{{ poster_url }}" alt="The last sky picture">{% endif %}
+            <span class="fs-tag">{% if poster_time %}Last picture &middot; {{ poster_time }}{% else %}No recent picture{% endif %}</span>
+            {% if can_start %}
+            <button type="button" id="focus-start" class="fs-play" aria-label="Start Live Preview">
+                <span class="fs-disc" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span>
+                <span class="fs-label">Start Live Preview</span>
+            </button>
+            {% endif %}
+        </div>
+        {% if can_start %}
+        {# whether this rig has a motor is capture's word (`state.motor`); motor_configured is the first guess #}
+        <div id="fs-idle-lens" class="fs-panel fs-ctl" {% if not motor_configured %}hidden{% endif %}>
+            <h3 class="fs-ctl-h">Focus controls</h3>
+            {{ step_controls('fs-idle', true) }}
+            <p id="fs-idle-hint" class="fs-hint">{{ motor_reason or 'Press Play to move the lens and watch the stars.' }}</p>
+            <button type="button" id="focus-start-af" class="tw:btn tw:btn-primary" {% if motor_reason %}disabled{% endif %}><span class="fs-label">Autofocus</span></button>
+        </div>
+        {% else %}
+        <p id="fs-no-session" class="fs-panel">No focus session is running. An admin can start one.</p>
+        {% endif %}
+        <p id="fs-ended" class="fs-panel" role="status" hidden></p>
+        <p id="fs-idle-reason" class="fs-muted" {% if not focus_decision.reason %}hidden{% endif %}>{{ focus_decision.reason }}</p>
+    </section>
+
+    {# ---- live: a session is running ------------------------------------------------------------------------- #}
+    <section id="fs-live" class="fs-live" data-status="waiting" hidden>
+        <div id="fs-warn" class="fs-warn tw:alert tw:alert-warning" role="alert" hidden>
+            <span id="fs-warn-text"></span>
+            {% if can_start %}<button type="button" id="fs-keep-going" class="tw:btn tw:btn-sm">Keep going</button>{% endif %}
+        </div>
+
+        <nav id="fs-stages" class="fs-stages fs-panel" aria-label="Focus session steps">
+            <ol id="fs-steps" class="fs-steps"></ol>
+            <p id="fs-step-help" class="fs-step-help fs-sub" aria-live="polite"></p>
+            <div id="fs-step-prog" class="fs-af" role="status" hidden>
+                <progress id="fs-step-bar" class="tw:progress tw:w-full" max="100" aria-label="Step progress"></progress>
+                <div id="fs-step-msg" class="fs-sub"></div>
+            </div>
+            <div id="fs-af" class="fs-af" role="status" hidden>
+                <div class="fs-af-head"><span id="fs-af-title" class="fs-af-title">Autofocus</span><span id="fs-af-left" class="fs-af-left fs-muted"></span></div>
+                <progress id="fs-af-bar" class="tw:progress tw:w-full" max="100" aria-label="Autofocus progress"></progress>
+                <ol id="fs-af-stages"></ol>
+            </div>
+            <div id="fs-af-msg" class="fs-af-msg fs-sub" role="status" hidden></div>
+        </nav>
+
+        <div id="fs-pic" class="fs-pic">
+            <canvas id="fs-canvas" width="512" height="512" aria-label="Live picture of the focus region"></canvas>
+            <span class="fs-tag fs-tag-live">LIVE</span>
+            <div id="fs-pic-wait" class="fs-wait" role="status"><span class="tw:loading tw:loading-spinner tw:loading-md" aria-hidden="true"></span> Starting live video&hellip;</div>
+            <svg id="fs-rings" class="fs-adv" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <button type="button" id="fs-shrink" class="fs-close tw:btn tw:btn-sm tw:btn-circle" aria-label="Close the large picture" hidden>&#x2715;</button>
+        </div>
+
+        <div class="fs-num">
+            <div id="fs-value" class="fs-value fs-dim"><span id="fs-value-n">&ndash;</span><span id="fs-value-unit" class="fs-unit"></span></div>
+            <div id="fs-sub" class="fs-sub"></div>
+            <div id="fs-sub2" class="fs-sub fs-muted"></div>
+            {% if can_start %}
+            <div class="fs-adv"><button type="button" id="fs-stars-chip" class="tw:btn tw:btn-sm tw:btn-outline" aria-expanded="false" hidden>Stars &#x25BE;</button></div>
+            {% endif %}
+        </div>
+
+        <div class="fs-status" aria-live="off">
+            <span id="fs-stxt" class="fs-stxt">Connecting</span>
+            <span class="fs-status-row"><span class="fs-dot"></span><span id="fs-age" class="fs-age"></span></span>
+        </div>
+        <div id="fs-mode" class="fs-mode fs-muted fs-adv"></div>
+
+        <div class="fs-cam fs-adv">
+            {% if can_start %}
+            <div class="fs-row">
+                <button type="button" id="fs-exp-btn" class="tw:btn tw:btn-sm" aria-expanded="false">Exposure &ndash; &#x25BE;</button>
+                <button type="button" id="fs-gain-btn" class="tw:btn tw:btn-sm" aria-expanded="false">Gain &ndash; &#x25BE;</button>
+                <button type="button" id="fs-region-btn" class="tw:btn tw:btn-sm">Move region</button>
+                <button type="button" id="fs-stretch-btn" class="tw:btn tw:btn-sm" aria-expanded="false">Stretch Auto &#x25BE;</button>
+                <button type="button" id="fs-tune" class="tw:btn tw:btn-sm" title="Try exposures and gains, keep the fastest that shows the stars">Tune</button>
+            </div>
+            <div id="fs-stretch-pop" class="fs-panel fs-slider" hidden>
+                <div class="fs-row" role="group" aria-label="Stretch">
+                    <button type="button" id="fs-stretch-auto" class="tw:btn tw:btn-sm" aria-pressed="true">Auto</button>
+                    <button type="button" id="fs-stretch-manual" class="tw:btn tw:btn-sm" aria-pressed="false">Manual</button>
+                    <button type="button" id="fs-stretch-off" class="tw:btn tw:btn-sm" aria-pressed="false">Off</button>
+                </div>
+                <div id="fs-stretch-auto-row" class="fs-row tw:mt-2">
+                    <span id="fs-stretch-auto-v" class="fs-muted"></span>
+                    <button type="button" id="fs-relevel" class="tw:btn tw:btn-sm">Re-level</button>
+                </div>
+                <div id="fs-stretch-manual-row" class="tw:mt-2" hidden>
+                    <label for="fs-black">Black <b id="fs-black-v"></b></label>
+                    <input type="range" id="fs-black" class="tw:range tw:range-primary" min="0" max="1000" step="1" value="0">
+                    <label for="fs-white">White <b id="fs-white-v"></b></label>
+                    <input type="range" id="fs-white" class="tw:range tw:range-primary" min="0" max="1000" step="1" value="1000">
+                </div>
+                <div class="fs-sub fs-muted tw:mt-2">Changes the picture only, for everyone watching. The measurements stay the same.</div>
+                <div class="fs-row tw:mt-2">
+                    <button type="button" id="fs-stretch-close" class="tw:btn tw:btn-sm tw:btn-ghost">Close</button>
+                </div>
+            </div>
+            <div id="fs-cam-pop" class="fs-panel fs-slider" hidden>
+                <label for="fs-exp">Exposure <b id="fs-exp-v"></b></label>
+                <input type="range" id="fs-exp" class="tw:range tw:range-primary" min="0" max="1" step="1" value="0">
+                <label for="fs-gain">Gain <b id="fs-gain-v"></b></label>
+                <input type="range" id="fs-gain" class="tw:range tw:range-primary" min="0" max="600" step="1" value="0">
+                <div class="fs-row tw:mt-2">
+                    <button type="button" id="fs-apply" class="tw:btn tw:btn-sm tw:btn-primary">Apply</button>
+                    <button type="button" id="fs-cam-close" class="tw:btn tw:btn-sm tw:btn-ghost">Close</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="fs-rest">
+            {% if can_start %}
+            <div id="fs-stars-pop" class="fs-panel fs-slider fs-adv" hidden>
+                <label for="fs-snr">Star brightness &ge; <b id="fs-snr-v">8</b></label>
+                <input type="range" id="fs-snr" class="tw:range tw:range-primary" min="3" max="60" step="1" value="8">
+                <ul id="fs-stars-list" class="fs-stars-list"></ul>
+                <div class="fs-row tw:mt-2">
+                    <button type="button" id="fs-repick" class="tw:btn tw:btn-sm">Pick stars again</button>
+                </div>
+            </div>
+            {% endif %}
+            <div id="fs-progress" class="fs-sub" role="status"></div>
+            {% if can_start %}
+            <div id="fs-next" class="fs-sub fs-muted" hidden>
+                <span id="fs-next-motor" {% if not motor_configured %}hidden{% endif %}>Press Autofocus, or nudge the lens and watch the star size.</span>
+                <span id="fs-next-hand" {% if motor_configured %}hidden{% endif %}>Turn the focus by hand and watch the size fall.</span>
+            </div>
+            {% endif %}
+
+            {# Whether this session has a motor is capture's word (`state.motor.ok`); motor_configured is the first guess. #}
+            <div id="fs-lens" class="fs-panel tw:flex tw:flex-col tw:gap-2" {% if not motor_configured %}hidden{% endif %}>
+                {# the graph: Advanced, once an autofocus has started #}
+                <div id="fs-graph-panel" class="fs-adv tw:flex tw:flex-col tw:gap-2" hidden>
+                    <div class="fs-ghead"><span id="fs-g-size"></span><span id="fs-g-lens"></span></div>
+                    <canvas id="fs-graph" class="fs-graph" role="img" aria-label="Star size against lens position"></canvas>
+                    <div id="fs-g-note" class="fs-sub fs-muted" role="status"></div>
+                    {% if can_start %}
+                    <div class="fs-lens-btns">
+                        <button type="button" id="fs-bestfit" class="tw:btn" disabled>Best fit</button>
+                        <button type="button" id="fs-back" class="tw:btn" aria-label="Back to where the lens was" disabled>&#x21A9;&#xFE0E; Back</button>
+                    </div>
+                    <div class="fs-clear-row"><button type="button" id="fs-clear" class="tw:btn tw:btn-link tw:btn-sm">Clear graph</button></div>
+                    {% endif %}
+                </div>
+                {% if can_start %}
+                <div class="fs-ctl" role="group" aria-labelledby="fs-ctl-h">
+                <h3 id="fs-ctl-h" class="fs-ctl-h">Focus controls</h3>
+                {{ step_controls('fs-lens', false) }}
+                <div class="fs-lens-btns">
+                    <button type="button" id="fs-af-save" class="tw:btn tw:btn-primary" hidden>Save autofocus results</button>
+                    <button type="button" id="fs-af-btn" class="tw:btn tw:btn-primary" disabled><span class="fs-label">Autofocus</span></button>
+                </div>
+                </div>
+                {% endif %}
+            </div>
+            <div id="fs-hand" class="fs-panel fs-adv" {% if motor_configured %}hidden{% endif %}>
+                <canvas id="fs-trace" class="fs-trace" aria-label="The last minute of readings"></canvas>
+                <div id="fs-best" class="fs-sub fs-muted"></div>
+            </div>
+            <div id="fs-motor-reason" class="fs-sub fs-muted" hidden></div>
+
+            {% if can_start %}
+            <div class="fs-row">
+                <button type="button" id="fs-save" class="tw:btn tw:btn-sm tw:btn-primary">Save focus</button>
+                <button type="button" id="fs-cancel" class="tw:btn tw:btn-sm tw:btn-outline">Cancel</button>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if can_start %}
+    {# the page's questions (start, autofocus again, cancel): Esc, a tap outside or the first button is the safe answer #}
+    <dialog id="fs-confirm" class="tw:modal" aria-labelledby="fs-confirm-t" aria-describedby="fs-confirm-b">
+        <div class="tw:modal-box tw:border tw:border-base-content/10 tw:shadow-2xl tw:bg-base-200">
+            <h3 id="fs-confirm-t" class="tw:text-base tw:font-bold tw:m-0"></h3>
+            <p id="fs-confirm-b" class="tw:text-sm tw:leading-relaxed tw:opacity-80 tw:mt-3"></p>
+            <div class="tw:modal-action">
+                <button type="button" id="fs-confirm-no" class="tw:btn tw:btn-sm tw:btn-ghost"></button>
+                <button type="button" id="fs-confirm-yes" class="tw:btn tw:btn-sm"></button>
+            </div>
+        </div>
+    </dialog>
+
+    <div id="fs-region" class="fs-region" role="dialog" aria-label="Move region" hidden>
+        <div id="fs-region-wait" class="fs-muted"><span class="tw:loading tw:loading-spinner tw:loading-sm"></span> Taking a whole-sensor picture&hellip;</div>
+        <div id="fs-region-pic" class="fs-region-pic" hidden>
+            <img id="fs-region-img" alt="The whole sensor">
+            <div id="fs-region-box" class="fs-region-box"></div>
+        </div>
+        <div id="fs-region-hint" class="fs-muted" hidden>Drag the box. Letting go moves the region.</div>
+        <button type="button" id="fs-region-cancel" class="tw:btn tw:btn-sm">Cancel</button>
+    </div>
+    {% endif %}
+</div>
+
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/focus_session.js', v=focus_js_version) }}"></script>
+{% endblock %}
