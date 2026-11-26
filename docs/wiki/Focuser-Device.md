@@ -11,7 +11,8 @@ Focusers are configured in the web interface under **Configuration** → **Focus
 | Driver Class | Supported Controller / Motor | Interface | Typical Pin Configuration |
 |---|---|---|---|
 | `focuser_28byj` | 28BYJ-48 Stepper with ULN2003 Driver | 4 GPIO Pins | Pin 1: IN1, Pin 2: IN2, Pin 3: IN3, Pin 4: IN4 |
-| `focuser_a4988` | A4988 / DRV8825 with NEMA 14 / NEMA 17 | 2–3 GPIO Pins | Pin 1: STEP, Pin 2: DIR, Pin 3: MS1 (Optional half-stepping) |
+| `focuser_a4988` | A4988 with NEMA 14 / NEMA 17 | 2–3 GPIO Pins | Pin 1: STEP, Pin 2: DIR, Pin 3: MS1 (Optional half-stepping) |
+| `focuser_drv8825` | DRV8825 / Xcluma Board with 28BYJ-48 (bipolar) or NEMA 17 | 3 GPIO Pins | Pin 1: STEP, Pin 2: DIR, Pin 3: EN (Active-low) |
 | `focuserMotorKit` | Adafruit Motor Shield / Motor FeatherWing (PCA9685) | I2C (`0x60`) | `stepper1` or `stepper2` channel |
 | `focuserSerial28byj` | Arduino / Custom Serial Microcontroller | USB / Serial | Serial device path (e.g. `/dev/ttyUSB0` or `/dev/ttyACM0`) |
 | `focuserSimulator` | Software Simulation Driver | Software | Virtual device for interface testing |
@@ -26,11 +27,17 @@ The 28BYJ-48 is an inexpensive 5V geared unipolar stepper motor (most commonly 1
 * Connect IN1, IN2, IN3, and IN4 to four available GPIO pins (e.g., `D17`, `D18`, `D27`, `D22`).
 * Ensure appropriate [GPIO Permissions](GPIO-Permissions) are granted to the `indi-allsky` service user.
 
-### A4988 / DRV8825 Bipolar Stepper Driver
+### A4988 Bipolar Stepper Driver
 For higher-torque NEMA 14 or NEMA 17 stepper motors:
 * **STEP**: Pulses motor position (1 pulse = 1 step).
 * **DIR**: Logic level sets clockwise or counter-clockwise rotation.
 * **MS1 / MS2 / MS3**: (Optional) Microstepping selection pins.
+
+### DRV8825 Step/Dir/Enable Driver (28BYJ-48 Bipolar & NEMA 17)
+For DRV8825 carrier/expansion boards (such as the Xcluma 42 CH expansion board) where microstepping is set via hardware jumpers/switches and Pin 3 controls **EN** (contributed by `@baryah` in [Discussion #3373](https://github.com/aaronwmorris/indi-allsky/discussions/3373)):
+* **Pin 1 (`STEP`)**: Step pulse output.
+* **Pin 2 (`DIR`)**: Rotation direction (`cw` / `ccw`).
+* **Pin 3 (`EN`)**: Active-low enable (`0` while stepping, `1` at rest to prevent motor heating).
 
 ### Adafruit MotorKit (I2C)
 The Adafruit Motor Shield uses I2C communication (default address `0x60`).
