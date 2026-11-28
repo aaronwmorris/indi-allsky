@@ -108,6 +108,24 @@ class TestVideoTaskQueue(unittest.TestCase):
 
         worker.processTask.assert_called_once_with({'task_id': 42})
 
+    def test_stale_misc_task_is_expired_and_reenqueued(self):
+        from datetime import datetime, timedelta, timezone
+        from indi_allsky.flask.models import TaskQueueState
+
+        ia = self._make_daemon_stub()
+
+        with app.app_context():
+            first = ia._enqueueVideoTask('sendAllskyMapPing', target_queue=ia.misc_q)
+            first.createDate = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=70)
+            db.session.commit()
+
+            second = ia._triggerAllskyMapPing()
+            self.assertIsNotNone(second)
+            db.session.refresh(first)
+            self.assertEqual(first.state, TaskQueueState.EXPIRED)
+            self.assertEqual(second.state, TaskQueueState.QUEUED)
+            self.assertEqual(ia.misc_q.qsize(), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

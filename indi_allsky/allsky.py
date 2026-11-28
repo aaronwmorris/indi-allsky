@@ -581,6 +581,28 @@ class IndiAllSky(object):
                 pass
 
 
+        if self.video_worker_idx > 0:
+            # Clear stale misc_q items and orphaned VIDEO tasks when respawning VideoWorker
+            while True:
+                try:
+                    self.misc_q.get(False)
+                except queue.Empty:
+                    break
+
+            with app.app_context():
+                orphaned_video = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state.in_((
+                        TaskQueueState.MANUAL,
+                        TaskQueueState.QUEUED,
+                        TaskQueueState.RUNNING,
+                    )))
+                for task in orphaned_video:
+                    logger.warning('Expiring orphaned video task %d on worker restart', task.id)
+                    task.state = TaskQueueState.EXPIRED
+                db.session.commit()
+
+
         self.video_worker_idx += 1
 
         logger.info('Starting Video-%d worker', self.video_worker_idx)
@@ -1678,14 +1700,26 @@ class IndiAllSky(object):
                 .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
                 .all()
 
+            stale_cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=60)
+            expired_any = False
+
             for existing in queued_tasks:
                 existing_data = existing.data or {}
                 if (
                     existing_data.get('action') == action
                     and existing_data.get('kwargs', {}) == job_kwargs
                 ):
+                    if target_queue is self.misc_q and existing.createDate and existing.createDate < stale_cutoff:
+                        logger.warning('Expiring stale misc task %s (id=%d)', action, existing.id)
+                        existing.state = TaskQueueState.EXPIRED
+                        expired_any = True
+                        continue
+
                     logger.info('Task %s already queued (id=%d), skipping duplicate', action, existing.id)
                     return None
+
+            if expired_any:
+                db.session.commit()
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
@@ -1701,7 +1735,7 @@ class IndiAllSky(object):
 
 
     def _triggerAllskyMapPing(self, task_state=TaskQueueState.QUEUED):
-        self._enqueueVideoTask(
+        return self._enqueueVideoTask(
             'sendAllskyMapPing',
             task_state=task_state,
             target_queue=self.misc_q,
