@@ -252,6 +252,7 @@ class IndiAllSky(object):
         self.image_worker_idx = 0
 
         self.video_q = Queue()
+        self.misc_q = Queue()
         self.video_error_q = Queue()
         self.video_worker = None
         self.video_worker_idx = 0
@@ -580,6 +581,28 @@ class IndiAllSky(object):
                 pass
 
 
+        if self.video_worker_idx > 0:
+            # Clear stale misc_q items and orphaned VIDEO tasks when respawning VideoWorker
+            while True:
+                try:
+                    self.misc_q.get(False)
+                except queue.Empty:
+                    break
+
+            with app.app_context():
+                orphaned_video = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state.in_((
+                        TaskQueueState.MANUAL,
+                        TaskQueueState.QUEUED,
+                        TaskQueueState.RUNNING,
+                    )))
+                for task in orphaned_video:
+                    logger.warning('Expiring orphaned video task %d on worker restart', task.id)
+                    task.state = TaskQueueState.EXPIRED
+                db.session.commit()
+
+
         self.video_worker_idx += 1
 
         logger.info('Starting Video-%d worker', self.video_worker_idx)
@@ -591,6 +614,7 @@ class IndiAllSky(object):
             self.upload_q,
             self.night_av,
             self.binning_av,
+            misc_q=self.misc_q,
         )
         self.video_worker.start()
 
@@ -620,6 +644,7 @@ class IndiAllSky(object):
         logger.info('Stopping Video worker')
 
         self.video_q.put({'stop' : True})
+        self.misc_q.put({'stop' : True})
         self.video_worker.join()
 
 
@@ -1566,22 +1591,12 @@ class IndiAllSky(object):
 
 
         for camera in active_cameras:
-            jobdata = {
-                'action' : 'updateAuroraData',
-                'kwargs' : {
-                    'camera_id' : camera.id,
-                },
-            }
-
-            task = IndiAllSkyDbTaskQueueTable(
-                queue=TaskQueueQueue.VIDEO,
-                state=task_state,
-                data=jobdata,
+            self._enqueueVideoTask(
+                'updateAuroraData',
+                kwargs={'camera_id' : camera.id},
+                task_state=task_state,
+                target_queue=self.misc_q,
             )
-            db.session.add(task)
-            db.session.commit()
-
-            self.video_q.put({'task_id' : task.id})
 
 
     def _updateSmokeData(self, task_state=TaskQueueState.QUEUED):
@@ -1592,56 +1607,28 @@ class IndiAllSky(object):
 
 
         for camera in active_cameras:
-            jobdata = {
-                'action' : 'updateSmokeData',
-                'kwargs' : {
-                    'camera_id' : camera.id,
-                },
-            }
-
-            task = IndiAllSkyDbTaskQueueTable(
-                queue=TaskQueueQueue.VIDEO,
-                state=task_state,
-                data=jobdata,
+            self._enqueueVideoTask(
+                'updateSmokeData',
+                kwargs={'camera_id' : camera.id},
+                task_state=task_state,
+                target_queue=self.misc_q,
             )
-            db.session.add(task)
-            db.session.commit()
-
-            self.video_q.put({'task_id' : task.id})
 
 
     def _updateSatelliteTleData(self, task_state=TaskQueueState.QUEUED):
-        jobdata = {
-            'action' : 'updateSatelliteTleData',
-            'kwargs' : {},
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
+        self._enqueueVideoTask(
+            'updateSatelliteTleData',
+            task_state=task_state,
+            target_queue=self.misc_q,
         )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
 
 
     def _backupDatabase(self, task_state=TaskQueueState.QUEUED):
-        jobdata = {
-            'action' : 'backupDatabase',
-            'kwargs' : {},
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
+        self._enqueueVideoTask(
+            'backupDatabase',
+            task_state=task_state,
+            target_queue=self.video_q,
         )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
 
 
     def updateConfigLocation(self, latitude, longitude, elevation, camera_id):
@@ -1692,11 +1679,47 @@ class IndiAllSky(object):
             return
 
 
-    def _triggerAllskyMapPing(self, task_state=TaskQueueState.QUEUED):
+    def _enqueueVideoTask(
+        self,
+        action,
+        kwargs=None,
+        task_state=TaskQueueState.QUEUED,
+        target_queue=None,
+        deduplicate=True,
+    ):
+        """Enqueue a VIDEO-queue task unless an identical QUEUED task is pending."""
+        job_kwargs = kwargs if kwargs is not None else {}
         jobdata = {
-            'action' : 'sendAllskyMapPing',
-            'kwargs' : {},
+            'action' : action,
+            'kwargs' : job_kwargs,
         }
+
+        if deduplicate and task_state == TaskQueueState.QUEUED:
+            queued_tasks = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                .all()
+
+            stale_cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=60)
+            expired_any = False
+
+            for existing in queued_tasks:
+                existing_data = existing.data or {}
+                if (
+                    existing_data.get('action') == action
+                    and existing_data.get('kwargs', {}) == job_kwargs
+                ):
+                    if target_queue is self.misc_q and existing.createDate and existing.createDate < stale_cutoff:
+                        logger.warning('Expiring stale misc task %s (id=%d)', action, existing.id)
+                        existing.state = TaskQueueState.EXPIRED
+                        expired_any = True
+                        continue
+
+                    logger.info('Task %s already queued (id=%d), skipping duplicate', action, existing.id)
+                    return None
+
+            if expired_any:
+                db.session.commit()
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
@@ -1706,5 +1729,15 @@ class IndiAllSky(object):
         db.session.add(task)
         db.session.commit()
 
-        self.video_q.put({'task_id' : task.id})
+        q = target_queue if target_queue is not None else self.video_q
+        q.put({'task_id' : task.id})
+        return task
+
+
+    def _triggerAllskyMapPing(self, task_state=TaskQueueState.QUEUED):
+        return self._enqueueVideoTask(
+            'sendAllskyMapPing',
+            task_state=task_state,
+            target_queue=self.misc_q,
+        )
 

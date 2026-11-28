@@ -99,6 +99,7 @@ class VideoWorker(Process):
         upload_q,
         night_av,
         binning_av,
+        misc_q=None,
     ):
         super(VideoWorker, self).__init__()
 
@@ -110,6 +111,7 @@ class VideoWorker(Process):
 
         self.error_q = error_q
         self.video_q = video_q
+        self.misc_q = misc_q
         self.upload_q = upload_q
 
         self.night_av = night_av
@@ -182,6 +184,14 @@ class VideoWorker(Process):
         )
         calibration_thread.start()
 
+        if self.misc_q is not None:
+            misc_thread = threading.Thread(
+                target=self._miscTaskWorker,
+                name='{0:s}-misc-tasks'.format(self.name),
+                daemon=True,
+            )
+            misc_thread.start()
+
         ### use this as a method to log uncaught exceptions
         try:
             self.saferun()
@@ -191,6 +201,29 @@ class VideoWorker(Process):
             raise e
         finally:
             self._asi676mc_calibration_q.put(None)
+            if self.misc_q is not None:
+                try:
+                    self.misc_q.put_nowait({'stop' : True})
+                except Exception:
+                    pass
+
+
+    def _miscTaskWorker(self):
+        """Process lightweight periodic network/data tasks without blocking on ffmpeg."""
+        while not self._shutdown:
+            try:
+                m_dict = self.misc_q.get(timeout=61)  # prime number
+            except queue.Empty:
+                continue
+
+            if m_dict.get('stop') or self._shutdown:
+                return
+
+            try:
+                with app.app_context():
+                    self.processTask(m_dict)
+            except Exception:
+                logger.exception('Unhandled error in misc task worker')
 
 
     def saferun(self):
